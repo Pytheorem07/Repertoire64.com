@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repertoire64 - Chess Opening Trainer</title>
+    <!-- Cool Chess Themed Favicon -->
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" type="image/svg+xml">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        .board-square { width: 12.5%; height: 12.5%; float: left; position: relative; }
+        .highlight { box-shadow: inset 0 0 0 4px rgba(255, 255, 0, 0.5); z-index: 5; }
+        .selected { background-color: rgba(20, 85, 30, 0.5) !important; z-index: 5; }
+        
+        .legal-dot {
+            position: absolute;
+            width: 25%;
+            height: 25%;
+            background-color: rgba(0, 0, 0, 0.25);
+            border-radius: 50%;
+            top: 37.5%;
+            left: 37.5%;
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        .piece-animated {
+            position: absolute;
+            width: 12.5%;
+            height: 12.5%;
+            z-index: 10;
+            cursor: grab;
+            user-select: none;
+            background-size: 100% 100%;
+            touch-action: none; /* Prevent scrolling while dragging */
+        }
+        
+        .piece-animated:active { cursor: grabbing; z-index: 100 !important; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        .engine-move-span:hover { background-color: rgba(255,255,255,0.2); border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-gray-800 shadow-md p-4 flex flex-col md:flex-row justify-between items-center z-20 shrink-0 gap-4">
+        <div class="flex items-center gap-3">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" class="w-8 h-8 drop-shadow-md" alt="Knight Logo">
+            <div>
+                <h1 class="text-xl font-bold leading-tight tracking-wide text-white">Repertoire<span class="text-blue-500">64</span>.com</h1>
+                <a href="https://pytheorem07.github.io/Chess64.app/" target="_blank" class="text-xs text-indigo-400 hover:text-indigo-300 underline font-semibold transition flex items-center gap-1 mt-0.5">
+                    Check out our fully featured Chess website Chess64 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <p id="active-rep-label" class="text-xs text-gray-400 font-semibold uppercase tracking-wider hidden md:block mr-2">No Repertoire Selected</p>
+            <button onclick="enterExploreMode()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Explore</span>
+            </button>
+            <button onclick="openRepertoiresModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-folder-open"></i> <span class="hidden sm:inline">Repertoires</span>
+            </button>
+            <button onclick="openSettingsModal()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-gear"></i> <span class="hidden sm:inline">Settings</span>
+            </button>
+            <button onclick="showInstructions()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-circle-info"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+        
+        <!-- Left Panel: Engine & Explorer -->
+        <aside class="w-full md:w-1/4 bg-gray-800 border-r border-gray-700 p-4 flex flex-col overflow-y-auto shrink-0 md:max-w-[320px]">
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 text-blue-400">Position</h2>
+                <p id="opening-name" class="text-sm font-medium text-gray-300">Starting Position</p>
+            </div>
+
+            <div class="mb-6 flex-shrink-0 flex flex-col max-h-[45%]">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 text-blue-400 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <span>Stockfish 10</span>
+                        <button onclick="toggleSetting('showFullLines')" class="text-gray-400 hover:text-white transition" title="Toggle Full Lines">
+                            <i id="icon-full-lines" class="fa-solid fa-list"></i>
+                        </button>
+                        <button onclick="toggleSetting('showStockfish')" class="text-gray-400 hover:text-white transition" title="Toggle Engine Visibility">
+                            <i id="icon-stockfish" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <span id="engine-depth" class="text-xs text-gray-500">Depth 0</span>
+                </h2>
+                <div id="engine-lines-container" class="overflow-y-auto text-sm text-gray-300 space-y-1 pr-1">
+                    <div class="text-gray-500 italic">Calculating...</div>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col min-h-0">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 text-blue-400 flex justify-between items-center">
+                    <span>ChessDB (Public)</span>
+                    <button onclick="toggleSetting('showChessDB')" class="text-gray-400 hover:text-white transition" title="Toggle DB Visibility">
+                        <i id="icon-chessdb" class="fa-solid fa-eye"></i>
+                    </button>
+                </h2>
+                <div id="db-moves-container" class="overflow-y-auto flex-1 text-sm pr-1">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-500 border-b border-gray-700">
+                                <th class="pb-2 px-1">Move</th>
+                                <th class="pb-2 px-1 text-right">Eval Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-moves">
+                            <tr><td colspan="2" class="text-gray-500 italic pt-2">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Panel: Board -->
+        <section class="flex-1 p-2 md:p-4 flex flex-col items-center justify-center bg-gray-900 overflow-y-auto relative">
+            
+            <div id="main-board-area" class="w-full flex gap-2 items-stretch justify-center transition-all duration-300" style="max-width: 530px;">
+                
+                <!-- Evaluation Bar -->
+                <div id="eval-bar-container" class="w-5 md:w-6 bg-gray-800 rounded flex shrink-0 overflow-hidden relative border border-gray-700 mt-[28px] mb-[28px]">
+                     <div id="eval-bar-fill" class="absolute left-0 right-0 bg-white transition-all duration-300" style="height: 50%; bottom: 0;"></div>
+                     <span id="eval-bar-text" class="absolute inset-0 flex items-center justify-center text-[10px] md:text-xs font-bold text-gray-400 mix-blend-difference pointer-events-none">0.0</span>
+                </div>
+
+                <!-- Board Wrapper -->
+                <div id="board-wrapper" class="flex-1 flex flex-col items-center">
+                    <div class="w-full mb-2 flex justify-between items-center text-sm font-semibold shrink-0">
+                        <div id="opponent-status" class="text-gray-400">Black</div>
+                        <div id="turn-indicator" class="px-2 py-1 rounded bg-gray-700 text-gray-300 text-xs">White to move</div>
+                    </div>
+
+                    <div id="board" class="w-full aspect-square shadow-2xl rounded border-4 border-gray-700 relative bg-gray-700 overflow-hidden shrink-0 touch-none">
+                        <!-- Grid and Pieces injected by JS -->
+                    </div>
+
+                    <div class="w-full mt-2 flex justify-between items-center text-sm font-semibold shrink-0">
+                        <div id="player-status" class="text-gray-400">White</div>
+                        <div class="flex gap-2">
+                            <button onclick="flipBoard()" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition" title="Flip Board">
+                                <i class="fa-solid fa-retweet"></i>
+                            </button>
+                            <button onclick="resetToStart()" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition" title="Reset to Start">
+                                <i class="fa-solid fa-backward-step"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Right Panel: Repertoire & Controls -->
+        <aside class="w-full md:w-1/3 bg-gray-800 border-l border-gray-700 flex flex-col shrink-0 md:max-w-[400px]">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-700 bg-gray-800 shrink-0">
+                <button onclick="switchTab('build')" id="tab-build" class="flex-1 py-3 text-sm font-semibold text-blue-400 border-b-2 border-blue-500 transition">Build</button>
+                <button onclick="switchTab('train')" id="tab-train" class="flex-1 py-3 text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Train</button>
+                <button onclick="switchTab('review')" id="tab-review" class="flex-1 py-3 text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Review <span id="mistake-count" class="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full hidden">0</span></button>
+            </div>
+
+            <!-- Build Mode Content -->
+            <div id="content-build" class="flex-1 flex flex-col p-4 overflow-hidden relative">
+                <!-- Overlay if no repertoire is active -->
+                <div id="no-rep-overlay" class="absolute inset-0 bg-gray-800/90 z-10 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm">
+                    <i class="fa-solid fa-book-open text-4xl text-gray-500 mb-4"></i>
+                    <h3 class="text-lg font-bold text-white mb-2">No Repertoire Active</h3>
+                    <p class="text-sm text-gray-400 mb-4">Create or select a repertoire to start building your lines.</p>
+                    <button onclick="openRepertoiresModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition">Manage Repertoires</button>
+                </div>
+
+                <div class="mb-4 shrink-0 flex gap-2">
+                    <button onclick="exportAllRepertoires()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-sm transition"><i class="fa-solid fa-download mr-1"></i> Backup All</button>
+                    <label class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-sm transition text-center cursor-pointer">
+                        <i class="fa-solid fa-upload mr-1"></i> Import
+                        <input type="file" class="hidden" accept=".json" onchange="importAllRepertoires(event)">
+                    </label>
+                </div>
+
+                <div class="flex-1 flex flex-col min-h-0 bg-gray-900 rounded-lg p-3 border border-gray-700 overflow-y-auto">
+                    <h3 class="text-xs uppercase text-gray-500 font-bold mb-2 shrink-0 flex justify-between items-center">
+                        <span>Current Line</span>
+                    </h3>
+                    <div id="move-history" class="text-sm leading-relaxed text-gray-300 mb-4">
+                        <!-- History injected here -->
+                    </div>
+                    
+                    <!-- Annotations UI -->
+                    <div id="node-annotations" class="mt-2 pt-3 border-t border-gray-700 hidden">
+                        <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Variation Name</label>
+                        <input type="text" id="node-var-name" placeholder="e.g. Main Line, Trap..." class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 mb-3" onchange="updateNodeAnnotation()">
+                        
+                        <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Comment</label>
+                        <textarea id="node-comment" placeholder="Add notes on this position..." class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 h-20 resize-none" onchange="updateNodeAnnotation()"></textarea>
+                    </div>
+                    
+                    <div id="variations-container" class="mt-4 pt-4 border-t border-gray-700 shrink-0">
+                        <h3 class="text-xs uppercase text-gray-500 font-bold mb-2">Alternative Moves</h3>
+                        <div id="variations-list" class="flex flex-wrap gap-2">
+                            <!-- Variations injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 shrink-0 flex justify-end">
+                    <button onclick="deleteCurrentNode()" class="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 transition">
+                        <i class="fa-solid fa-trash"></i> Delete this move
+                    </button>
+                </div>
+            </div>
+
+            <!-- Train Mode Content -->
+            <div id="content-train" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700 mb-4 shrink-0 overflow-y-auto">
+                    <h3 class="font-semibold text-lg mb-2 text-blue-400">Training Setup</h3>
+                    <p class="text-sm text-gray-400 mb-4">You will be tested on lines in <span id="train-rep-name" class="text-white font-semibold"></span>.</p>
+                    
+                    <div class="mb-4 flex flex-col gap-3">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="train-mode" value="auto" checked class="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-300">Auto-play opponent's moves</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="train-mode" value="manual" class="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-300">Play both sides manually</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-6 pt-4 border-t border-gray-700">
+                        <label class="flex items-center cursor-pointer" title="Skips opening moves you've already trained in previous lines">
+                            <input type="checkbox" id="train-smart-skip" checked class="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-300 font-semibold text-blue-300">Smart Skip Mode (Start from deviations)</span>
+                        </label>
+                    </div>
+
+                    <button onclick="startTraining()" id="btn-start-train" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition">
+                        Start Training
+                    </button>
+                </div>
+
+                <div id="training-status" class="flex-1 flex flex-col items-center justify-center text-center hidden">
+                    <div class="text-4xl mb-2 text-blue-500"><i class="fa-solid fa-dumbbell"></i></div>
+                    <h3 class="text-xl font-bold mb-1">Training Active</h3>
+                    <p id="train-progress" class="text-gray-400 mb-2">Line 1 of 5</p>
+                    
+                    <div id="train-active-comment" class="text-sm text-gray-300 italic mb-4 max-w-[90%] bg-gray-800 p-2 rounded hidden"></div>
+                    
+                    <p id="train-feedback" class="text-lg font-semibold text-yellow-400 min-h-[30px]"></p>
+                    
+                    <div class="mt-6 flex flex-col gap-2">
+                        <button onclick="playDemoLine()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded shadow transition text-sm font-semibold flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> Watch Line First
+                        </button>
+                        <button onclick="stopTraining()" class="text-sm text-gray-500 hover:text-white transition underline">Stop Training</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Mode Content -->
+            <div id="content-review" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700 mb-4 flex-1 overflow-y-auto">
+                    <h3 class="font-semibold text-lg mb-2 text-red-400">Mistakes to Review</h3>
+                    <p class="text-sm text-gray-400 mb-4">Lines where you played an incorrect move.</p>
+                    
+                    <div id="mistakes-list" class="space-y-3">
+                        <!-- Mistakes injected here -->
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- Modals (Repertoires, Settings, Message, Instructions, Confirm) -->
+    
+    <div id="reps-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-lg w-full mx-4 shadow-2xl flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                <h2 class="text-xl font-bold text-white">Your Repertoires</h2>
+                <button onclick="closeRepertoiresModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div id="reps-list" class="flex-1 overflow-y-auto space-y-2 mb-4">
+                <!-- Repertoires injected here -->
+            </div>
+            
+            <div class="border-t border-gray-700 pt-4 mt-2">
+                <h3 class="text-sm font-semibold text-gray-300 mb-2">Create New Repertoire</h3>
+                <div class="flex gap-2">
+                    <input type="text" id="new-rep-name" placeholder="e.g. Ruy Lopez, Caro-Kann" class="flex-1 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <select id="new-rep-color" class="bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <option value="w">White</option>
+                        <option value="b">Black</option>
+                    </select>
+                    <button onclick="createNewRepertoire()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold transition">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-gear mr-2"></i> Settings</h2>
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                <div>
+                    <label class="flex justify-between text-sm text-gray-300 mb-2">
+                        <span>Board Size (Max Width)</span>
+                        <span id="setting-size-val">500px</span>
+                    </label>
+                    <input type="range" id="setting-size" min="300" max="800" step="10" value="500" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+                
+                <!-- Visibility Toggles -->
+                <div class="grid grid-cols-2 gap-4 border-t border-b border-gray-700 py-4 my-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Eval Bar</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-eval" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Stockfish</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-sf" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">ChessDB</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-db" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Animations</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-anim" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Legal Dots</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-dots" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Sound Effects</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-sound" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-300 mb-2">Stockfish MultiPV (Lines)</label>
+                    <select id="setting-multipv" class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <option value="1">1 Line (Best Move only)</option>
+                        <option value="2">2 Lines</option>
+                        <option value="3" selected>3 Lines (Default)</option>
+                        <option value="4">4 Lines</option>
+                        <option value="5">5 Lines</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm text-gray-300 mb-2">Board Theme</label>
+                        <select id="setting-board-theme" class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                            <option value="lichess">Lichess Classic</option>
+                            <option value="green">Chess.com Green</option>
+                            <option value="blue">Tournament Blue</option>
+                            <option value="wood">Wood Board</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm text-gray-300 mb-2">Piece Style</label>
+                        <select id="setting-piece-theme" class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                            <option value="standard">Standard</option>
+                            <option value="alpha">Alpha</option>
+                            <option value="merida">Merida</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="msg-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] hidden opacity-0 transition-opacity">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="msg-modal-content">
+            <h3 id="msg-title" class="text-xl font-bold mb-2">Message</h3>
+            <p id="msg-body" class="text-gray-300 mb-6 text-sm leading-relaxed"></p>
+            <div class="flex justify-end">
+                <button onclick="closeMsgModal()" class="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg font-semibold transition">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[65] hidden opacity-0 transition-opacity">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="confirm-modal-content">
+            <h3 id="confirm-title" class="text-xl font-bold mb-2 text-white">Confirm</h3>
+            <p id="confirm-body" class="text-gray-300 mb-6 text-sm leading-relaxed"></p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeConfirmModal(false)" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition text-white">Cancel</button>
+                <button onclick="closeConfirmModal(true)" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold transition text-white">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="instructions-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
+        <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-2xl w-full mx-4 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <h2 class="text-2xl font-bold text-blue-400"><i class="fa-solid fa-graduation-cap mr-2"></i> How to Use</h2>
+                <button onclick="closeInstructions()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+                <p><strong>1. Repertoires:</strong> Open the Repertoires menu (top right) to create and manage multiple repertoires.</p>
+                <p><strong>2. Build & Annotate:</strong> Play moves to build lines. Add names and comments to positions. Click Stockfish moves to play them.</p>
+                <p><strong>3. Smart Training:</strong> The trainer remembers lines you've trained. "Smart Skip" auto-plays the start of branching lines to save you time.</p>
+                <p><strong>4. Drag & Drop:</strong> You can click or drag pieces naturally. Turn on Legal Dots in Settings if you want hints.</p>
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button onclick="closeInstructions()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ASSETS & CONFIGURATIONS ---
+        const PIECE_SETS = {
+            'standard': {
+                'wP': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
+                'wN': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+                'wB': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+                'wR': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+                'wQ': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+                'wK': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+                'bP': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
+                'bN': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
+                'bB': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+                'bR': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+                'bQ': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+                'bK': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'
+            },
+            'alpha': {
+                'wP': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/wP.svg',
+                'wN': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/wN.svg',
+                'wB': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/wB.svg',
+                'wR': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/wR.svg',
+                'wQ': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/wQ.svg',
+                'wK': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/wK.svg',
+                'bP': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/bP.svg',
+                'bN': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/bN.svg',
+                'bB': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/bB.svg',
+                'bR': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/bR.svg',
+                'bQ': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/bQ.svg',
+                'bK': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/alpha/bK.svg'
+            },
+            'merida': {
+                'wP': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/wP.svg',
+                'wN': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/wN.svg',
+                'wB': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/wB.svg',
+                'wR': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/wR.svg',
+                'wQ': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/wQ.svg',
+                'wK': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/wK.svg',
+                'bP': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/bP.svg',
+                'bN': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/bN.svg',
+                'bB': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/bB.svg',
+                'bR': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/bR.svg',
+                'bQ': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/bQ.svg',
+                'bK': 'https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/merida/bK.svg'
+            }
+        };
+
+        const BOARD_THEMES = {
+            'lichess': { light: '#f0d9b5', dark: '#b58863' },
+            'green': { light: '#eeeed2', dark: '#769656' },
+            'blue': { light: '#dee3e6', dark: '#8ca2ad' },
+            'wood': { light: '#cba170', dark: '#805634' }
+        };
+
+        // --- GLOBAL STATE ---
+        const game = new Chess();
+        const testGame = new Chess(); 
+        let boardFlipped = false;
+        let selectedSquare = null;
+        
+        let isDragging = false;
+        let dragPieceEl = null;
+        let dragStartSquare = null;
+        let dragOffsetX = 0; let dragOffsetY = 0;
+        
+        let repData = {
+            activeId: null,
+            repertoires: {},
+            trainedNodes: {} 
+        };
+
+        let currentNode = null;
+        let currentPath = [];
+        let currentMode = 'build';
+        
+        let settings = {
+            size: 500,
+            anim: true,
+            sound: true,
+            multipv: 3,
+            boardTheme: 'lichess',
+            pieceTheme: 'standard',
+            showEvalBar: true,
+            showStockfish: true,
+            showChessDB: true,
+            showFullLines: false,
+            legalDots: true
+        };
+
+        let trainingLines = [];
+        let currentTrainLineIndex = 0;
+        let currentTrainMoveIndex = 0;
+        let isTraining = false;
+        let mistakes = []; // Array of { line: [], mistakeIndex: num }
+        let demoInterval = null;
+
+        let engine = null;
+        let engineLines = [];
+        let engineCurrentFen = "";
+        let globalForceSkipIndex = -1;
+        
+        // Punchy Chess Thump Sounds
+        const synthMove = new Tone.MembraneSynth({ 
+            pitchDecay: 0.05, octaves: 2, oscillator: { type: "triangle" }, 
+            envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 } 
+        }).toDestination();
+        const synthCapture = new Tone.MembraneSynth({ 
+            pitchDecay: 0.1, octaves: 4, oscillator: { type: "square" }, 
+            envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 } 
+        }).toDestination();
+
+        // --- INIT & LOGIC ---
+        function init() {
+            loadState();
+            applySettingsToUI();
+            createBoardGrid();
+            
+            if (repData.activeId && repData.repertoires[repData.activeId]) {
+                loadRepertoire(repData.activeId);
+            } else {
+                renderPieces(false);
+                updateRepertoireUI();
+                fetchChessDB();
+            }
+
+            initEngine();
+            
+            if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
+                showInstructions();
+                localStorage.setItem('chess_rep_seen_tutorial_v4', 'true');
+            }
+
+            document.getElementById('setting-size').addEventListener('input', (e) => {
+                document.getElementById('setting-size-val').innerText = e.target.value + 'px';
+            });
+            
+            // Global drag events
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchmove', handleDragMove, {passive: false});
+            document.addEventListener('touchend', handleDragEnd);
+        }
+
+        function playSound(isCapture) {
+            if (!settings.sound) return;
+            if (Tone.context.state !== 'running') Tone.context.resume();
+            if (isCapture) {
+                synthCapture.triggerAttackRelease("E2", "16n", Tone.now(), 0.6);
+            } else {
+                synthMove.triggerAttackRelease("C2", "16n", Tone.now(), 0.5);
+            }
+        }
+
+        function showMsg(title, body) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-body').innerText = body;
+            const modal = document.getElementById('msg-modal');
+            const content = document.getElementById('msg-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+        }
+        function closeMsgModal() {
+            const modal = document.getElementById('msg-modal');
+            const content = document.getElementById('msg-modal-content');
+            modal.classList.add('opacity-0'); content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+        
+        let confirmCallback = null;
+        function showConfirm(title, body, callback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-body').innerText = body;
+            confirmCallback = callback;
+            const m = document.getElementById('confirm-modal');
+            const c = document.getElementById('confirm-modal-content');
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); }, 10);
+        }
+        function closeConfirmModal(result) {
+            const m = document.getElementById('confirm-modal');
+            const c = document.getElementById('confirm-modal-content');
+            m.classList.add('opacity-0'); c.classList.add('scale-95');
+            setTimeout(() => { 
+                m.classList.add('hidden'); 
+                if(result && confirmCallback) confirmCallback(); 
+                confirmCallback = null;
+            }, 300);
+        }
+
+        function showInstructions() { document.getElementById('instructions-modal').classList.remove('hidden'); }
+        function closeInstructions() { document.getElementById('instructions-modal').classList.add('hidden'); }
+        
+        function openSettingsModal() {
+            document.getElementById('setting-size').value = settings.size;
+            document.getElementById('setting-size-val').innerText = settings.size + 'px';
+            document.getElementById('setting-anim').checked = settings.anim;
+            document.getElementById('setting-sound').checked = settings.sound;
+            document.getElementById('setting-eval').checked = settings.showEvalBar;
+            document.getElementById('setting-sf').checked = settings.showStockfish;
+            document.getElementById('setting-db').checked = settings.showChessDB;
+            document.getElementById('setting-dots').checked = settings.legalDots !== false;
+            document.getElementById('setting-multipv').value = settings.multipv;
+            document.getElementById('setting-board-theme').value = settings.boardTheme;
+            document.getElementById('setting-piece-theme').value = settings.pieceTheme;
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+        
+        function toggleSetting(key) {
+            settings[key] = !settings[key];
+            saveState();
+            applySettingsToUI();
+            if (key === 'showFullLines') renderEngineLines();
+        }
+
+        function saveSettings() {
+            settings = {
+                size: parseInt(document.getElementById('setting-size').value),
+                anim: document.getElementById('setting-anim').checked,
+                sound: document.getElementById('setting-sound').checked,
+                showEvalBar: document.getElementById('setting-eval').checked,
+                showStockfish: document.getElementById('setting-sf').checked,
+                showChessDB: document.getElementById('setting-db').checked,
+                legalDots: document.getElementById('setting-dots').checked,
+                showFullLines: settings.showFullLines, 
+                multipv: parseInt(document.getElementById('setting-multipv').value),
+                boardTheme: document.getElementById('setting-board-theme').value,
+                pieceTheme: document.getElementById('setting-piece-theme').value
+            };
+            saveState();
+            applySettingsToUI();
+            closeSettingsModal();
+            triggerEngine(); 
+        }
+
+        function applySettingsToUI() {
+            document.getElementById('main-board-area').style.maxWidth = (settings.size + 30) + 'px';
+            
+            createBoardGrid(); 
+            renderPieces(false); 
+            
+            const evalContainer = document.getElementById('eval-bar-container');
+            const evalFill = document.getElementById('eval-bar-fill');
+            if (settings.showEvalBar) {
+                evalContainer.classList.remove('hidden');
+                if (boardFlipped) {
+                    evalFill.style.bottom = 'auto'; evalFill.style.top = '0';
+                } else {
+                    evalFill.style.top = 'auto'; evalFill.style.bottom = '0';
+                }
+            } else {
+                evalContainer.classList.add('hidden');
+            }
+
+            document.getElementById('icon-full-lines').className = settings.showFullLines ? 'fa-solid fa-list' : 'fa-solid fa-list-ul text-gray-500';
+            
+            const sfIcon = document.getElementById('icon-stockfish');
+            if (settings.showStockfish) {
+                sfIcon.className = 'fa-solid fa-eye';
+                document.getElementById('engine-lines-container').classList.remove('hidden');
+            } else {
+                sfIcon.className = 'fa-solid fa-eye-slash text-gray-500';
+                document.getElementById('engine-lines-container').classList.add('hidden');
+            }
+
+            const dbIcon = document.getElementById('icon-chessdb');
+            if (settings.showChessDB) {
+                dbIcon.className = 'fa-solid fa-eye';
+                document.getElementById('db-moves-container').classList.remove('hidden');
+            } else {
+                dbIcon.className = 'fa-solid fa-eye-slash text-gray-500';
+                document.getElementById('db-moves-container').classList.add('hidden');
+            }
+
+            if (engineLines.length > 0 && engineLines[0]) updateEvalBar(engineLines[0].score);
+        }
+
+        // --- REPERTOIRES ---
+        function openRepertoiresModal() {
+            renderRepertoiresList();
+            document.getElementById('reps-modal').classList.remove('hidden');
+        }
+        function closeRepertoiresModal() { document.getElementById('reps-modal').classList.add('hidden'); }
+
+        function renderRepertoiresList() {
+            const listEl = document.getElementById('reps-list');
+            listEl.innerHTML = '';
+            const ids = Object.keys(repData.repertoires);
+            if (ids.length === 0) {
+                listEl.innerHTML = '<p class="text-sm text-gray-400 italic">No repertoires created yet.</p>';
+                return;
+            }
+            ids.forEach(id => {
+                const rep = repData.repertoires[id];
+                const isActive = id === repData.activeId;
+                const icon = rep.color === 'w' ? '<i class="fa-solid fa-chess-king text-gray-300"></i>' : '<i class="fa-solid fa-chess-king text-black drop-shadow-md"></i>';
+                
+                const el = document.createElement('div');
+                el.className = `flex justify-between items-center p-3 rounded-lg border ${isActive ? 'bg-blue-900/30 border-blue-500' : 'bg-gray-700 border-gray-600'}`;
+                el.innerHTML = `
+                    <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="loadRepertoire('${id}')">
+                        <div class="w-8 h-8 rounded bg-gray-600 flex items-center justify-center">${icon}</div>
+                        <div>
+                            <p class="font-bold text-white">${rep.name}</p>
+                            <p class="text-xs text-gray-400">${rep.color === 'w' ? 'White' : 'Black'} Repertoire</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteRepertoire('${id}')" class="text-red-400 hover:text-red-300 p-2"><i class="fa-solid fa-trash"></i></button>
+                `;
+                listEl.appendChild(el);
+            });
+        }
+
+        function createNewRepertoire() {
+            const nameInput = document.getElementById('new-rep-name');
+            const name = nameInput.value.trim();
+            const color = document.getElementById('new-rep-color').value;
+            if (!name) { showMsg("Error", "Please enter a name for your repertoire."); return; }
+            const id = 'rep_' + Date.now();
+            const tempGame = new Chess();
+            
+            repData.repertoires[id] = { name: name, color: color, root: { fen: tempGame.fen(), san: 'Root', children: [], parent: null, comment: '', variationName: '' } };
+            nameInput.value = '';
+            saveState();
+            loadRepertoire(id);
+        }
+
+        function loadRepertoire(id) {
+            if (!repData.repertoires[id]) return;
+            repData.activeId = id;
+            const rep = repData.repertoires[id];
+            
+            function linkParents(node, parent) {
+                node.parent = parent;
+                node.children.forEach(c => linkParents(c, node));
+            }
+            linkParents(rep.root, null);
+
+            currentNode = rep.root;
+            currentPath = [];
+            game.load(currentNode.fen);
+            boardFlipped = (rep.color === 'b');
+            
+            document.getElementById('active-rep-label').innerText = rep.name;
+            document.getElementById('train-rep-name').innerText = rep.name;
+            
+            saveState();
+            closeRepertoiresModal();
+            applySettingsToUI(); 
+            updateRepertoireUI();
+            triggerEngine();
+            fetchChessDB();
+        }
+
+        function deleteRepertoire(id) {
+            showConfirm("Delete Repertoire", "Are you sure you want to delete this repertoire entirely?", () => {
+                delete repData.repertoires[id];
+                delete repData.trainedNodes[id];
+                if (repData.activeId === id) {
+                    enterExploreMode();
+                }
+                saveState();
+                renderRepertoiresList();
+            });
+        }
+
+        function enterExploreMode() {
+            repData.activeId = null;
+            currentNode = null;
+            currentPath = [];
+            game.reset();
+            document.getElementById('active-rep-label').innerText = "Free Analysis";
+            saveState();
+            switchTab('build');
+            afterMoveTrigger(false);
+        }
+
+        // --- BOARD RENDERING ---
+        function getSquarePosition(square) {
+            const files = ['a','b','c','d','e','f','g','h'];
+            const file = files.indexOf(square[0]);
+            const rank = parseInt(square[1]) - 1; 
+
+            let col = boardFlipped ? 7 - file : file;
+            let row = boardFlipped ? rank : 7 - rank;
+            return { left: col * 12.5, top: row * 12.5 };
+        }
+
+        function createBoardGrid() {
+            const boardEl = document.getElementById('board');
+            boardEl.querySelectorAll('.board-square').forEach(e => e.remove());
+            const theme = BOARD_THEMES[settings.boardTheme] || BOARD_THEMES['lichess'];
+            const files = ['a','b','c','d','e','f','g','h'];
+            
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < 64; i++) {
+                const sq = document.createElement('div');
+                const rowNum = boardFlipped ? Math.floor(i / 8) : 7 - Math.floor(i / 8);
+                const colNum = boardFlipped ? 7 - (i % 8) : i % 8;
+                
+                const squareId = files[colNum] + (rowNum + 1);
+                sq.id = 'sq-' + squareId;
+                sq.className = 'board-square flex items-center justify-center';
+                sq.style.backgroundColor = (rowNum + colNum) % 2 === 1 ? theme.light : theme.dark;
+                
+                sq.addEventListener('click', () => handleSquareClick(squareId));
+                fragment.appendChild(sq);
+            }
+            boardEl.prepend(fragment);
+            updateLabels();
+        }
+
+        function updateLabels() {
+            const topLabel = boardFlipped ? "White" : "Black";
+            const botLabel = boardFlipped ? "Black" : "White";
+            document.getElementById('opponent-status').innerText = topLabel;
+            document.getElementById('player-status').innerText = botLabel;
+            const turnText = game.turn() === 'w' ? "White to move" : "Black to move";
+            document.getElementById('turn-indicator').innerText = turnText;
+        }
+
+        function renderPieces(animate = false, moveFrom = null, moveTo = null) {
+            const boardEl = document.getElementById('board');
+            const boardData = game.board();
+            const pieceThemeUrls = PIECE_SETS[settings.pieceTheme] || PIECE_SETS['standard'];
+            
+            document.querySelectorAll('.board-square').forEach(sq => {
+                sq.classList.remove('highlight', 'selected');
+            });
+            clearLegalDots();
+            
+            if (selectedSquare) {
+                const sqEl = document.getElementById('sq-' + selectedSquare);
+                if (sqEl) sqEl.classList.add('selected');
+                if (settings.legalDots !== false) drawLegalDots(selectedSquare);
+            }
+
+            if (!animate || !moveFrom || !moveTo) {
+                boardEl.querySelectorAll('.piece-animated').forEach(e => e.remove());
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const piece = boardData[r][c];
+                        if (piece) {
+                            const squareId = String.fromCharCode(97 + c) + (8 - r);
+                            const img = document.createElement('div');
+                            img.className = 'piece-animated drop-shadow-md';
+                            img.dataset.square = squareId;
+                            img.dataset.color = piece.color;
+                            
+                            const key = piece.color + piece.type.toUpperCase();
+                            img.style.backgroundImage = `url(${pieceThemeUrls[key]})`;
+                            
+                            const pos = getSquarePosition(squareId);
+                            img.style.left = pos.left + '%';
+                            img.style.top = pos.top + '%';
+                            
+                            // Drag events
+                            img.addEventListener('mousedown', handleDragStart);
+                            img.addEventListener('touchstart', handleDragStart, {passive: false});
+                            
+                            boardEl.appendChild(img);
+                        }
+                    }
+                }
+            } else {
+                const pieceElements = Array.from(boardEl.querySelectorAll('.piece-animated'));
+                const movedDomPiece = pieceElements.find(p => p.dataset.square === moveFrom);
+                const targetDomPiece = pieceElements.find(p => p.dataset.square === moveTo);
+                
+                if (targetDomPiece) {
+                    targetDomPiece.style.opacity = '0';
+                    targetDomPiece.style.transition = 'opacity 0.15s ease-out';
+                    setTimeout(() => targetDomPiece.remove(), 150);
+                }
+
+                if (movedDomPiece) {
+                    movedDomPiece.style.zIndex = '90';
+                    movedDomPiece.dataset.square = moveTo;
+                    movedDomPiece.style.transition = 'top 0.25s cubic-bezier(0.25, 1, 0.5, 1), left 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+                    const pos = getSquarePosition(moveTo);
+                    movedDomPiece.style.left = pos.left + '%';
+                    movedDomPiece.style.top = pos.top + '%';
+                }
+                setTimeout(() => renderPieces(false), 260);
+            }
+        }
+
+        function drawLegalDots(square) {
+            const moves = game.moves({ square: square, verbose: true });
+            moves.forEach(m => {
+                const sqEl = document.getElementById('sq-' + m.to);
+                if (sqEl && !sqEl.querySelector('.legal-dot')) {
+                    const dot = document.createElement('div');
+                    dot.className = 'legal-dot';
+                    sqEl.appendChild(dot);
+                }
+            });
+        }
+        function clearLegalDots() {
+            document.querySelectorAll('.legal-dot').forEach(d => d.remove());
+        }
+
+        function flipBoard() {
+            boardFlipped = !boardFlipped;
+            applySettingsToUI();
+        }
+
+        // --- DRAG AND DROP ---
+        function handleDragStart(e) {
+            if (isTraining && document.querySelector('input[name="train-mode"]:checked').value === 'auto' && game.turn() !== repData.repertoires[repData.activeId].color) return;
+            
+            const isTouch = e.type === 'touchstart';
+            if (isTouch) e.preventDefault(); 
+
+            const pieceColor = e.target.dataset.color;
+            if (pieceColor !== game.turn()) {
+                handleSquareClick(e.target.dataset.square);
+                return;
+            }
+
+            isDragging = true;
+            dragPieceEl = e.target;
+            dragStartSquare = dragPieceEl.dataset.square;
+            
+            selectedSquare = dragStartSquare;
+            renderPieces(false); // This updates selection & dots
+
+            // Find exactly which element we are re-grabbing since renderPieces destroys and rebuilds
+            dragPieceEl = document.querySelector(`.piece-animated[data-square="${dragStartSquare}"]`);
+            if (!dragPieceEl) { isDragging = false; return; }
+
+            dragPieceEl.style.transition = 'none';
+            dragPieceEl.style.zIndex = '9999';
+
+            const rect = dragPieceEl.getBoundingClientRect();
+            const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+            
+            dragOffsetX = clientX - rect.left;
+            dragOffsetY = clientY - rect.top;
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging || !dragPieceEl) return;
+            const isTouch = e.type === 'touchmove';
+            if (isTouch) e.preventDefault();
+            
+            const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+            
+            const boardRect = document.getElementById('board').getBoundingClientRect();
+            
+            // Constrain roughly to board
+            let x = clientX - boardRect.left - dragOffsetX;
+            let y = clientY - boardRect.top - dragOffsetY;
+            
+            dragPieceEl.style.left = `${(x / boardRect.width) * 100}%`;
+            dragPieceEl.style.top = `${(y / boardRect.height) * 100}%`;
+        }
+
+        function handleDragEnd(e) {
+            if (!isDragging || !dragPieceEl) return;
+            isDragging = false;
+            
+            const isTouch = e.type === 'touchend';
+            const clientX = isTouch ? e.changedTouches[0].clientX : e.clientX;
+            const clientY = isTouch ? e.changedTouches[0].clientY : e.clientY;
+            
+            const boardRect = document.getElementById('board').getBoundingClientRect();
+            let x = clientX - boardRect.left;
+            let y = clientY - boardRect.top;
+            
+            dragPieceEl.style.zIndex = '10';
+            
+            if (x >= 0 && x <= boardRect.width && y >= 0 && y <= boardRect.height) {
+                const files = ['a','b','c','d','e','f','g','h'];
+                const colRaw = Math.floor((x / boardRect.width) * 8);
+                const rowRaw = Math.floor((y / boardRect.height) * 8);
+                
+                const colNum = boardFlipped ? 7 - colRaw : colRaw;
+                const rowNum = boardFlipped ? rowRaw : 7 - rowRaw;
+                
+                const targetSquare = files[colNum] + (rowNum + 1);
+                
+                if (targetSquare !== dragStartSquare) {
+                    attemptMove(dragStartSquare, targetSquare);
+                    selectedSquare = null;
+                    renderPieces(false);
+                    return;
+                }
+            }
+            
+            // Snap back
+            renderPieces(false);
+        }
+
+        // --- PLAYING MOVES ---
+        function handleSquareClick(square) {
+            if (isDragging) return;
+            if (isTraining) {
+                const autoPlay = document.querySelector('input[name="train-mode"]:checked').value === 'auto';
+                const repColor = repData.repertoires[repData.activeId].color;
+                if (autoPlay && game.turn() !== repColor) return;
+            }
+
+            const pieceHere = game.get(square);
+
+            if (selectedSquare) {
+                if (selectedSquare === square) {
+                    selectedSquare = null;
+                    renderPieces(false);
+                    return;
+                }
+                if (pieceHere && pieceHere.color === game.turn()) {
+                    selectedSquare = square;
+                    renderPieces(false);
+                    return;
+                }
+                attemptMove(selectedSquare, square);
+                selectedSquare = null;
+            } else {
+                if (pieceHere && pieceHere.color === game.turn()) {
+                    selectedSquare = square;
+                    renderPieces(false);
+                }
+            }
+        }
+
+        function playUciSequence(uciSequence) {
+            if (!uciSequence || isTraining) return; 
+            const moves = uciSequence.split(',');
+            // We only actually *play* the sequence on the board
+            for (let uci of moves) {
+                uci = uci.trim();
+                if (!uci) continue;
+                const from = uci.substring(0, 2);
+                const to = uci.substring(2, 4);
+                const promotion = uci.length > 4 ? uci.charAt(4) : 'q';
+                attemptMove(from, to, promotion);
+            }
+        }
+
+        function attemptMove(from, to, promotion = 'q') {
+            let moveObj = { from: from, to: to, promotion: promotion };
+            const tGame = new Chess(game.fen());
+            const attempt = tGame.move(moveObj);
+            
+            if (!attempt) {
+                selectedSquare = null;
+                renderPieces(false);
+                return;
+            }
+
+            const isCapture = attempt.captured != null;
+            playSound(isCapture);
+
+            if (currentMode === 'build') {
+                executeBuildMove(moveObj, from, to);
+            } else if (currentMode === 'train' || currentMode === 'review') {
+                executeTrainMove(moveObj, from, to);
+            }
+        }
+
+        function executeBuildMove(moveObj, from, to) {
+            const moveResult = game.move(moveObj);
+            if (!moveResult) return;
+
+            if (repData.activeId) {
+                const newFen = game.fen();
+                const san = moveResult.san;
+                let childNode = currentNode.children.find(c => c.san === san);
+                
+                if (!childNode) {
+                    childNode = { fen: newFen, san: san, children: [], parent: currentNode, comment: '', variationName: '' };
+                    currentNode.children.push(childNode);
+                }
+                currentNode = childNode;
+                currentPath.push(currentNode);
+                saveState();
+            }
+            afterMoveTrigger(settings.anim, from, to);
+        }
+
+        function navigateToNode(pathIndex) {
+            if (!repData.activeId) return;
+            const root = repData.repertoires[repData.activeId].root;
+            game.load(root.fen);
+            currentNode = root;
+            
+            if (pathIndex === -1) {
+                currentPath = [];
+            } else {
+                currentPath = currentPath.slice(0, pathIndex + 1);
+                currentNode = currentPath[pathIndex];
+                game.load(currentNode.fen);
+            }
+            afterMoveTrigger(false);
+        }
+
+        function navigateToVariation(san) {
+            const childNode = currentNode.children.find(c => c.san === san);
+            if (childNode) {
+                game.load(childNode.fen);
+                currentNode = childNode;
+                currentPath.push(currentNode);
+                afterMoveTrigger(false);
+            }
+        }
+
+        function resetToStart() {
+            if (isTraining) return;
+            if (!repData.activeId) {
+                game.reset();
+                afterMoveTrigger(false);
+                return;
+            }
+            navigateToNode(-1);
+        }
+
+        function deleteCurrentNode() {
+            if (!repData.activeId) {
+                game.undo();
+                afterMoveTrigger(false);
+                return;
+            }
+            const root = repData.repertoires[repData.activeId].root;
+            if (currentNode === root) {
+                showMsg("Cannot Delete", "You cannot delete the starting position.");
+                return;
+            }
+            showConfirm("Delete Move", `Are you sure you want to delete the move ${currentNode.san} and all its variations?`, () => {
+                const parent = currentNode.parent;
+                parent.children = parent.children.filter(c => c !== currentNode);
+                saveState();
+                navigateToNode(currentPath.length - 2);
+            });
+        }
+
+        function afterMoveTrigger(animate, moveFrom = null, moveTo = null) {
+            updateLabels();
+            renderPieces(animate, moveFrom, moveTo);
+            if (currentMode === 'build') updateRepertoireUI();
+            fetchChessDB();
+            triggerEngine();
+        }
+
+        function switchTab(tab) {
+            if (isTraining && tab !== currentMode) {
+                showMsg("Training Active", "Please stop your current training session before switching modes.");
+                return;
+            }
+            ['build', 'train', 'review'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.remove('text-blue-400', 'border-blue-500');
+                document.getElementById(`tab-${t}`).classList.add('text-gray-400', 'border-transparent');
+                document.getElementById(`content-${t}`).classList.add('hidden');
+            });
+            document.getElementById(`tab-${tab}`).classList.add('text-blue-400', 'border-blue-500');
+            document.getElementById(`tab-${tab}`).classList.remove('text-gray-400', 'border-transparent');
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+            
+            currentMode = tab;
+            if (tab === 'build') updateRepertoireUI();
+            else if (tab === 'review') renderMistakesList();
+        }
+
+        function updateNodeAnnotation() {
+            if(!currentNode) return;
+            currentNode.variationName = document.getElementById('node-var-name').value.trim();
+            currentNode.comment = document.getElementById('node-comment').value.trim();
+            saveState();
+        }
+
+        function updateRepertoireUI() {
+            const overlay = document.getElementById('no-rep-overlay');
+            if (overlay) overlay.classList.add('hidden'); 
+
+            const historyEl = document.getElementById('move-history');
+            const varsContainer = document.getElementById('variations-container');
+            const varsList = document.getElementById('variations-list');
+            const annoBox = document.getElementById('node-annotations');
+            historyEl.innerHTML = '';
+            
+            if (!repData.activeId) {
+                let html = '<div class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-2"><i class="fa-solid fa-magnifying-glass"></i> Free Analysis Mode</div>';
+                let history = game.history();
+                if (history.length === 0) {
+                    html += `
+                        <div class="mt-4 text-center py-4">
+                            <i class="fa-solid fa-chess text-3xl text-gray-600 mb-3"></i>
+                            <p class="text-gray-400 text-sm mb-4">Play a move to explore freely.</p>
+                            <button onclick="openRepertoiresModal()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded shadow transition text-sm font-semibold">
+                                Create Repertoire to Save Lines
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    let moveNum = 1;
+                    for (let i = 0; i < history.length; i++) {
+                        const isWhite = i % 2 === 0;
+                        if (isWhite) html += `<span class="text-gray-500 mr-1">${moveNum}.</span>`; 
+                        html += `<span class="px-1.5 py-0.5 rounded text-gray-300">${history[i]}</span> `;
+                        if (!isWhite) moveNum++;
+                    }
+                }
+                historyEl.innerHTML = html;
+                varsContainer.classList.add('hidden');
+                annoBox.classList.add('hidden');
+                
+                const deleteBtn = document.querySelector('button[onclick="deleteCurrentNode()"]');
+                if (deleteBtn) deleteBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Undo Move';
+                return;
+            } else {
+                const deleteBtn = document.querySelector('button[onclick="deleteCurrentNode()"]');
+                if (deleteBtn) deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete this move';
+                annoBox.classList.remove('hidden');
+                
+                document.getElementById('node-var-name').value = currentNode.variationName || '';
+                document.getElementById('node-comment').value = currentNode.comment || '';
+            }
+
+            if (currentPath.length === 0) {
+                historyEl.innerHTML = '<span class="text-gray-500 italic">Starting position. Play a move to begin building.</span>';
+                annoBox.classList.add('hidden');
+            } else {
+                let html = '';
+                let moveNum = 1;
+                for (let i = 0; i < currentPath.length; i++) {
+                    const node = currentPath[i];
+                    const isWhite = i % 2 === 0;
+                    if (isWhite) html += `<span class="text-gray-500 mr-1">${moveNum}.</span>`; 
+                    const isLast = (i === currentPath.length - 1);
+                    const classes = isLast ? 'bg-blue-600 text-white font-bold' : 'hover:bg-gray-700 cursor-pointer';
+                    html += `<span onclick="navigateToNode(${i})" class="px-1.5 py-0.5 rounded transition ${classes}">${node.san}</span> `;
+                    if (!isWhite) moveNum++;
+                }
+                historyEl.innerHTML = html;
+            }
+
+            if (currentNode && currentNode.children.length === 0) {
+                varsContainer.classList.add('hidden');
+            } else if (currentNode) {
+                varsContainer.classList.remove('hidden');
+                varsList.innerHTML = '';
+                currentNode.children.forEach(child => {
+                    const btn = document.createElement('button');
+                    btn.className = 'bg-gray-700 hover:bg-gray-600 text-sm px-3 py-1.5 rounded shadow transition font-semibold';
+                    btn.innerText = child.variationName ? `${child.san} (${child.variationName})` : child.san;
+                    btn.onclick = () => navigateToVariation(child.san);
+                    varsList.appendChild(btn);
+                });
+            }
+        }
+
+        // --- EXTERNAL APIs (ChessDB, Stockfish, Eval Bar) ---
+        function updateEvalBar(evalStr) {
+            const container = document.getElementById('eval-bar-container');
+            if (!settings.showEvalBar) return;
+            
+            const fill = document.getElementById('eval-bar-fill');
+            const text = document.getElementById('eval-bar-text');
+
+            let val = 0;
+            if (evalStr === '-') {
+                val = 0; text.innerText = "0.0";
+            } else if (evalStr.startsWith('M')) {
+                let mateNum = parseInt(evalStr.replace('M', ''));
+                val = mateNum > 0 ? 20 : -20;
+                text.innerText = evalStr;
+            } else {
+                val = parseFloat(evalStr);
+                text.innerText = (val > 0 ? '+' : '') + val.toFixed(1);
+            }
+
+            let pct = 50 + (Math.atan(val / 4) / (Math.PI / 2)) * 50;
+            pct = Math.max(5, Math.min(95, pct)); 
+            fill.style.height = `${pct}%`;
+        }
+
+        async function fetchChessDB() {
+            if (!settings.showChessDB) return;
+            
+            const fen = game.fen();
+            const dbMovesEl = document.getElementById('db-moves');
+            const openingEl = document.getElementById('opening-name');
+            
+            if (game.game_over()) {
+                dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">Game Over</td></tr>';
+                return;
+            }
+            dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">Loading...</td></tr>';
+            
+            try {
+                const urlInfo = `https://www.chessdb.cn/cdb.php?action=queryboard&board=${encodeURIComponent(fen)}`;
+                fetch(urlInfo).then(r => r.text()).then(text => { /* Trigger DB */ });
+                
+                openingEl.innerText = fen === "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" ? "Starting Position" : "Theory Position";
+
+                const url = `https://www.chessdb.cn/cdb.php?action=queryall&board=${encodeURIComponent(fen)}`;
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                if (text.includes('unknown') || text.trim() === '') {
+                    dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">No master games found</td></tr>';
+                    return;
+                }
+
+                const movesRaw = text.split('|');
+                let html = '';
+                const safeGame = new Chess(fen);
+                
+                for (let mRaw of movesRaw) {
+                    if(!mRaw.trim()) continue;
+                    let moveObj = {};
+                    mRaw.split(',').forEach(part => {
+                        const [k, v] = part.split(':');
+                        if (k) moveObj[k] = v;
+                    });
+                    
+                    if (moveObj.move) {
+                        const uci = moveObj.move;
+                        const pMove = safeGame.move({
+                            from: uci.substring(0,2), to: uci.substring(2,4), 
+                            promotion: uci.length > 4 ? uci.charAt(4) : undefined
+                        });
+                        
+                        if (pMove) {
+                            safeGame.undo(); 
+                            let dbEvalText = '-';
+                            if (moveObj.score !== undefined) {
+                                let scoreVal = parseInt(moveObj.score);
+                                if (Math.abs(scoreVal) > 10000) {
+                                    dbEvalText = (scoreVal > 0 ? "M" : "M-") + Math.max(1, Math.ceil((30000 - Math.abs(scoreVal)) / 2));
+                                } else {
+                                    let evalVal = scoreVal / 100;
+                                    dbEvalText = (evalVal > 0 ? '+' : '') + evalVal.toFixed(2);
+                                }
+                            }
+
+                            html += `
+                                <tr onclick="playUciSequence('${uci}')" class="border-b border-gray-700 last:border-0 hover:bg-gray-700 transition cursor-pointer" title="Click to play move">
+                                    <td class="py-1.5 font-semibold text-gray-200 px-1">${pMove.san}</td>
+                                    <td class="py-1.5 text-right text-gray-400 px-1 font-mono text-xs">${dbEvalText}</td>
+                                </tr>
+                            `;
+                        }
+                    }
+                }
+                dbMovesEl.innerHTML = html || '<tr><td colspan="2" class="text-gray-500 italic pt-2">No master games found</td></tr>';
+            } catch (error) {
+                console.warn("ChessDB API error:", error);
+                dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-red-400 italic text-xs pt-2">Failed to load DB</td></tr>';
+            }
+        }
+
+        async function initEngine() {
+            try {
+                const sfUrl = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
+                const response = await fetch(sfUrl);
+                const code = await response.text();
+                const blob = new Blob([code], { type: 'application/javascript' });
+                
+                engine = new Worker(URL.createObjectURL(blob));
+                
+                engine.onmessage = function(e) {
+                    const msg = e.data;
+                    if (msg.startsWith('info depth') && msg.includes('multipv') && msg.includes('pv')) {
+                        const depthMatch = msg.match(/depth (\d+)/);
+                        if (depthMatch) document.getElementById('engine-depth').innerText = `Depth ${depthMatch[1]}`;
+
+                        const mpvMatch = msg.match(/multipv (\d+)/);
+                        if (!mpvMatch) return;
+                        const pvIndex = parseInt(mpvMatch[1]) - 1; 
+
+                        let evalText = "0.00";
+                        const matchCP = msg.match(/score cp (-?\d+)/);
+                        const matchMate = msg.match(/score mate (-?\d+)/);
+                        
+                        if (matchCP) {
+                            let eval = parseInt(matchCP[1]) / 100;
+                            if (game.turn() === 'b') eval = -eval; 
+                            evalText = (eval > 0 ? "+" : "") + eval.toFixed(2);
+                        } else if (matchMate) {
+                            let mate = parseInt(matchMate[1]);
+                            if (game.turn() === 'b') mate = -mate;
+                            evalText = "M" + mate;
+                        }
+
+                        const pvMatch = msg.match(/pv (.+)/);
+                        if (pvMatch) {
+                            const uciMoves = pvMatch[1].trim().split(/\s+/);
+                            engineLines[pvIndex] = { score: evalText, uci: uciMoves, fen: engineCurrentFen };
+                            renderEngineLines();
+                            if (pvIndex === 0) updateEvalBar(evalText);
+                        }
+                    }
+                };
+                
+                engine.postMessage('uci');
+                engine.postMessage(`setoption name MultiPV value ${settings.multipv}`);
+                triggerEngine();
+            } catch (err) {
+                console.error("Failed to initialize Stockfish:", err);
+                document.getElementById('engine-lines-container').innerHTML = "<span class='text-red-400'>Error loading Stockfish</span>";
+            }
+        }
+
+        function triggerEngine() {
+            if (!engine || !settings.showStockfish) return;
+            
+            engineLines = [];
+            document.getElementById('engine-lines-container').innerHTML = "<div class='text-gray-500 italic'>Calculating...</div>";
+            document.getElementById('engine-depth').innerText = `Depth 0`;
+
+            if (game.game_over()) {
+                document.getElementById('engine-lines-container').innerHTML = "<div>Game Over</div>";
+                return;
+            }
+
+            engine.postMessage('stop');
+            engine.postMessage(`setoption name MultiPV value ${settings.multipv}`);
+            engineCurrentFen = game.fen();
+            engine.postMessage(`position fen ${engineCurrentFen}`);
+            engine.postMessage('go depth 16'); 
+        }
+
+        function renderEngineLines() {
+            const container = document.getElementById('engine-lines-container');
+            if (engineLines.length === 0) return;
+            
+            let html = '';
+            for (let i = 0; i < settings.multipv; i++) {
+                const line = engineLines[i];
+                if (!line) continue;
+                
+                testGame.load(line.fen || game.fen());
+                let sanLineHtml = '';
+                let moveCount = testGame.history().length;
+                let runningUciSequence = [];
+                
+                const validUcis = line.uci.filter(u => u.trim() !== '');
+
+                for(let j=0; j < Math.min(validUcis.length, settings.showFullLines ? 8 : 1); j++) { 
+                    const uci = validUcis[j];
+                    runningUciSequence.push(uci);
+                    
+                    let turn = testGame.turn();
+                    let mCount = Math.floor(moveCount/2) + 1;
+                    const moveNumStr = (turn === 'w') ? `${mCount}. ` : (j === 0 ? `${mCount}... ` : '');
+                    
+                    const pMove = testGame.move({
+                        from: uci.substring(0,2), to: uci.substring(2,4), 
+                        promotion: uci.length > 4 ? uci.charAt(4) : undefined
+                    });
+                    
+                    const moveText = pMove ? pMove.san : uci;
+                    const seqStr = runningUciSequence.join(',');
+                    
+                    sanLineHtml += `<span class="text-gray-400 text-xs pl-1">${moveNumStr}</span>`;
+                    sanLineHtml += `<span class="engine-move-span cursor-pointer font-medium hover:text-white ${j === 0 ? 'text-blue-400 font-bold text-sm mr-2' : 'text-gray-300'}" onclick="playUciSequence('${seqStr}'); event.stopPropagation();" title="Play sequence">${moveText}</span> `;
+                    
+                    if(pMove) moveCount++;
+                    else break;
+                }
+
+                let colorClass = 'text-gray-400 bg-gray-700';
+                if (line.score.startsWith('+') || (line.score.startsWith('M') && !line.score.startsWith('M-'))) {
+                    colorClass = game.turn() === 'w' ? 'text-white bg-green-600/80' : 'text-white bg-red-600/80';
+                } else if (line.score.startsWith('-') || line.score.startsWith('M-')) {
+                    colorClass = game.turn() === 'b' ? 'text-white bg-green-600/80' : 'text-white bg-red-600/80';
+                }
+
+                html += `
+                    <div class="flex items-start gap-2 mb-1.5 leading-tight p-1.5 rounded transition">
+                        <span class="px-1.5 rounded font-mono text-xs shrink-0 ${colorClass} w-[50px] text-center pt-0.5">${line.score}</span>
+                        <div class="flex-1">${sanLineHtml}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // --- TRAINING LOGIC ---
+        function extractPaths(node, currentBranch = []) {
+            if (node.children.length === 0) return currentBranch.length > 0 ? [currentBranch] : [];
+            let paths = [];
+            for (let child of node.children) paths = paths.concat(extractPaths(child, [...currentBranch, child]));
+            return paths;
+        }
+
+        function startTraining(specificLines = null, forceSkipToIndex = -1) {
+            if (!repData.activeId) { showMsg("No Repertoire", "Please select or create a repertoire first."); return; }
+            const rep = repData.repertoires[repData.activeId];
+            
+            if (specificLines) {
+                trainingLines = specificLines;
+            } else {
+                trainingLines = extractPaths(rep.root).filter(path => path.length > 0);
+                if (trainingLines.length === 0) { showMsg("Empty Repertoire", "This repertoire is empty. Build moves first!"); return; }
+                trainingLines.sort(() => Math.random() - 0.5);
+                repData.trainedNodes[repData.activeId] = repData.trainedNodes[repData.activeId] || [];
+            }
+
+            isTraining = true;
+            currentTrainLineIndex = 0;
+            globalForceSkipIndex = forceSkipToIndex;
+            
+            document.getElementById('content-train').children[0].classList.add('hidden');
+            document.getElementById('training-status').classList.remove('hidden');
+            
+            boardFlipped = (rep.color === 'b');
+            applySettingsToUI(); 
+            loadTrainingLine();
+        }
+
+        function stopTraining() {
+            isTraining = false;
+            clearInterval(demoInterval);
+            demoInterval = null;
+            document.getElementById('content-train').children[0].classList.remove('hidden');
+            document.getElementById('training-status').classList.add('hidden');
+            updateMistakesBadge();
+            resetToStart();
+        }
+
+        function loadTrainingLine() {
+            clearInterval(demoInterval);
+            demoInterval = null;
+            if (currentTrainLineIndex >= trainingLines.length) {
+                showMsg("Training Complete!", "You have finished all lines in this session.");
+                stopTraining(); return;
+            }
+            
+            const targetLine = trainingLines[currentTrainLineIndex];
+            currentTrainMoveIndex = 0;
+            const root = repData.repertoires[repData.activeId].root;
+            game.load(root.fen);
+            
+            let skipToIndex = 0;
+            if (globalForceSkipIndex >= 0) {
+                skipToIndex = globalForceSkipIndex;
+                globalForceSkipIndex = -1; // reset after applying
+            } else {
+                let useSmartSkip = document.getElementById('train-smart-skip').checked;
+                if (useSmartSkip && repData.trainedNodes[repData.activeId]) {
+                    const trainedSet = new Set(repData.trainedNodes[repData.activeId]);
+                    for(let i=0; i < targetLine.length - 1; i++) {
+                        if(trainedSet.has(targetLine[i].fen)) skipToIndex = i + 1;
+                        else break;
+                    }
+                }
+            }
+
+            if (skipToIndex > 0) {
+                for(let i=0; i < skipToIndex; i++) game.move(targetLine[i].san);
+                currentTrainMoveIndex = skipToIndex;
+            }
+
+            renderPieces(false);
+            updateLabels();
+            
+            document.getElementById('train-progress').innerText = `Line ${currentTrainLineIndex + 1} of ${trainingLines.length}`;
+            setTrainFeedback(currentTrainMoveIndex > 0 ? "Fast-forwarded to new moves..." : "Ready...", "text-gray-400");
+            checkAutoPlay();
+            updateTrainingCommentUI();
+        }
+
+        function playDemoLine() {
+            const targetLine = trainingLines[currentTrainLineIndex];
+            if (currentTrainMoveIndex >= targetLine.length) return;
+            
+            setTrainFeedback("Playing demo...", "text-blue-400");
+            
+            const savedFen = game.fen();
+            const savedIndex = currentTrainMoveIndex;
+            
+            demoInterval = setInterval(() => {
+                if (currentTrainMoveIndex >= targetLine.length) {
+                    clearInterval(demoInterval);
+                    demoInterval = null;
+                    setTimeout(() => {
+                        game.load(savedFen);
+                        currentTrainMoveIndex = savedIndex;
+                        renderPieces(false); updateLabels(); updateTrainingCommentUI();
+                        setTrainFeedback("Your turn! Try it now.", "text-green-400");
+                        checkAutoPlay();
+                    }, 1000);
+                    return;
+                }
+                
+                const expectedNode = targetLine[currentTrainMoveIndex];
+                const moveDetails = game.move(expectedNode.san);
+                playSound(moveDetails.captured != null);
+                renderPieces(settings.anim, moveDetails.from, moveDetails.to);
+                updateLabels();
+                updateTrainingCommentUI();
+                currentTrainMoveIndex++;
+            }, 1000);
+        }
+
+        function executeTrainMove(moveObj, from, to) {
+            if (demoInterval) return; // Block moves during demo
+            
+            const targetLine = trainingLines[currentTrainLineIndex];
+            const expectedNode = targetLine[currentTrainMoveIndex];
+            const tGame = new Chess(game.fen());
+            const attempt = tGame.move(moveObj);
+
+            if (attempt && attempt.san === expectedNode.san) {
+                game.move(moveObj);
+                renderPieces(settings.anim, from, to);
+                updateLabels();
+                setTrainFeedback("Correct!", "text-green-400");
+                updateTrainingCommentUI();
+                currentTrainMoveIndex++;
+                
+                if (currentTrainMoveIndex >= targetLine.length) {
+                    lineCompleteTrigger();
+                } else checkAutoPlay();
+            } else {
+                setTrainFeedback(`Mistake! Expected: ${expectedNode.san}`, "text-red-400");
+                
+                // Save mistake with context index
+                const lineId = targetLine.map(n => n.san).join('-');
+                const existing = mistakes.find(m => m.line.map(n=>n.san).join('-') === lineId);
+                if (!existing) { 
+                    mistakes.push({ line: [...targetLine], mistakeIndex: currentTrainMoveIndex }); 
+                    updateMistakesBadge(); 
+                    saveState();
+                }
+
+                const boardEl = document.getElementById('board');
+                boardEl.classList.remove('border-gray-700'); boardEl.classList.add('border-red-500');
+                setTimeout(() => { boardEl.classList.remove('border-red-500'); boardEl.classList.add('border-gray-700'); }, 500);
+            }
+        }
+
+        function lineCompleteTrigger() {
+            const targetLine = trainingLines[currentTrainLineIndex];
+            // Mark line as trained
+            if (repData.activeId) {
+                repData.trainedNodes[repData.activeId] = repData.trainedNodes[repData.activeId] || [];
+                targetLine.forEach(node => repData.trainedNodes[repData.activeId].push(node.fen));
+                saveState();
+            }
+            
+            setTimeout(() => {
+                setTrainFeedback("Line Complete!", "text-blue-400");
+                setTimeout(() => { currentTrainLineIndex++; loadTrainingLine(); }, 800);
+            }, 200);
+        }
+
+        function checkAutoPlay() {
+            if (demoInterval) return;
+            const autoPlay = document.querySelector('input[name="train-mode"]:checked').value === 'auto';
+            const repColor = repData.repertoires[repData.activeId].color;
+            
+            if (autoPlay && game.turn() !== repColor) {
+                const targetLine = trainingLines[currentTrainLineIndex];
+                if (currentTrainMoveIndex < targetLine.length) {
+                    const expectedNode = targetLine[currentTrainMoveIndex];
+                    setTimeout(() => {
+                        testGame.load(game.fen());
+                        const moveDetails = testGame.move(expectedNode.san);
+                        
+                        game.move(expectedNode.san);
+                        playSound(moveDetails.captured != null);
+                        renderPieces(settings.anim, moveDetails.from, moveDetails.to);
+                        updateLabels();
+                        updateTrainingCommentUI();
+                        currentTrainMoveIndex++;
+                        
+                        if (currentTrainMoveIndex >= targetLine.length) {
+                            lineCompleteTrigger();
+                        } else setTrainFeedback("Your turn", "text-gray-400");
+                    }, 500);
+                }
+            }
+        }
+
+        function setTrainFeedback(msg, colorClass) {
+            const el = document.getElementById('train-feedback');
+            el.innerText = msg;
+            el.className = `text-lg font-semibold min-h-[30px] transition-colors ${colorClass}`;
+        }
+        
+        function updateTrainingCommentUI() {
+            const targetLine = trainingLines[currentTrainLineIndex];
+            const commentEl = document.getElementById('train-active-comment');
+            if (currentTrainMoveIndex > 0 && currentTrainMoveIndex <= targetLine.length) {
+                const recentNode = targetLine[currentTrainMoveIndex - 1];
+                let txt = '';
+                if (recentNode.variationName) txt += `<strong class="text-blue-300">${recentNode.variationName}:</strong> `;
+                if (recentNode.comment) txt += recentNode.comment;
+                
+                if (txt) {
+                    commentEl.innerHTML = txt; commentEl.classList.remove('hidden'); return;
+                }
+            }
+            commentEl.classList.add('hidden');
+        }
+
+        function updateMistakesBadge() {
+            const badge = document.getElementById('mistake-count');
+            if (mistakes.length > 0) {
+                badge.innerText = mistakes.length; badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden'); 
+            }
+            if (currentMode === 'review') renderMistakesList();
+        }
+
+        function renderMistakesList() {
+            const listEl = document.getElementById('mistakes-list');
+            if (mistakes.length === 0) {
+                listEl.innerHTML = '<div class="text-gray-500 italic text-sm p-4 bg-gray-800 rounded">No mistakes to review! Great job.</div>';
+                return;
+            }
+            let html = '';
+            mistakes.forEach((mObj, idx) => {
+                const lineStr = mObj.line.map((n, i) => i === mObj.mistakeIndex ? `<span class="text-red-400 font-bold underline">${n.san}</span>` : n.san).join(' ');
+                html += `
+                <div class="p-3 bg-gray-800 rounded border border-gray-700 shadow-sm flex flex-col gap-2">
+                    <div class="text-sm text-gray-300">${lineStr}</div>
+                    <div class="flex gap-2">
+                        <button onclick="startSpecificReview(${idx}, false)" class="flex-1 bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded font-semibold transition">Review Full Line</button>
+                        <button onclick="startSpecificReview(${idx}, true)" class="flex-1 bg-red-900/50 hover:bg-red-800/80 text-red-200 border border-red-800 text-xs py-1.5 rounded font-semibold transition">Review Missed Move</button>
+                    </div>
+                </div>`;
+            });
+            listEl.innerHTML = html;
+        }
+
+        function startSpecificReview(mistakeIndex, startAtMistake) {
+            const mObj = mistakes[mistakeIndex];
+            mistakes.splice(mistakeIndex, 1); // remove from mistakes
+            updateMistakesBadge();
+            saveState();
+            
+            switchTab('train');
+            
+            if (startAtMistake) {
+                startTraining([mObj.line], mObj.mistakeIndex);
+            } else {
+                startTraining([mObj.line], -1);
+            }
+        }
+
+        // --- STORAGE ---
+        function serializeNode(node) { 
+            return { 
+                san: node.san, 
+                fen: node.fen, 
+                comment: node.comment || '', 
+                variationName: node.variationName || '',
+                children: node.children.map(c => serializeNode(c)) 
+            }; 
+        }
+        function deserializeNode(data, parent = null) {
+            const node = { 
+                san: data.san, 
+                fen: data.fen, 
+                comment: data.comment || '',
+                variationName: data.variationName || '',
+                parent: parent, 
+                children: [] 
+            };
+            if (data.children) node.children = data.children.map(cData => deserializeNode(cData, node));
+            return node;
+        }
+
+        function saveState() {
+            const toSave = { activeId: repData.activeId, repertoires: {}, trainedNodes: repData.trainedNodes };
+            for (let id in repData.repertoires) {
+                toSave.repertoires[id] = { name: repData.repertoires[id].name, color: repData.repertoires[id].color, root: serializeNode(repData.repertoires[id].root) };
+            }
+            toSave.mistakes = mistakes.map(m => ({
+                line: m.line.map(n => ({ san: n.san, fen: n.fen, variationName: n.variationName, comment: n.comment })),
+                mistakeIndex: m.mistakeIndex
+            }));
+            localStorage.setItem('chess_rep_data_v4', JSON.stringify(toSave));
+            localStorage.setItem('chess_rep_settings_v4', JSON.stringify(settings));
+        }
+
+        function loadState() {
+            const savedData = localStorage.getItem('chess_rep_data_v4') || localStorage.getItem('chess_rep_data');
+            const savedSettings = localStorage.getItem('chess_rep_settings_v4') || localStorage.getItem('chess_rep_settings');
+            if (savedSettings) { try { settings = { ...settings, ...JSON.parse(savedSettings) }; } catch(e){} }
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    repData.activeId = parsed.activeId;
+                    repData.trainedNodes = parsed.trainedNodes || {};
+                    mistakes = parsed.mistakes || [];
+                    for (let id in parsed.repertoires) {
+                        repData.repertoires[id] = { name: parsed.repertoires[id].name, color: parsed.repertoires[id].color, root: deserializeNode(parsed.repertoires[id].root) };
+                    }
+                } catch (e) { console.error("Corrupted local data", e); }
+            }
+        }
+
+        function exportAllRepertoires() {
+            try {
+                const toSave = { version: "4.0", repertoires: {} };
+                for (let id in repData.repertoires) toSave.repertoires[id] = { name: repData.repertoires[id].name, color: repData.repertoires[id].color, root: serializeNode(repData.repertoires[id].root) };
+                const jsonStr = JSON.stringify(toSave, null, 2);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `chess_backup_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                showMsg("Success", "All repertoires backed up successfully.");
+            } catch (err) { showMsg("Export Error", "Failed to save: " + err.message); }
+        }
+
+        function importAllRepertoires(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.repertoires) {
+                        for (let id in data.repertoires) repData.repertoires[id] = { name: data.repertoires[id].name, color: data.repertoires[id].color, root: deserializeNode(data.repertoires[id].root) };
+                    } else if (data.fen && data.san === 'Root') {
+                        const id = 'rep_' + Date.now();
+                        repData.repertoires[id] = { name: "Imported Repertoire", color: "w", root: deserializeNode(data) };
+                        repData.activeId = id;
+                    } else throw new Error("Invalid Format");
+                    
+                    saveState();
+                    if(repData.activeId) loadRepertoire(repData.activeId);
+                    else { updateRepertoireUI(); renderRepertoiresList(); }
+                    showMsg("Success", "Repertoires loaded successfully!");
+                } catch (err) { showMsg("Import Error", "Failed to load file. Ensure it is a valid backup JSON."); }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
