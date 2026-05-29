@@ -3,9 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repertoire64 - Chess Opening Trainer</title>
-    <!-- Cool Chess Themed Favicon -->
+    
+    <!-- SEO & Meta Tags -->
+    <title>Repertoire64 - Interactive Chess Opening Trainer & Builder</title>
+    <meta name="description" content="Master your chess openings with Repertoire64. A free, single-file chess repertoire builder and trainer featuring Stockfish evaluation, ChessDB master games, and smart spaced repetition.">
+    <meta name="keywords" content="chess, repertoire, opening trainer, chess openings, stockfish, chessdb, chess study, chess tool, web chess, interactive chess">
+    <meta name="author" content="PyTheorem07">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:title" content="Repertoire64 - Professional Chess Opening Trainer">
+    <meta property="og:description" content="Build, train, and study your chess openings with built-in Stockfish analysis and master databases.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
+    <meta property="og:url" content="https://repertoire64.com"> <!-- Replace with actual URL if hosted -->
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Repertoire64 - Chess Opening Trainer">
+    <meta name="twitter:description" content="Build and train your chess repertoires directly in your browser.">
+    <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
+
+    <!-- Favicon (Shows in browser tabs and some search engines) -->
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" type="image/svg+xml">
+    <!-- Apple Touch Icon (For iOS bookmarks/home screen) -->
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -1501,7 +1523,10 @@
                 
                 const validUcis = line.uci.filter(u => u.trim() !== '');
 
-                for(let j=0; j < Math.min(validUcis.length, settings.showFullLines ? 8 : 1); j++) { 
+                // Always show at least the first move, or up to 8 if full lines is enabled
+                let movesToShow = settings.showFullLines ? 8 : 1;
+                
+                for(let j=0; j < Math.min(validUcis.length, movesToShow); j++) { 
                     const uci = validUcis[j];
                     runningUciSequence.push(uci);
                     
@@ -1518,6 +1543,8 @@
                     const seqStr = runningUciSequence.join(',');
                     
                     sanLineHtml += `<span class="text-gray-400 text-xs pl-1">${moveNumStr}</span>`;
+                    
+                    // Note the addition of the onclick handler to play the sequence when clicked
                     sanLineHtml += `<span class="engine-move-span cursor-pointer font-medium hover:text-white ${j === 0 ? 'text-blue-400 font-bold text-sm mr-2' : 'text-gray-300'}" onclick="playUciSequence('${seqStr}'); event.stopPropagation();" title="Play sequence">${moveText}</span> `;
                     
                     if(pMove) moveCount++;
@@ -1531,8 +1558,10 @@
                     colorClass = game.turn() === 'b' ? 'text-white bg-green-600/80' : 'text-white bg-red-600/80';
                 }
 
+                // Add cursor-pointer and onclick to the whole row container as well for easier clicking
+                const firstUciMove = validUcis.length > 0 ? validUcis[0] : '';
                 html += `
-                    <div class="flex items-start gap-2 mb-1.5 leading-tight p-1.5 rounded transition">
+                    <div class="flex items-start gap-2 mb-1.5 leading-tight p-1.5 rounded transition hover:bg-gray-700 cursor-pointer" onclick="playUciSequence('${firstUciMove}')" title="Play move">
                         <span class="px-1.5 rounded font-mono text-xs shrink-0 ${colorClass} w-[50px] text-center pt-0.5">${line.score}</span>
                         <div class="flex-1">${sanLineHtml}</div>
                     </div>
