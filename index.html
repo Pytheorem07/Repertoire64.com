@@ -4,29 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- SEO & Meta Tags -->
     <title>Repertoire64 - Interactive Chess Opening Trainer & Builder</title>
     <meta name="description" content="Master your chess openings with Repertoire64. A free, single-file chess repertoire builder and trainer featuring Stockfish evaluation, ChessDB master games, and smart spaced repetition.">
     <meta name="keywords" content="chess, repertoire, opening trainer, chess openings, stockfish, chessdb, chess study, chess tool, web chess, interactive chess">
     <meta name="author" content="PyTheorem07">
     <meta name="robots" content="index, follow">
     
-    <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:title" content="Repertoire64 - Professional Chess Opening Trainer">
     <meta property="og:description" content="Build, train, and study your chess openings with built-in Stockfish analysis and master databases.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
-    <meta property="og:url" content="https://repertoire64.com"> <!-- Replace with actual URL if hosted -->
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Repertoire64 - Chess Opening Trainer">
-    <meta name="twitter:description" content="Build and train your chess repertoires directly in your browser.">
-    <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
+    <meta property="og:url" content="https://repertoire64.com">
 
-    <!-- Favicon (Shows in browser tabs and some search engines) -->
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" type="image/svg+xml">
-    <!-- Apple Touch Icon (For iOS bookmarks/home screen) -->
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -41,14 +31,25 @@
         .highlight { box-shadow: inset 0 0 0 4px rgba(255, 255, 0, 0.5); z-index: 5; }
         .selected { background-color: rgba(20, 85, 30, 0.5) !important; z-index: 5; }
         
+        .square-coord {
+            position: absolute;
+            font-size: 9px;
+            font-weight: bold;
+            opacity: 0.75;
+            user-select: none;
+            pointer-events: none;
+        }
+        .coord-rank { left: 2px; top: 2px; }
+        .coord-file { right: 2px; bottom: 2px; }
+
         .legal-dot {
             position: absolute;
-            width: 25%;
-            height: 25%;
+            width: 24%;
+            height: 24%;
             background-color: rgba(0, 0, 0, 0.25);
             border-radius: 50%;
-            top: 37.5%;
-            left: 37.5%;
+            top: 38%;
+            left: 38%;
             pointer-events: none;
             z-index: 6;
         }
@@ -61,7 +62,7 @@
             cursor: grab;
             user-select: none;
             background-size: 100% 100%;
-            touch-action: none; /* Prevent scrolling while dragging */
+            touch-action: none;
         }
         
         .piece-animated:active { cursor: grabbing; z-index: 100 !important; }
@@ -76,7 +77,6 @@
 </head>
 <body class="bg-gray-900 text-gray-100 h-screen flex flex-col overflow-hidden">
 
-    <!-- Header -->
     <header class="bg-gray-800 shadow-md p-4 flex flex-col md:flex-row justify-between items-center z-20 shrink-0 gap-4">
         <div class="flex items-center gap-3">
             <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" class="w-8 h-8 drop-shadow-md" alt="Knight Logo">
@@ -87,7 +87,7 @@
                 </a>
             </div>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap justify-center">
             <p id="active-rep-label" class="text-xs text-gray-400 font-semibold uppercase tracking-wider hidden md:block mr-2">No Repertoire Selected</p>
             <button onclick="enterExploreMode()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Explore</span>
@@ -104,36 +104,37 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
         
         <!-- Left Panel: Engine & Explorer -->
         <aside class="w-full md:w-1/4 bg-gray-800 border-r border-gray-700 p-4 flex flex-col overflow-y-auto shrink-0 md:max-w-[320px]">
-            <div class="mb-6">
-                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 text-blue-400">Position</h2>
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-2 text-blue-400">Position</h2>
                 <p id="opening-name" class="text-sm font-medium text-gray-300">Starting Position</p>
             </div>
 
-            <div class="mb-6 flex-shrink-0 flex flex-col max-h-[45%]">
-                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 text-blue-400 flex justify-between items-center">
-                    <div class="flex items-center gap-3">
+            <!-- Stockfish Engine Interface -->
+            <div class="mb-4 flex-shrink-0 flex flex-col max-h-[40%]">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-2 text-blue-400 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
                         <span>Stockfish 10</span>
                         <button onclick="toggleSetting('showFullLines')" class="text-gray-400 hover:text-white transition" title="Toggle Full Lines">
                             <i id="icon-full-lines" class="fa-solid fa-list"></i>
                         </button>
-                        <button onclick="toggleSetting('showStockfish')" class="text-gray-400 hover:text-white transition" title="Toggle Engine Visibility">
+                        <button onclick="toggleSetting('showStockfish')" class="text-gray-400 hover:text-white transition" title="Toggle Engine">
                             <i id="icon-stockfish" class="fa-solid fa-eye"></i>
                         </button>
                     </div>
                     <span id="engine-depth" class="text-xs text-gray-500">Depth 0</span>
                 </h2>
-                <div id="engine-lines-container" class="overflow-y-auto text-sm text-gray-300 space-y-1 pr-1">
+                <div id="engine-lines-container" class="overflow-y-auto text-sm text-gray-300 space-y-1.5 pr-1">
                     <div class="text-gray-500 italic">Calculating...</div>
                 </div>
             </div>
 
+            <!-- ChessDB Database Interface -->
             <div class="flex-1 flex flex-col min-h-0">
-                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-3 text-blue-400 flex justify-between items-center">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-2 text-blue-400 flex justify-between items-center">
                     <span>ChessDB (Public)</span>
                     <button onclick="toggleSetting('showChessDB')" class="text-gray-400 hover:text-white transition" title="Toggle DB Visibility">
                         <i id="icon-chessdb" class="fa-solid fa-eye"></i>
@@ -143,8 +144,8 @@
                     <table class="w-full text-left">
                         <thead>
                             <tr class="text-gray-500 border-b border-gray-700">
-                                <th class="pb-2 px-1">Move</th>
-                                <th class="pb-2 px-1 text-right">Eval Score</th>
+                                <th class="pb-1 px-1">Move</th>
+                                <th class="pb-1 px-1 text-right">Eval Score</th>
                             </tr>
                         </thead>
                         <tbody id="db-moves">
@@ -168,22 +169,25 @@
 
                 <!-- Board Wrapper -->
                 <div id="board-wrapper" class="flex-1 flex flex-col items-center">
-                    <div class="w-full mb-2 flex justify-between items-center text-sm font-semibold shrink-0">
+                    <div class="w-full mb-1 flex justify-between items-center text-sm font-semibold shrink-0">
                         <div id="opponent-status" class="text-gray-400">Black</div>
-                        <div id="turn-indicator" class="px-2 py-1 rounded bg-gray-700 text-gray-300 text-xs">White to move</div>
+                        <div id="turn-indicator" class="px-2 py-0.5 rounded bg-gray-700 text-gray-300 text-xs">White to move</div>
                     </div>
 
                     <div id="board" class="w-full aspect-square shadow-2xl rounded border-4 border-gray-700 relative bg-gray-700 overflow-hidden shrink-0 touch-none">
                         <!-- Grid and Pieces injected by JS -->
                     </div>
 
-                    <div class="w-full mt-2 flex justify-between items-center text-sm font-semibold shrink-0">
+                    <div class="w-full mt-1 flex justify-between items-center text-sm font-semibold shrink-0">
                         <div id="player-status" class="text-gray-400">White</div>
-                        <div class="flex gap-2">
-                            <button onclick="flipBoard()" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition" title="Flip Board">
+                        <div class="flex gap-1.5 sm:gap-2">
+                            <button id="btn-watch-rep" onclick="toggleWatchRepertoire()" class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded transition flex items-center gap-1.5 text-xs font-bold" title="Watch Repertoire Tour">
+                                <i class="fa-solid fa-play"></i> <span>Watch Rep</span>
+                            </button>
+                            <button onclick="flipBoard()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition text-xs" title="Flip Board">
                                 <i class="fa-solid fa-retweet"></i>
                             </button>
-                            <button onclick="resetToStart()" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition" title="Reset to Start">
+                            <button onclick="resetToStart()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition text-xs" title="Reset to Start">
                                 <i class="fa-solid fa-backward-step"></i>
                             </button>
                         </div>
@@ -197,24 +201,25 @@
         <aside class="w-full md:w-1/3 bg-gray-800 border-l border-gray-700 flex flex-col shrink-0 md:max-w-[400px]">
             <!-- Tabs -->
             <div class="flex border-b border-gray-700 bg-gray-800 shrink-0">
-                <button onclick="switchTab('build')" id="tab-build" class="flex-1 py-3 text-sm font-semibold text-blue-400 border-b-2 border-blue-500 transition">Build</button>
-                <button onclick="switchTab('train')" id="tab-train" class="flex-1 py-3 text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Train</button>
-                <button onclick="switchTab('review')" id="tab-review" class="flex-1 py-3 text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Review <span id="mistake-count" class="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                <button onclick="switchTab('build')" id="tab-build" class="flex-1 py-3 text-xs md:text-sm font-semibold text-blue-400 border-b-2 border-blue-500 transition">Build</button>
+                <button onclick="switchTab('train')" id="tab-train" class="flex-1 py-3 text-xs md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Train</button>
+                <button onclick="switchTab('review')" id="tab-review" class="flex-1 py-3 text-xs md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Review <span id="mistake-count" class="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                <button onclick="switchTab('games')" id="tab-games" class="flex-1 py-3 text-xs md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Games</button>
             </div>
 
             <!-- Build Mode Content -->
             <div id="content-build" class="flex-1 flex flex-col p-4 overflow-hidden relative">
                 <!-- Overlay if no repertoire is active -->
-                <div id="no-rep-overlay" class="absolute inset-0 bg-gray-800/90 z-10 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm">
+                <div id="no-rep-overlay" class="absolute inset-0 bg-gray-800/95 z-10 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm">
                     <i class="fa-solid fa-book-open text-4xl text-gray-500 mb-4"></i>
                     <h3 class="text-lg font-bold text-white mb-2">No Repertoire Active</h3>
                     <p class="text-sm text-gray-400 mb-4">Create or select a repertoire to start building your lines.</p>
                     <button onclick="openRepertoiresModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition">Manage Repertoires</button>
                 </div>
 
-                <div class="mb-4 shrink-0 flex gap-2">
-                    <button onclick="exportAllRepertoires()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-sm transition"><i class="fa-solid fa-download mr-1"></i> Backup All</button>
-                    <label class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-sm transition text-center cursor-pointer">
+                <div class="mb-3 shrink-0 flex gap-2">
+                    <button onclick="exportAllRepertoires()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-1.5 rounded text-xs transition"><i class="fa-solid fa-download mr-1"></i> Backup All</button>
+                    <label class="flex-1 bg-gray-700 hover:bg-gray-600 py-1.5 rounded text-xs transition text-center cursor-pointer">
                         <i class="fa-solid fa-upload mr-1"></i> Import
                         <input type="file" class="hidden" accept=".json" onchange="importAllRepertoires(event)">
                     </label>
@@ -224,29 +229,75 @@
                     <h3 class="text-xs uppercase text-gray-500 font-bold mb-2 shrink-0 flex justify-between items-center">
                         <span>Current Line</span>
                     </h3>
-                    <div id="move-history" class="text-sm leading-relaxed text-gray-300 mb-4">
+                    <div id="move-history" class="text-sm leading-relaxed text-gray-300 mb-2">
                         <!-- History injected here -->
                     </div>
                     
-                    <!-- Annotations UI -->
-                    <div id="node-annotations" class="mt-2 pt-3 border-t border-gray-700 hidden">
-                        <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Variation Name</label>
-                        <input type="text" id="node-var-name" placeholder="e.g. Main Line, Trap..." class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 mb-3" onchange="updateNodeAnnotation()">
-                        
-                        <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Comment</label>
-                        <textarea id="node-comment" placeholder="Add notes on this position..." class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 h-20 resize-none" onchange="updateNodeAnnotation()"></textarea>
+                    <!-- ChessDB Auto-Builder From Current Position Config -->
+                    <div class="mb-4 bg-gray-800 p-2.5 rounded border border-gray-700 text-xs flex flex-col gap-2">
+                        <div class="font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-gears"></i> Auto-Build Tree Config
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">Plies Deep (Moves)</label>
+                                <select id="autobuild-depth" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[11px] focus:outline-none">
+                                    <option value="4">4 plies (2 moves)</option>
+                                    <option value="6">6 plies (3 moves)</option>
+                                    <option value="8" selected>8 plies (4 moves)</option>
+                                    <option value="10">10 plies (5 moves)</option>
+                                    <option value="12">12 plies (6 moves)</option>
+                                    <option value="auto">Auto (Dynamic)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">Opponent Branching</label>
+                                <select id="autobuild-opp-branching" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[11px] focus:outline-none">
+                                    <option value="1">1 (Mainlines only)</option>
+                                    <option value="2" selected>2 moves (Solid)</option>
+                                    <option value="3">3 moves (Thorough)</option>
+                                    <option value="auto">Auto (Popularity)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between py-0.5">
+                            <span class="text-[10px] text-gray-300">Allow multiple moves for my color</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="autobuild-my-branching" class="sr-only peer">
+                                <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <button onclick="buildComprehensiveRepertoireFromCurrentMoment()" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white py-2 px-3 rounded text-xs font-bold transition flex items-center justify-center gap-1.5 shadow mt-1">
+                            <i class="fa-solid fa-network-wired"></i> Auto-Build Tree from Here
+                        </button>
                     </div>
                     
-                    <div id="variations-container" class="mt-4 pt-4 border-t border-gray-700 shrink-0">
-                        <h3 class="text-xs uppercase text-gray-500 font-bold mb-2">Alternative Moves</h3>
-                        <div id="variations-list" class="flex flex-wrap gap-2">
+                    <!-- Annotations UI -->
+                    <div id="node-annotations" class="mt-2 pt-2 border-t border-gray-700 hidden">
+                        <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Variation Name</label>
+                        <input type="text" id="node-var-name" placeholder="e.g. Main Line, Trap..." class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 mb-2" onchange="updateNodeAnnotation()">
+                        
+                        <label class="block text-xs uppercase text-gray-500 font-bold mb-1">Comment</label>
+                        <textarea id="node-comment" placeholder="Add notes on this position..." class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 h-16 resize-none" onchange="updateNodeAnnotation()"></textarea>
+                    </div>
+                    
+                    <div id="variations-container" class="mt-2 pt-2 border-t border-gray-700 shrink-0">
+                        <h3 class="text-xs uppercase text-gray-500 font-bold mb-1">Alternative Moves</h3>
+                        <div id="variations-list" class="flex flex-wrap gap-1.5">
                             <!-- Variations injected here -->
                         </div>
                     </div>
+
+                    <!-- PGN Importer Box -->
+                    <div class="mt-4 pt-4 border-t border-gray-700 shrink-0">
+                        <h3 class="text-xs uppercase text-gray-500 font-bold mb-1">Import PGN to Repertoire</h3>
+                        <textarea id="pgn-import-text" placeholder="Paste single PGN notation here (e.g. 1. e4 e5 2. Nf3...)" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white h-16 resize-none focus:outline-none focus:border-blue-500 mb-2"></textarea>
+                        <button onclick="importPgnText()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded text-xs font-bold transition">Parse PGN & Append</button>
+                    </div>
                 </div>
 
-                <div class="mt-4 shrink-0 flex justify-end">
-                    <button onclick="deleteCurrentNode()" class="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 transition">
+                <div class="mt-2 shrink-0 flex justify-end">
+                    <button onclick="deleteCurrentNode()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 transition">
                         <i class="fa-solid fa-trash"></i> Delete this move
                     </button>
                 </div>
@@ -255,76 +306,133 @@
             <!-- Train Mode Content -->
             <div id="content-train" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
                 <div class="bg-gray-900 rounded-lg p-4 border border-gray-700 mb-4 shrink-0 overflow-y-auto">
-                    <h3 class="font-semibold text-lg mb-2 text-blue-400">Training Setup</h3>
-                    <p class="text-sm text-gray-400 mb-4">You will be tested on lines in <span id="train-rep-name" class="text-white font-semibold"></span>.</p>
+                    <h3 class="font-semibold text-base mb-2 text-blue-400">Training Setup</h3>
+                    <p class="text-sm text-gray-400 mb-2">You will be tested on lines in <span id="train-rep-name" class="text-white font-semibold"></span>.</p>
                     
-                    <div class="mb-4 flex flex-col gap-3">
+                    <div class="mb-3 flex flex-col gap-2">
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="train-mode" value="auto" checked class="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-300">Auto-play opponent's moves</span>
+                            <span class="ml-2 text-xs text-gray-300">Auto-play opponent's moves</span>
                         </label>
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="train-mode" value="manual" class="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-300">Play both sides manually</span>
+                            <span class="ml-2 text-xs text-gray-300">Play both sides manually</span>
                         </label>
                     </div>
 
-                    <div class="mb-6 pt-4 border-t border-gray-700">
+                    <div class="mb-4 pt-2 border-t border-gray-700">
                         <label class="flex items-center cursor-pointer" title="Skips opening moves you've already trained in previous lines">
                             <input type="checkbox" id="train-smart-skip" checked class="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-300 font-semibold text-blue-300">Smart Skip Mode (Start from deviations)</span>
+                            <span class="ml-2 text-xs text-gray-300 font-semibold text-blue-300">Smart Skip Mode (Start from deviations)</span>
                         </label>
                     </div>
 
-                    <button onclick="startTraining()" id="btn-start-train" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold transition">
+                    <button onclick="startTraining()" id="btn-start-train" class="w-full bg-blue-600 hover:bg-blue-700 py-2.5 rounded-lg font-bold transition text-sm">
                         Start Training
                     </button>
                 </div>
 
                 <div id="training-status" class="flex-1 flex flex-col items-center justify-center text-center hidden">
-                    <div class="text-4xl mb-2 text-blue-500"><i class="fa-solid fa-dumbbell"></i></div>
-                    <h3 class="text-xl font-bold mb-1">Training Active</h3>
-                    <p id="train-progress" class="text-gray-400 mb-2">Line 1 of 5</p>
+                    <div class="text-3xl mb-1 text-blue-500"><i class="fa-solid fa-dumbbell"></i></div>
+                    <h3 class="text-lg font-bold mb-0.5">Training Active</h3>
+                    <p id="train-progress" class="text-gray-400 text-xs mb-1">Line 1 of 5</p>
                     
-                    <div id="train-active-comment" class="text-sm text-gray-300 italic mb-4 max-w-[90%] bg-gray-800 p-2 rounded hidden"></div>
+                    <div id="train-active-comment" class="text-xs text-gray-300 italic mb-2 max-w-[90%] bg-gray-800 p-2 rounded hidden"></div>
                     
-                    <p id="train-feedback" class="text-lg font-semibold text-yellow-400 min-h-[30px]"></p>
+                    <p id="train-feedback" class="text-sm font-semibold text-yellow-400 min-h-[24px] mb-2"></p>
                     
-                    <div class="mt-6 flex flex-col gap-2">
-                        <button onclick="playDemoLine()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded shadow transition text-sm font-semibold flex items-center justify-center gap-2">
+                    <div class="mt-4 flex flex-col gap-2">
+                        <button onclick="playDemoLine()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded shadow transition text-xs font-semibold flex items-center justify-center gap-2">
                             <i class="fa-solid fa-play"></i> Watch Line First
                         </button>
-                        <button onclick="stopTraining()" class="text-sm text-gray-500 hover:text-white transition underline">Stop Training</button>
+                        <button onclick="stopTraining()" class="text-xs text-gray-500 hover:text-white transition underline">Stop Training</button>
                     </div>
                 </div>
             </div>
 
             <!-- Review Mode Content -->
             <div id="content-review" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700 mb-4 flex-1 overflow-y-auto">
-                    <h3 class="font-semibold text-lg mb-2 text-red-400">Mistakes to Review</h3>
-                    <p class="text-sm text-gray-400 mb-4">Lines where you played an incorrect move.</p>
+                <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 flex-1 overflow-y-auto">
+                    <h3 class="font-semibold text-base mb-1 text-red-400">Mistakes to Review</h3>
+                    <p class="text-xs text-gray-400 mb-2">Lines where you played an incorrect move.</p>
                     
-                    <div id="mistakes-list" class="space-y-3">
+                    <div id="mistakes-list" class="space-y-2.5">
                         <!-- Mistakes injected here -->
                     </div>
+                </div>
+            </div>
+
+            <!-- Games Mode Content -->
+            <div id="content-games" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+                <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
+                    <h3 class="font-semibold text-base mb-1 text-green-400 flex justify-between items-center">
+                        <span>Find Deviations</span>
+                        <div class="text-[10px] text-gray-500" id="analysis-stats">Unanalyzed</div>
+                    </h3>
+                    <p class="text-[11px] text-gray-400 mb-2">Scan games to identify where you or opponents diverged from your prep.</p>
+                    
+                    <div class="flex gap-1.5 mb-2">
+                        <select id="games-platform" class="bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <option value="lichess">Lichess</option>
+                            <option value="chesscom">Chess.com</option>
+                        </select>
+                        <input type="text" id="games-username" placeholder="Username" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-0.5">Games limit</label>
+                            <select id="games-limit" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
+                                <option value="10">10 games</option>
+                                <option value="25" selected>25 games</option>
+                                <option value="50">50 games</option>
+                                <option value="100">100 games</option>
+                                <option value="150">150 games</option>
+                                <option value="200">200 games</option>
+                                <option value="250">250 games</option>
+                                <option value="300">300 games</option>
+                                <option value="400">400 games</option>
+                                <option value="500">500 games</option>
+                                <option value="1000">1000 games</option>
+                                <option value="1500">1500 games</option>
+                                <option value="2000">2000 games</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-0.5">Deviation starting from</label>
+                            <select id="games-start-move" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
+                                <option value="1">Move 1 and on</option>
+                                <option value="2">Move 2 and on</option>
+                                <option value="3" selected>Move 3 and on</option>
+                                <option value="4">Move 4 and on</option>
+                                <option value="5">Move 5 and on</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="fetchAndAnalyzeGames()" id="btn-fetch-games" class="w-full bg-green-600 hover:bg-green-700 py-1.5 rounded font-bold transition text-xs text-white">
+                        Analyze Recent Games
+                    </button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto pr-1" id="deviations-list">
+                    <div class="text-gray-500 text-xs text-center mt-4">Deviations will appear here.</div>
                 </div>
             </div>
 
         </aside>
     </main>
 
-    <!-- Modals (Repertoires, Settings, Message, Instructions, Confirm) -->
-    
+    <!-- Modals -->
     <div id="reps-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
-        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-lg w-full mx-4 shadow-2xl flex flex-col max-h-[80vh]">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-lg w-full mx-4 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                 <h2 class="text-xl font-bold text-white">Your Repertoires</h2>
                 <button onclick="closeRepertoiresModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <div id="reps-list" class="flex-1 overflow-y-auto space-y-2 mb-4">
-                <!-- Repertoires injected here -->
+                <!-- Repertoires injected here with inline renaming -->
             </div>
             
             <div class="border-t border-gray-700 pt-4 mt-2">
@@ -338,9 +446,76 @@
                     <button onclick="createNewRepertoire()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold transition">Add</button>
                 </div>
             </div>
+
+            <!-- Native ChessDB Craft Repertoire Section -->
+            <div class="border-t border-gray-700 pt-4 mt-4">
+                <h3 class="text-sm font-semibold text-indigo-400 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic"></i> ChessDB Repertoire Crafter
+                </h3>
+                <p class="text-xs text-gray-400 mb-3">Instantly generate a complete, computer-approved opening repertoire from scratch using ChessDB master database statistics.</p>
+                
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-0.5">Your Color</label>
+                        <select id="chessdb-rep-color" class="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                            <option value="w">White</option>
+                            <option value="b">Black</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-0.5">Play Style</label>
+                        <select id="chessdb-rep-style" class="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                            <option value="Aggressive">Aggressive (Gambits & sharp lines)</option>
+                            <option value="Positional">Positional (Solid, strategic setups)</option>
+                            <option value="Out of Book">Out of Book (Surprise & off-beat lines)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-0.5">Moves Deep (Plies)</label>
+                        <select id="chessdb-rep-depth" class="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                            <option value="4">4 plies (Short)</option>
+                            <option value="6" selected>6 plies (Standard)</option>
+                            <option value="8">8 plies (Deep)</option>
+                            <option value="10">10 plies (Grandmaster)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-0.5">Name (Optional)</label>
+                        <input type="text" id="chessdb-rep-name-input" placeholder="e.g. My Openings" class="w-full bg-gray-950 border border-gray-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                    </div>
+                </div>
+                
+                <button onclick="chessDbCraftRepertoire()" id="btn-chessdb-craft" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-wand-magic"></i> Craft ChessDB Repertoire
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- Edit Repertoire Lines Modal -->
+    <div id="edit-rep-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[55] hidden">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-4xl mx-4 shadow-2xl flex flex-col h-[85vh]">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700 shrink-0">
+                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-pen-to-square mr-2"></i> Modify Repertoire Lines</h2>
+                <button onclick="closeEditRepertoireModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Lines List -->
+                <div class="w-1/3 border-r border-gray-700 bg-gray-800 p-3 overflow-y-auto" id="edit-lines-list">
+                    <!-- Loaded dynamically -->
+                </div>
+                <!-- Nodes Editor -->
+                <div class="w-2/3 p-4 overflow-y-auto bg-gray-900" id="edit-nodes-list">
+                    <div class="text-gray-500 italic text-center mt-10">Select a line from the left to edit its moves and comments.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-md w-full mx-4 shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
@@ -355,6 +530,24 @@
                         <span id="setting-size-val">500px</span>
                     </label>
                     <input type="range" id="setting-size" min="300" max="800" step="10" value="500" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Playback Speed Slider -->
+                <div>
+                    <label class="flex justify-between text-sm text-gray-300 mb-2">
+                        <span>Playback Speed (Tours & Demos)</span>
+                        <span id="setting-playback-val">1200ms</span>
+                    </label>
+                    <input type="range" id="setting-playback" min="300" max="3000" step="100" value="1200" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Piece Slide Transition speed -->
+                <div>
+                    <label class="flex justify-between text-sm text-gray-300 mb-2">
+                        <span>Piece Slide Animation Duration</span>
+                        <span id="setting-anim-speed-val">0.25s</span>
+                    </label>
+                    <input type="range" id="setting-anim-speed" min="0.05" max="1.0" step="0.05" value="0.25" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
                 </div>
                 
                 <!-- Visibility Toggles -->
@@ -401,6 +594,13 @@
                             <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
+                    <div class="flex items-center justify-between col-span-2">
+                        <span class="text-sm text-gray-300">Show Coordinates</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-coords" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
                 </div>
 
                 <div>
@@ -433,6 +633,26 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- Saved Lichess / Chess.com account profile settings inside local storage -->
+                <div class="border-t border-gray-700 pt-4 mt-2">
+                    <h3 class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wide"><i class="fa-solid fa-user-gear mr-1"></i> Saved Chess Account</h3>
+                    <p class="text-[11px] text-gray-400 mb-2">Save your username to skip entering it in Games tab on every load.</p>
+                    <div class="flex gap-2 mb-2">
+                        <select id="setting-platform" class="bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none w-1/3">
+                            <option value="lichess">Lichess</option>
+                            <option value="chesscom">Chess.com</option>
+                        </select>
+                        <input type="text" id="setting-username" placeholder="Username" class="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <button onclick="clearSavedAccount()" class="text-red-400 hover:text-red-300 text-[10px] flex items-center gap-1 transition">
+                            <i class="fa-solid fa-user-slash"></i> Remove saved account
+                        </button>
+                        <span class="text-[10px] text-gray-500 italic">Saved in LocalStorage</span>
+                    </div>
+                </div>
+
             </div>
             
             <div class="mt-6 flex justify-end">
@@ -441,7 +661,7 @@
         </div>
     </div>
 
-    <!-- Message Modal -->
+    <!-- Message Popup Modal -->
     <div id="msg-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] hidden opacity-0 transition-opacity">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="msg-modal-content">
             <h3 id="msg-title" class="text-xl font-bold mb-2">Message</h3>
@@ -452,7 +672,7 @@
         </div>
     </div>
 
-    <!-- Confirm Modal -->
+    <!-- Confirmation Modal -->
     <div id="confirm-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[65] hidden opacity-0 transition-opacity">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="confirm-modal-content">
             <h3 id="confirm-title" class="text-xl font-bold mb-2 text-white">Confirm</h3>
@@ -464,20 +684,39 @@
         </div>
     </div>
 
+    <!-- Instructions Modal (Explainer Menu) -->
     <div id="instructions-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
         <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-2xl w-full mx-4 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-                <h2 class="text-2xl font-bold text-blue-400"><i class="fa-solid fa-graduation-cap mr-2"></i> How to Use</h2>
+                <h2 class="text-2xl font-bold text-blue-400"><i class="fa-solid fa-graduation-cap mr-2"></i> How to Use Repertoire64</h2>
                 <button onclick="closeInstructions()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
-                <p><strong>1. Repertoires:</strong> Open the Repertoires menu (top right) to create and manage multiple repertoires.</p>
-                <p><strong>2. Build & Annotate:</strong> Play moves to build lines. Add names and comments to positions. Click Stockfish moves to play them.</p>
-                <p><strong>3. Smart Training:</strong> The trainer remembers lines you've trained. "Smart Skip" auto-plays the start of branching lines to save you time.</p>
-                <p><strong>4. Drag & Drop:</strong> You can click or drag pieces naturally. Turn on Legal Dots in Settings if you want hints.</p>
+            
+            <div class="space-y-6 text-gray-300 text-sm leading-relaxed">
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-hammer text-gray-400 mr-2"></i> 1. Build Your Openings</h3>
+                    <p>Click and drag pieces (or simply click the destination square) to record moves. Under the <strong>Build</strong> tab, write variation names and comments for any move. Add as many branching alternative moves as you want!</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-network-wired text-indigo-400 mr-2"></i> 2. ChessDB Auto-Build & Repertoire Crafter</h3>
+                    <p>Harness the power of the public ChessDB master games database to auto-generate lines in seconds. Build a brand new complete theoretical opening tree using the <strong>ChessDB Repertoire Crafter</strong> in the repertoires menu (matching Aggressive, Positional, or Out of Book styles), or recursively expand any existing line directly from the board!</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-robot text-gray-400 mr-2"></i> 3. Deep Engine & DB Analysis</h3>
+                    <p>Stockfish calculates top-tier move options in Standard Algebraic Notation (e.g. <strong>e4</strong> or <strong>Nf3</strong>) alongside evaluation metrics. Click any engine path to automatically execute that sequence on the board. ChessDB query logs keep you aligned with optimal master theory.</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-dumbbell text-gray-400 mr-2"></i> 4. Spaced repetition & Repertoire Tour</h3>
+                    <p>Launch customized study lines in the <strong>Train</strong> tab. By default, the program auto-plays opponent actions. Use the new <strong>Watch Rep</strong> button below the chessboard to automatically sit back and watch your whole repertoire played out beautifully branch-by-branch!</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-magnifying-glass-chart text-gray-400 mr-2"></i> 5. Deviation Analysis</h3>
+                    <p>Under the <strong>Games</strong> tab, input your Lichess or Chess.com username. The application downloads and scans recent games, pinpointing exactly where your play strayed from your documented preparation, allowing you to instantly add those lines to your repertoire with a single click.</p>
+                </section>
             </div>
+            
             <div class="mt-8 flex justify-end">
-                <button onclick="closeInstructions()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition">Got it!</button>
+                <button onclick="closeInstructions()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition">Get Started</button>
             </div>
         </div>
     </div>
@@ -545,7 +784,8 @@
         let isDragging = false;
         let dragPieceEl = null;
         let dragStartSquare = null;
-        let dragOffsetX = 0; let dragOffsetY = 0;
+        let dragOffsetX = 0; 
+        let dragOffsetY = 0;
         
         let repData = {
             activeId: null,
@@ -568,22 +808,35 @@
             showStockfish: true,
             showChessDB: true,
             showFullLines: false,
-            legalDots: true
+            legalDots: true,
+            showCoords: true,
+            savedPlatform: 'lichess',
+            savedUsername: '',
+            playbackSpeed: 1200,
+            animSpeed: 0.25
         };
 
         let trainingLines = [];
         let currentTrainLineIndex = 0;
         let currentTrainMoveIndex = 0;
         let isTraining = false;
-        let mistakes = []; // Array of { line: [], mistakeIndex: num }
+        let mistakes = []; 
         let demoInterval = null;
 
         let engine = null;
+        let stockfishReady = false;
         let engineLines = [];
         let engineCurrentFen = "";
         let globalForceSkipIndex = -1;
+
+        // Repertoire Tour Play Mode variables
+        let isWatchingRepertoire = false;
+        let watchTimeout = null;
+        let watchLines = [];
+        let watchLineIdx = 0;
+        let watchMoveIdx = 0;
         
-        // Punchy Chess Thump Sounds
+        // Wood audio synthesis models via Tone.js
         const synthMove = new Tone.MembraneSynth({ 
             pitchDecay: 0.05, octaves: 2, oscillator: { type: "triangle" }, 
             envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 } 
@@ -593,7 +846,6 @@
             envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 } 
         }).toDestination();
 
-        // --- INIT & LOGIC ---
         function init() {
             loadState();
             applySettingsToUI();
@@ -607,6 +859,12 @@
                 fetchChessDB();
             }
 
+            // Load platform username if saved
+            if (settings.savedUsername) {
+                document.getElementById('games-platform').value = settings.savedPlatform || 'lichess';
+                document.getElementById('games-username').value = settings.savedUsername;
+            }
+
             initEngine();
             
             if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
@@ -617,8 +875,13 @@
             document.getElementById('setting-size').addEventListener('input', (e) => {
                 document.getElementById('setting-size-val').innerText = e.target.value + 'px';
             });
+            document.getElementById('setting-playback').addEventListener('input', (e) => {
+                document.getElementById('setting-playback-val').innerText = e.target.value + 'ms';
+            });
+            document.getElementById('setting-anim-speed').addEventListener('input', (e) => {
+                document.getElementById('setting-anim-speed-val').innerText = parseFloat(e.target.value).toFixed(2) + 's';
+            });
             
-            // Global drag events
             document.addEventListener('mousemove', handleDragMove);
             document.addEventListener('mouseup', handleDragEnd);
             document.addEventListener('touchmove', handleDragMove, {passive: false});
@@ -629,9 +892,9 @@
             if (!settings.sound) return;
             if (Tone.context.state !== 'running') Tone.context.resume();
             if (isCapture) {
-                synthCapture.triggerAttackRelease("E2", "16n", Tone.now(), 0.6);
+                synthCapture.triggerAttackRelease("D2", "16n", Tone.now(), 0.6);
             } else {
-                synthMove.triggerAttackRelease("C2", "16n", Tone.now(), 0.5);
+                synthMove.triggerAttackRelease("B1", "16n", Tone.now(), 0.5);
             }
         }
 
@@ -671,21 +934,39 @@
             }, 300);
         }
 
-        function showInstructions() { document.getElementById('instructions-modal').classList.remove('hidden'); }
-        function closeInstructions() { document.getElementById('instructions-modal').classList.add('hidden'); }
+        function showInstructions() { 
+            const modal = document.getElementById('instructions-modal');
+            if (modal) {
+                modal.classList.remove('hidden'); 
+            }
+        }
+        function closeInstructions() { 
+            const modal = document.getElementById('instructions-modal');
+            if (modal) {
+                modal.classList.add('hidden'); 
+            }
+        }
         
         function openSettingsModal() {
             document.getElementById('setting-size').value = settings.size;
             document.getElementById('setting-size-val').innerText = settings.size + 'px';
+            document.getElementById('setting-playback').value = settings.playbackSpeed || 1200;
+            document.getElementById('setting-playback-val').innerText = (settings.playbackSpeed || 1200) + 'ms';
+            document.getElementById('setting-anim-speed').value = settings.animSpeed || 0.25;
+            document.getElementById('setting-anim-speed-val').innerText = (settings.animSpeed || 0.25).toFixed(2) + 's';
+
             document.getElementById('setting-anim').checked = settings.anim;
             document.getElementById('setting-sound').checked = settings.sound;
             document.getElementById('setting-eval').checked = settings.showEvalBar;
             document.getElementById('setting-sf').checked = settings.showStockfish;
             document.getElementById('setting-db').checked = settings.showChessDB;
             document.getElementById('setting-dots').checked = settings.legalDots !== false;
+            document.getElementById('setting-coords').checked = settings.showCoords !== false;
             document.getElementById('setting-multipv').value = settings.multipv;
             document.getElementById('setting-board-theme').value = settings.boardTheme;
             document.getElementById('setting-piece-theme').value = settings.pieceTheme;
+            document.getElementById('setting-platform').value = settings.savedPlatform || 'lichess';
+            document.getElementById('setting-username').value = settings.savedUsername || '';
             document.getElementById('settings-modal').classList.remove('hidden');
         }
         function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
@@ -700,17 +981,26 @@
         function saveSettings() {
             settings = {
                 size: parseInt(document.getElementById('setting-size').value),
+                playbackSpeed: parseInt(document.getElementById('setting-playback').value) || 1200,
+                animSpeed: parseFloat(document.getElementById('setting-anim-speed').value) || 0.25,
                 anim: document.getElementById('setting-anim').checked,
                 sound: document.getElementById('setting-sound').checked,
                 showEvalBar: document.getElementById('setting-eval').checked,
                 showStockfish: document.getElementById('setting-sf').checked,
                 showChessDB: document.getElementById('setting-db').checked,
                 legalDots: document.getElementById('setting-dots').checked,
+                showCoords: document.getElementById('setting-coords').checked,
                 showFullLines: settings.showFullLines, 
                 multipv: parseInt(document.getElementById('setting-multipv').value),
                 boardTheme: document.getElementById('setting-board-theme').value,
-                pieceTheme: document.getElementById('setting-piece-theme').value
+                pieceTheme: document.getElementById('setting-piece-theme').value,
+                savedPlatform: document.getElementById('setting-platform').value,
+                savedUsername: document.getElementById('setting-username').value.trim()
             };
+            
+            document.getElementById('games-platform').value = settings.savedPlatform;
+            document.getElementById('games-username').value = settings.savedUsername;
+
             saveState();
             applySettingsToUI();
             closeSettingsModal();
@@ -759,7 +1049,6 @@
             if (engineLines.length > 0 && engineLines[0]) updateEvalBar(engineLines[0].score);
         }
 
-        // --- REPERTOIRES ---
         function openRepertoiresModal() {
             renderRepertoiresList();
             document.getElementById('reps-modal').classList.remove('hidden');
@@ -782,17 +1071,57 @@
                 const el = document.createElement('div');
                 el.className = `flex justify-between items-center p-3 rounded-lg border ${isActive ? 'bg-blue-900/30 border-blue-500' : 'bg-gray-700 border-gray-600'}`;
                 el.innerHTML = `
-                    <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="loadRepertoire('${id}')">
-                        <div class="w-8 h-8 rounded bg-gray-600 flex items-center justify-center">${icon}</div>
-                        <div>
-                            <p class="font-bold text-white">${rep.name}</p>
+                    <!-- Static view -->
+                    <div id="rep-view-${id}" class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 mr-2" onclick="loadRepertoire('${id}')">
+                        <div class="w-8 h-8 rounded bg-gray-600 flex items-center justify-center shrink-0">${icon}</div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold text-white truncate text-sm">${rep.name}</p>
                             <p class="text-xs text-gray-400">${rep.color === 'w' ? 'White' : 'Black'} Repertoire</p>
                         </div>
                     </div>
-                    <button onclick="deleteRepertoire('${id}')" class="text-red-400 hover:text-red-300 p-2"><i class="fa-solid fa-trash"></i></button>
+                    
+                    <!-- Rename input -->
+                    <div id="rep-edit-${id}" class="hidden flex items-center gap-2 flex-1 mr-2">
+                        <input type="text" id="rep-input-${id}" value="${rep.name}" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none w-full">
+                        <button onclick="saveRename('${id}')" class="text-green-400 hover:text-green-300 p-1 text-sm"><i class="fa-solid fa-check"></i></button>
+                        <button onclick="cancelRename('${id}')" class="text-red-400 hover:text-red-300 p-1 text-sm"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="startRename('${id}')" class="text-yellow-400 hover:text-yellow-300 p-1.5 text-xs" title="Rename Repertoire"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="openEditRepertoireModal('${id}')" class="text-blue-400 hover:text-blue-300 p-1.5 text-xs" title="Modify Lines"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteRepertoire('${id}')" class="text-red-400 hover:text-red-300 p-1.5 text-xs" title="Delete Repertoire"><i class="fa-solid fa-trash"></i></button>
+                    </div>
                 `;
                 listEl.appendChild(el);
             });
+        }
+
+        function startRename(id) {
+            document.getElementById(`rep-view-${id}`).classList.add('hidden');
+            document.getElementById(`rep-edit-${id}`).classList.remove('hidden');
+            document.getElementById(`rep-input-${id}`).focus();
+        }
+        function cancelRename(id) {
+            document.getElementById(`rep-view-${id}`).classList.remove('hidden');
+            document.getElementById(`rep-edit-${id}`).classList.add('hidden');
+        }
+        function saveRename(id) {
+            const input = document.getElementById(`rep-input-${id}`);
+            const newName = input.value.trim();
+            if (!newName) {
+                showMsg("Error", "Repertoire name cannot be empty.");
+                return;
+            }
+            repData.repertoires[id].name = newName;
+            if (repData.activeId === id) {
+                document.getElementById('active-rep-label').innerText = newName;
+                const trainRepNameEl = document.getElementById('train-rep-name');
+                if (trainRepNameEl) trainRepNameEl.innerText = newName;
+            }
+            saveState();
+            renderRepertoiresList();
         }
 
         function createNewRepertoire() {
@@ -826,7 +1155,10 @@
             boardFlipped = (rep.color === 'b');
             
             document.getElementById('active-rep-label').innerText = rep.name;
-            document.getElementById('train-rep-name').innerText = rep.name;
+            const trainRepNameEl = document.getElementById('train-rep-name');
+            if (trainRepNameEl) {
+                trainRepNameEl.innerText = rep.name;
+            }
             
             saveState();
             closeRepertoiresModal();
@@ -848,6 +1180,213 @@
             });
         }
 
+        let autoBuildCount = 0;
+
+        async function chessDbCraftRepertoire() {
+            const color = document.getElementById('chessdb-rep-color').value;
+            const style = document.getElementById('chessdb-rep-style').value;
+            const rawDepth = document.getElementById('chessdb-rep-depth').value;
+            const customName = document.getElementById('chessdb-rep-name-input').value.trim();
+            
+            const maxDepth = parseInt(rawDepth) || 6;
+            const repName = customName || `${style} ${color === 'w' ? 'White' : 'Black'} ChessDB Repertoire`;
+            
+            const btn = document.getElementById('btn-chessdb-craft');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating Tree...`;
+
+            // Setup progress dialog overlay
+            const progressOverlay = document.createElement('div');
+            progressOverlay.id = 'build-progress-overlay';
+            progressOverlay.className = 'fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[100] p-6 text-center';
+            progressOverlay.innerHTML = `
+                <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full shadow-2xl">
+                    <i class="fa-solid fa-gears text-4xl text-indigo-400 animate-spin mb-4"></i>
+                    <h3 class="text-lg font-bold text-white mb-2">Crafting Repertoire...</h3>
+                    <p class="text-sm text-gray-400 mb-4" id="build-progress-text">Harvesting ChessDB master games...</p>
+                    <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                        <div id="build-progress-bar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-300" style="width: 5%"></div>
+                    </div>
+                    <p class="text-[10px] text-gray-500" id="build-progress-details">Fetched 0 positions</p>
+                </div>
+            `;
+            document.body.appendChild(progressOverlay);
+
+            autoBuildCount = 0;
+            const id = 'rep_' + Date.now();
+            const tempGame = new Chess();
+            
+            repData.repertoires[id] = {
+                name: repName,
+                color: color,
+                root: { fen: tempGame.fen(), san: 'Root', children: [], parent: null, comment: `ChessDB Generated: ${style} style`, variationName: '' }
+            };
+
+            // Recursively generate repertoire starting from the root node
+            await crawlChessDbNode(repData.repertoires[id].root, 0, maxDepth, 2, style, color, true);
+
+            document.getElementById('build-progress-bar').style.width = '100%';
+            document.getElementById('build-progress-text').innerText = "Complete!";
+            
+            setTimeout(() => {
+                const overlay = document.getElementById('build-progress-overlay');
+                if (overlay) overlay.remove();
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                
+                saveState();
+                loadRepertoire(id);
+                closeRepertoiresModal();
+                showMsg("Repertoire Created", `Your "${repName}" has been successfully built with sound theoretical master moves directly from ChessDB!`);
+            }, 800);
+        }
+
+        async function crawlChessDbNode(node, currentPlies, maxPlies, oppBranching, style, userColor, autoBranching = false) {
+            if (currentPlies >= maxPlies) return;
+
+            const turn = (currentPlies % 2 === 0) ? 'w' : 'b';
+            const isMyTurn = (turn === userColor);
+
+            const url = `https://www.chessdb.cn/cdb.php?action=queryall&board=${encodeURIComponent(node.fen)}`;
+            await new Promise(resolve => setTimeout(resolve, 80)); // Rate limiter protection
+
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                if (text.includes('unknown') || text.trim() === '') return;
+
+                const movesRaw = text.split('|');
+                let parsedMoves = [];
+                const tempGame = new Chess(node.fen);
+
+                for (let mRaw of movesRaw) {
+                    if (!mRaw.trim()) continue;
+                    let moveObj = {};
+                    mRaw.split(',').forEach(part => {
+                        const [k, v] = part.split(':');
+                        if (k) moveObj[k] = v;
+                    });
+
+                    if (moveObj.move) {
+                        const uci = moveObj.move;
+                        const pMove = tempGame.move({
+                            from: uci.substring(0,2), to: uci.substring(2,4), 
+                            promotion: uci.length > 4 ? uci.charAt(4) : undefined
+                        });
+
+                        if (pMove) {
+                            tempGame.undo();
+                            parsedMoves.push({
+                                uci: uci,
+                                san: pMove.san,
+                                score: moveObj.score ? parseInt(moveObj.score) : 0,
+                                rank: moveObj.rank !== undefined ? parseInt(moveObj.rank) : 1, // default to 1 (Good) if not supplied
+                                winRate: moveObj.winrate ? parseFloat(moveObj.winrate) : 50
+                            });
+                        }
+                    }
+                }
+
+                if (parsedMoves.length === 0) return;
+
+                // FILTER OUT BAD MOVES (rank == 0) to guarantee sound lines, unless no other moves exist
+                let filteredMoves = parsedMoves.filter(m => m.rank > 0);
+                if (filteredMoves.length === 0) {
+                    filteredMoves = parsedMoves; // fallback
+                }
+
+                // SORT BY RANK DESCENDING (2 = Best, 1 = Good, 0 = Bad)
+                // This ensures Rank 2 (Best) and Rank 1 (Good) standard moves are always processed first
+                filteredMoves.sort((a, b) => b.rank - a.rank);
+
+                let movesToExpand = [];
+
+                if (isMyTurn) {
+                    const allowMulti = document.getElementById('autobuild-my-branching').checked;
+                    if (allowMulti) {
+                        movesToExpand = filteredMoves.slice(0, 2);
+                    } else {
+                        // Pick exactly ONE best move depending on the selected play style
+                        let selectedMove = filteredMoves[0];
+                        if (style === 'Aggressive') {
+                            let bestAggressive = filteredMoves[0];
+                            let maxAbsScore = -1;
+                            const candidates = filteredMoves.slice(0, Math.min(3, filteredMoves.length));
+                            candidates.forEach(c => {
+                                let scoreVal = Math.abs(c.score);
+                                if (scoreVal > maxAbsScore && scoreVal < 600) { 
+                                    maxAbsScore = scoreVal;
+                                    bestAggressive = c;
+                                }
+                            });
+                            selectedMove = bestAggressive;
+                        } else if (style === 'Positional') {
+                            let bestPositional = filteredMoves[0];
+                            let minAbsScore = 99999;
+                            const candidates = filteredMoves.slice(0, Math.min(2, filteredMoves.length));
+                            candidates.forEach(c => {
+                                let scoreVal = Math.abs(c.score);
+                                if (scoreVal < minAbsScore) {
+                                    minAbsScore = scoreVal;
+                                    bestPositional = c;
+                                }
+                            });
+                            selectedMove = bestPositional;
+                        } else if (style === 'Out of Book') {
+                            // Focus on Sidelines (rank 1 choice or secondary branch choice)
+                            if (filteredMoves.length > 1 && filteredMoves[1].rank > 0) {
+                                selectedMove = filteredMoves[1];
+                            } else if (filteredMoves.length > 2 && filteredMoves[2].rank > 0) {
+                                selectedMove = filteredMoves[2];
+                            }
+                        }
+                        movesToExpand = [selectedMove];
+                    }
+                } else {
+                    let limit = oppBranching;
+                    if (autoBranching) {
+                        limit = (currentPlies < 4) ? 2 : 1;
+                    }
+                    movesToExpand = filteredMoves.slice(0, limit);
+                }
+
+                for (let m of movesToExpand) {
+                    const actualGame = new Chess(node.fen);
+                    const verifiedMove = actualGame.move(m.san);
+                    if (verifiedMove) {
+                        const childFen = actualGame.fen();
+                        
+                        let childNode = node.children.find(c => c.san === m.san);
+                        if (!childNode) {
+                            childNode = {
+                                fen: childFen,
+                                san: m.san,
+                                children: [],
+                                parent: node,
+                                comment: `ChessDB standard theory (Eval: ${(m.score / 100).toFixed(2)})`,
+                                variationName: ''
+                            };
+                            node.children.push(childNode);
+                        }
+
+                        autoBuildCount++;
+                        const detailsEl = document.getElementById('build-progress-details');
+                        const barEl = document.getElementById('build-progress-bar');
+                        if (detailsEl) detailsEl.innerText = `Fetched ${autoBuildCount} positions...`;
+                        if (barEl) {
+                            const progressPercent = Math.min(98, (autoBuildCount / (maxPlies * 3.5)) * 100);
+                            barEl.style.width = `${progressPercent}%`;
+                        }
+
+                        await crawlChessDbNode(childNode, currentPlies + 1, maxPlies, oppBranching, style, userColor, autoBranching);
+                    }
+                }
+            } catch (e) {
+                console.warn("Error querying ChessDB recursive node:", e);
+            }
+        }
+
         function enterExploreMode() {
             repData.activeId = null;
             currentNode = null;
@@ -859,7 +1398,6 @@
             afterMoveTrigger(false);
         }
 
-        // --- BOARD RENDERING ---
         function getSquarePosition(square) {
             const files = ['a','b','c','d','e','f','g','h'];
             const file = files.indexOf(square[0]);
@@ -875,6 +1413,7 @@
             boardEl.querySelectorAll('.board-square').forEach(e => e.remove());
             const theme = BOARD_THEMES[settings.boardTheme] || BOARD_THEMES['lichess'];
             const files = ['a','b','c','d','e','f','g','h'];
+            const ranks = ['1','2','3','4','5','6','7','8'];
             
             const fragment = document.createDocumentFragment();
             for (let i = 0; i < 64; i++) {
@@ -882,10 +1421,28 @@
                 const rowNum = boardFlipped ? Math.floor(i / 8) : 7 - Math.floor(i / 8);
                 const colNum = boardFlipped ? 7 - (i % 8) : i % 8;
                 
-                const squareId = files[colNum] + (rowNum + 1);
+                const squareId = files[colNum] + ranks[rowNum];
                 sq.id = 'sq-' + squareId;
                 sq.className = 'board-square flex items-center justify-center';
                 sq.style.backgroundColor = (rowNum + colNum) % 2 === 1 ? theme.light : theme.dark;
+                
+                if (settings.showCoords) {
+                    const squareColor = (rowNum + colNum) % 2 === 1 ? theme.dark : theme.light; 
+                    if (colNum === (boardFlipped ? 7 : 0)) {
+                        const rankLabel = document.createElement('span');
+                        rankLabel.className = 'square-coord coord-rank';
+                        rankLabel.style.color = squareColor;
+                        rankLabel.innerText = ranks[rowNum];
+                        sq.appendChild(rankLabel);
+                    }
+                    if (rowNum === (boardFlipped ? 7 : 0)) {
+                        const fileLabel = document.createElement('span');
+                        fileLabel.className = 'square-coord coord-file';
+                        fileLabel.style.color = squareColor;
+                        fileLabel.innerText = files[colNum];
+                        sq.appendChild(fileLabel);
+                    }
+                }
                 
                 sq.addEventListener('click', () => handleSquareClick(squareId));
                 fragment.appendChild(sq);
@@ -896,9 +1453,9 @@
 
         function updateLabels() {
             const topLabel = boardFlipped ? "White" : "Black";
-            const botLabel = boardFlipped ? "Black" : "White";
+            const bottomLabel = boardFlipped ? "Black" : "White";
             document.getElementById('opponent-status').innerText = topLabel;
-            document.getElementById('player-status').innerText = botLabel;
+            document.getElementById('player-status').innerText = bottomLabel;
             const turnText = game.turn() === 'w' ? "White to move" : "Black to move";
             document.getElementById('turn-indicator').innerText = turnText;
         }
@@ -938,7 +1495,6 @@
                             img.style.left = pos.left + '%';
                             img.style.top = pos.top + '%';
                             
-                            // Drag events
                             img.addEventListener('mousedown', handleDragStart);
                             img.addEventListener('touchstart', handleDragStart, {passive: false});
                             
@@ -960,7 +1516,10 @@
                 if (movedDomPiece) {
                     movedDomPiece.style.zIndex = '90';
                     movedDomPiece.dataset.square = moveTo;
-                    movedDomPiece.style.transition = 'top 0.25s cubic-bezier(0.25, 1, 0.5, 1), left 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+                    
+                    // Respect the animation slide speed settings
+                    const duration = (settings.animSpeed !== undefined ? settings.animSpeed : 0.25) + 's';
+                    movedDomPiece.style.transition = `top ${duration} cubic-bezier(0.25, 1, 0.5, 1), left ${duration} cubic-bezier(0.25, 1, 0.5, 1)`;
                     const pos = getSquarePosition(moveTo);
                     movedDomPiece.style.left = pos.left + '%';
                     movedDomPiece.style.top = pos.top + '%';
@@ -989,7 +1548,6 @@
             applySettingsToUI();
         }
 
-        // --- DRAG AND DROP ---
         function handleDragStart(e) {
             if (isTraining && document.querySelector('input[name="train-mode"]:checked').value === 'auto' && game.turn() !== repData.repertoires[repData.activeId].color) return;
             
@@ -1007,9 +1565,8 @@
             dragStartSquare = dragPieceEl.dataset.square;
             
             selectedSquare = dragStartSquare;
-            renderPieces(false); // This updates selection & dots
+            renderPieces(false); 
 
-            // Find exactly which element we are re-grabbing since renderPieces destroys and rebuilds
             dragPieceEl = document.querySelector(`.piece-animated[data-square="${dragStartSquare}"]`);
             if (!dragPieceEl) { isDragging = false; return; }
 
@@ -1034,7 +1591,6 @@
             
             const boardRect = document.getElementById('board').getBoundingClientRect();
             
-            // Constrain roughly to board
             let x = clientX - boardRect.left - dragOffsetX;
             let y = clientY - boardRect.top - dragOffsetY;
             
@@ -1074,11 +1630,9 @@
                 }
             }
             
-            // Snap back
             renderPieces(false);
         }
 
-        // --- PLAYING MOVES ---
         function handleSquareClick(square) {
             if (isDragging) return;
             if (isTraining) {
@@ -1113,7 +1667,6 @@
         function playUciSequence(uciSequence) {
             if (!uciSequence || isTraining) return; 
             const moves = uciSequence.split(',');
-            // We only actually *play* the sequence on the board
             for (let uci of moves) {
                 uci = uci.trim();
                 if (!uci) continue;
@@ -1193,6 +1746,7 @@
 
         function resetToStart() {
             if (isTraining) return;
+            if (isWatchingRepertoire) stopWatchRepertoire();
             if (!repData.activeId) {
                 game.reset();
                 afterMoveTrigger(false);
@@ -1230,17 +1784,32 @@
 
         function switchTab(tab) {
             if (isTraining && tab !== currentMode) {
-                showMsg("Training Active", "Please stop your current training session before switching modes.");
+                showMsg("Training Active", "Please stop your current training session before switching tabs.");
                 return;
             }
-            ['build', 'train', 'review'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.remove('text-blue-400', 'border-blue-500');
-                document.getElementById(`tab-${t}`).classList.add('text-gray-400', 'border-transparent');
-                document.getElementById(`content-${t}`).classList.add('hidden');
+            if (isWatchingRepertoire && tab !== 'build') {
+                stopWatchRepertoire();
+            }
+            ['build', 'train', 'review', 'games'].forEach(t => {
+                const tabEl = document.getElementById(`tab-${t}`);
+                if (tabEl) {
+                    tabEl.classList.remove('text-blue-400', 'border-blue-500');
+                    tabEl.classList.add('text-gray-400', 'border-transparent');
+                }
+                const contentEl = document.getElementById(`content-${t}`);
+                if (contentEl) {
+                    contentEl.classList.add('hidden');
+                }
             });
-            document.getElementById(`tab-${tab}`).classList.add('text-blue-400', 'border-blue-500');
-            document.getElementById(`tab-${tab}`).classList.remove('text-gray-400', 'border-transparent');
-            document.getElementById(`content-${tab}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${tab}`);
+            if (activeTab) {
+                activeTab.classList.add('text-blue-400', 'border-blue-500');
+                activeTab.classList.remove('text-gray-400', 'border-transparent');
+            }
+            const activeContent = document.getElementById(`content-${tab}`);
+            if (activeContent) {
+                activeContent.classList.remove('hidden');
+            }
             
             currentMode = tab;
             if (tab === 'build') updateRepertoireUI();
@@ -1252,6 +1821,158 @@
             currentNode.variationName = document.getElementById('node-var-name').value.trim();
             currentNode.comment = document.getElementById('node-comment').value.trim();
             saveState();
+        }
+
+        function toggleWatchRepertoire() {
+            if (!repData.activeId) {
+                showMsg("Select Repertoire", "Please select or create a repertoire first to watch it play.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-watch-rep');
+            if (isWatchingRepertoire) {
+                stopWatchRepertoire();
+                showMsg("Watch Stopped", "Auto-play paused.");
+                return;
+            }
+
+            if (isTraining) {
+                showMsg("Training Active", "Stop training before watching the repertoire.");
+                return;
+            }
+
+            const root = repData.repertoires[repData.activeId].root;
+            watchLines = extractPaths(root).filter(p => p.length > 0);
+            if (watchLines.length === 0) {
+                showMsg("Empty Repertoire", "This repertoire does not have any moves yet.");
+                return;
+            }
+
+            isWatchingRepertoire = true;
+            watchLineIdx = 0;
+            watchMoveIdx = 0;
+            
+            btn.innerHTML = `<i class="fa-solid fa-pause"></i> <span>Pause Rep</span>`;
+            btn.classList.remove('bg-indigo-700', 'hover:bg-indigo-600');
+            btn.classList.add('bg-amber-600', 'hover:bg-amber-500');
+
+            playNextWatchMove();
+        }
+
+        function stopWatchRepertoire() {
+            isWatchingRepertoire = false;
+            if (watchTimeout) {
+                clearTimeout(watchTimeout);
+                watchTimeout = null;
+            }
+            const btn = document.getElementById('btn-watch-rep');
+            if (btn) {
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>Watch Rep</span>`;
+                btn.classList.add('bg-indigo-700', 'hover:bg-indigo-600');
+                btn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
+            }
+            resetToStart();
+        }
+
+        function playNextWatchMove() {
+            if (!isWatchingRepertoire) return;
+
+            if (watchLineIdx >= watchLines.length) {
+                stopWatchRepertoire();
+                showMsg("Completed Tour!", "You've finished watching all recorded lines in your repertoire!");
+                return;
+            }
+
+            const currentLine = watchLines[watchLineIdx];
+
+            if (watchMoveIdx === 0) {
+                const root = repData.repertoires[repData.activeId].root;
+                game.load(root.fen);
+                currentNode = root;
+                currentPath = [];
+                afterMoveTrigger(false);
+            }
+
+            const delay = settings.playbackSpeed !== undefined ? settings.playbackSpeed : 1200;
+
+            if (watchMoveIdx < currentLine.length) {
+                const nextNode = currentLine[watchMoveIdx];
+                const moveDetails = game.move(nextNode.san);
+                if (moveDetails) {
+                    playSound(moveDetails.captured != null);
+                    currentNode = nextNode;
+                    currentPath.push(currentNode);
+                    afterMoveTrigger(settings.anim, moveDetails.from, moveDetails.to);
+                    watchMoveIdx++;
+                    
+                    watchTimeout = setTimeout(playNextWatchMove, delay);
+                } else {
+                    watchLineIdx++;
+                    watchMoveIdx = 0;
+                    watchTimeout = setTimeout(playNextWatchMove, delay / 2);
+                }
+            } else {
+                watchLineIdx++;
+                watchMoveIdx = 0;
+                watchTimeout = setTimeout(playNextWatchMove, delay * 1.8);
+            }
+        }
+
+        function importPgnText() {
+            if (!repData.activeId) {
+                showMsg("Error", "Please activate a repertoire before importing PGN moves.");
+                return;
+            }
+            const pgnText = document.getElementById('pgn-import-text').value.trim();
+            if (!pgnText) {
+                showMsg("Error", "Please paste PGN notation.");
+                return;
+            }
+
+            try {
+                let cleanPgn = pgnText.replace(/\{[^}]*\}/g, ''); 
+                cleanPgn = cleanPgn.replace(/\([^)]*\)/g, '');    
+                cleanPgn = cleanPgn.replace(/\d+\.+/g, '');       
+                cleanPgn = cleanPgn.replace(/\s+/g, ' ').trim();  
+                
+                const rawMoves = cleanPgn.split(' ');
+                
+                game.load(repData.repertoires[repData.activeId].root.fen);
+                currentNode = repData.repertoires[repData.activeId].root;
+                currentPath = [];
+
+                let importCount = 0;
+                for (let i = 0; i < rawMoves.length; i++) {
+                    const cleanSan = rawMoves[i].trim();
+                    if (!cleanSan || cleanSan.includes('*') || cleanSan.includes('1-0') || cleanSan.includes('0-1') || cleanSan.includes('1/2')) continue;
+
+                    const validMove = game.move(cleanSan);
+                    if (!validMove) {
+                        throw new Error(`Invalid move detected: "${cleanSan}"`);
+                    }
+
+                    const newFen = game.fen();
+                    const san = validMove.san;
+                    let childNode = currentNode.children.find(c => c.san === san);
+                    
+                    if (!childNode) {
+                        childNode = { fen: newFen, san: san, children: [], parent: currentNode, comment: '', variationName: '' };
+                        currentNode.children.push(childNode);
+                    }
+                    currentNode = childNode;
+                    currentPath.push(currentNode);
+                    importCount++;
+                }
+
+                saveState();
+                afterMoveTrigger(true);
+                document.getElementById('pgn-import-text').value = '';
+                showMsg("Import Successful", `Successfully parsed and appended ${importCount} moves into your active repertoire tree!`);
+
+            } catch (err) {
+                showMsg("PGN Parse Error", `Failed to parse PGN. Error: ${err.message}`);
+                game.load(currentNode ? currentNode.fen : repData.repertoires[repData.activeId].root.fen);
+            }
         }
 
         function updateRepertoireUI() {
@@ -1327,7 +2048,7 @@
                 varsList.innerHTML = '';
                 currentNode.children.forEach(child => {
                     const btn = document.createElement('button');
-                    btn.className = 'bg-gray-700 hover:bg-gray-600 text-sm px-3 py-1.5 rounded shadow transition font-semibold';
+                    btn.className = 'bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1.5 rounded shadow transition font-semibold';
                     btn.innerText = child.variationName ? `${child.san} (${child.variationName})` : child.san;
                     btn.onclick = () => navigateToVariation(child.san);
                     varsList.appendChild(btn);
@@ -1335,11 +2056,61 @@
             }
         }
 
-        // --- EXTERNAL APIs (ChessDB, Stockfish, Eval Bar) ---
-        function updateEvalBar(evalStr) {
-            const container = document.getElementById('eval-bar-container');
-            if (!settings.showEvalBar) return;
+        async function buildComprehensiveRepertoireFromCurrentMoment() {
+            if (!repData.activeId) {
+                showMsg("Error", "Please select or create a repertoire first to build inside.");
+                return;
+            }
             
+            showConfirm("Build from Current Moment?", "This will automatically query ChessDB to recursively build theoretical master lines starting from this current position. Continue?", async () => {
+                const rawDepth = document.getElementById('autobuild-depth').value;
+                const rawBranching = document.getElementById('autobuild-opp-branching').value;
+                
+                let maxDepth = parseInt(rawDepth) || 8;
+                let oppBranching = parseInt(rawBranching) || 2;
+                let autoBranching = (rawDepth === 'auto' || rawBranching === 'auto');
+
+                if (autoBranching) {
+                    maxDepth = 8;
+                    oppBranching = 2;
+                }
+
+                const progressModal = document.createElement('div');
+                progressModal.id = 'build-progress-overlay';
+                progressModal.className = 'fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[100] p-6 text-center';
+                progressModal.innerHTML = `
+                    <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full shadow-2xl">
+                        <i class="fa-solid fa-gears text-4xl text-indigo-400 animate-spin mb-4"></i>
+                        <h3 class="text-lg font-bold text-white mb-2">Building Repertoire...</h3>
+                        <p class="text-sm text-gray-400 mb-4" id="build-progress-text">Querying ChessDB master games...</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="build-progress-bar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-300" style="width: 5%"></div>
+                        </div>
+                        <p class="text-[10px] text-gray-500" id="build-progress-details">Fetched 0 positions</p>
+                    </div>
+                `;
+                document.body.appendChild(progressModal);
+
+                autoBuildCount = 0;
+                const repColor = repData.repertoires[repData.activeId].color;
+
+                await crawlChessDbNode(currentNode, 0, maxDepth, oppBranching, 'Positional', repColor, autoBranching);
+                
+                document.getElementById('build-progress-bar').style.width = '100%';
+                document.getElementById('build-progress-text').innerText = "Complete!";
+                
+                setTimeout(() => {
+                    const overlay = document.getElementById('build-progress-overlay');
+                    if (overlay) overlay.remove();
+                    saveState();
+                    afterMoveTrigger(true);
+                    showMsg("Success", `Repertoire built successfully! Harvested ${autoBuildCount} master positions into your current branch.`);
+                }, 800);
+            });
+        }
+
+        function updateEvalBar(evalStr) {
+            if (!settings.showEvalBar) return;
             const fill = document.getElementById('eval-bar-fill');
             const text = document.getElementById('eval-bar-text');
 
@@ -1375,7 +2146,7 @@
             
             try {
                 const urlInfo = `https://www.chessdb.cn/cdb.php?action=queryboard&board=${encodeURIComponent(fen)}`;
-                fetch(urlInfo).then(r => r.text()).then(text => { /* Trigger DB */ });
+                fetch(urlInfo).then(r => r.text()).then(text => { });
                 
                 openingEl.innerText = fen === "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" ? "Starting Position" : "Theory Position";
 
@@ -1438,39 +2209,50 @@
 
         async function initEngine() {
             try {
-                const sfUrl = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
-                const response = await fetch(sfUrl);
-                const code = await response.text();
-                const blob = new Blob([code], { type: 'application/javascript' });
-                
+                const blobCode = `
+                    self.onmessage = function(e) {
+                        postMessage(e.data);
+                    };
+                    try {
+                        importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+                    } catch (err) {
+                        console.error("Worker importScripts failed:", err);
+                    }
+                `;
+                const blob = new Blob([blobCode], { type: 'application/javascript' });
                 engine = new Worker(URL.createObjectURL(blob));
                 
                 engine.onmessage = function(e) {
                     const msg = e.data;
-                    if (msg.startsWith('info depth') && msg.includes('multipv') && msg.includes('pv')) {
+                    if (typeof msg !== 'string') return;
+                    
+                    if (msg.includes('uciok')) {
+                        stockfishReady = true;
+                    }
+                    
+                    if (msg.startsWith('info') && msg.includes('pv')) {
                         const depthMatch = msg.match(/depth (\d+)/);
                         if (depthMatch) document.getElementById('engine-depth').innerText = `Depth ${depthMatch[1]}`;
 
                         const mpvMatch = msg.match(/multipv (\d+)/);
-                        if (!mpvMatch) return;
-                        const pvIndex = parseInt(mpvMatch[1]) - 1; 
+                        const pvMatch = msg.match(/ pv (.+)/);
+                        if (mpvMatch && pvMatch) {
+                            const pvIndex = parseInt(mpvMatch[1]) - 1; 
 
-                        let evalText = "0.00";
-                        const matchCP = msg.match(/score cp (-?\d+)/);
-                        const matchMate = msg.match(/score mate (-?\d+)/);
-                        
-                        if (matchCP) {
-                            let eval = parseInt(matchCP[1]) / 100;
-                            if (game.turn() === 'b') eval = -eval; 
-                            evalText = (eval > 0 ? "+" : "") + eval.toFixed(2);
-                        } else if (matchMate) {
-                            let mate = parseInt(matchMate[1]);
-                            if (game.turn() === 'b') mate = -mate;
-                            evalText = "M" + mate;
-                        }
+                            let evalText = "0.00";
+                            const matchCP = msg.match(/score cp (-?\d+)/);
+                            const matchMate = msg.match(/score mate (-?\d+)/);
+                            
+                            if (matchCP) {
+                                let evalVal = parseInt(matchCP[1]) / 100;
+                                if (game.turn() === 'b') evalVal = -evalVal; 
+                                evalText = (evalVal > 0 ? "+" : "") + evalVal.toFixed(2);
+                            } else if (matchMate) {
+                                let mate = parseInt(matchMate[1]);
+                                if (game.turn() === 'b') mate = -mate;
+                                evalText = "M" + mate;
+                            }
 
-                        const pvMatch = msg.match(/pv (.+)/);
-                        if (pvMatch) {
                             const uciMoves = pvMatch[1].trim().split(/\s+/);
                             engineLines[pvIndex] = { score: evalText, uci: uciMoves, fen: engineCurrentFen };
                             renderEngineLines();
@@ -1478,18 +2260,26 @@
                         }
                     }
                 };
+
+                engine.onerror = function() {
+                    stockfishReady = false;
+                };
                 
                 engine.postMessage('uci');
                 engine.postMessage(`setoption name MultiPV value ${settings.multipv}`);
-                triggerEngine();
+                
+                setTimeout(() => {
+                    triggerEngine();
+                }, 800);
             } catch (err) {
-                console.error("Failed to initialize Stockfish:", err);
-                document.getElementById('engine-lines-container').innerHTML = "<span class='text-red-400'>Error loading Stockfish</span>";
+                console.warn("Failed to load local Stockfish. Falling back to Cloud Engine.");
+                stockfishReady = false;
+                triggerEngine();
             }
         }
 
-        function triggerEngine() {
-            if (!engine || !settings.showStockfish) return;
+        async function triggerEngine() {
+            if (!settings.showStockfish) return;
             
             engineLines = [];
             document.getElementById('engine-lines-container').innerHTML = "<div class='text-gray-500 italic'>Calculating...</div>";
@@ -1500,11 +2290,49 @@
                 return;
             }
 
-            engine.postMessage('stop');
-            engine.postMessage(`setoption name MultiPV value ${settings.multipv}`);
             engineCurrentFen = game.fen();
-            engine.postMessage(`position fen ${engineCurrentFen}`);
-            engine.postMessage('go depth 16'); 
+
+            if (engine && stockfishReady) {
+                engine.postMessage('stop');
+                engine.postMessage(`setoption name MultiPV value ${settings.multipv}`);
+                engine.postMessage(`position fen ${engineCurrentFen}`);
+                engine.postMessage('go depth 16'); 
+            } else {
+                // Cloud Engine Fallback
+                document.getElementById('engine-depth').innerText = `Cloud Engine`;
+                try {
+                    const cloudUrl = `https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(engineCurrentFen)}`;
+                    const res = await fetch(cloudUrl);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.pvs && data.pvs.length > 0) {
+                            engineLines = data.pvs.slice(0, settings.multipv).map((pv) => {
+                                let evalText = "0.00";
+                                if (pv.mate !== undefined) {
+                                    let mate = pv.mate;
+                                    if (game.turn() === 'b') mate = -mate;
+                                    evalText = "M" + mate;
+                                } else if (pv.cp !== undefined) {
+                                    let evalVal = pv.cp / 100;
+                                    if (game.turn() === 'b') evalVal = -evalVal;
+                                    evalText = (evalVal > 0 ? "+" : "") + evalVal.toFixed(2);
+                                }
+                                const uciMoves = pv.moves.trim().split(/\s+/);
+                                return { score: evalText, uci: uciMoves, fen: engineCurrentFen };
+                            });
+                            renderEngineLines();
+                            if (engineLines[0]) updateEvalBar(engineLines[0].score);
+                        } else {
+                            document.getElementById('engine-lines-container').innerHTML = "<div class='text-gray-500 italic'>Calculating...</div>";
+                        }
+                    } else {
+                        document.getElementById('engine-lines-container').innerHTML = "<div class='text-red-400 italic text-xs'>Initializing...</div>";
+                    }
+                } catch (err) {
+                    console.warn("Cloud engine failed:", err);
+                    document.getElementById('engine-lines-container').innerHTML = "<div class='text-red-400 italic text-xs'>Engine unavailable</div>";
+                }
+            }
         }
 
         function renderEngineLines() {
@@ -1522,8 +2350,6 @@
                 let runningUciSequence = [];
                 
                 const validUcis = line.uci.filter(u => u.trim() !== '');
-
-                // Always show at least the first move, or up to 8 if full lines is enabled
                 let movesToShow = settings.showFullLines ? 8 : 1;
                 
                 for(let j=0; j < Math.min(validUcis.length, movesToShow); j++) { 
@@ -1542,10 +2368,12 @@
                     const moveText = pMove ? pMove.san : uci;
                     const seqStr = runningUciSequence.join(',');
                     
-                    sanLineHtml += `<span class="text-gray-400 text-xs pl-1">${moveNumStr}</span>`;
-                    
-                    // Note the addition of the onclick handler to play the sequence when clicked
-                    sanLineHtml += `<span class="engine-move-span cursor-pointer font-medium hover:text-white ${j === 0 ? 'text-blue-400 font-bold text-sm mr-2' : 'text-gray-300'}" onclick="playUciSequence('${seqStr}'); event.stopPropagation();" title="Play sequence">${moveText}</span> `;
+                    if (!settings.showFullLines && j === 0) {
+                        sanLineHtml += `<span class="engine-move-span cursor-pointer font-bold text-blue-400 hover:text-white text-base" onclick="playUciSequence('${seqStr}'); event.stopPropagation();" title="Play sequence">${moveText}</span>`;
+                    } else if (settings.showFullLines) {
+                        sanLineHtml += `<span class="text-gray-400 text-xs pl-1">${moveNumStr}</span>`;
+                        sanLineHtml += `<span class="engine-move-span cursor-pointer font-medium hover:text-white ${j === 0 ? 'text-blue-400 font-bold text-sm mr-2' : 'text-gray-300'}" onclick="playUciSequence('${seqStr}'); event.stopPropagation();" title="Play sequence">${moveText}</span> `;
+                    }
                     
                     if(pMove) moveCount++;
                     else break;
@@ -1558,10 +2386,9 @@
                     colorClass = game.turn() === 'b' ? 'text-white bg-green-600/80' : 'text-white bg-red-600/80';
                 }
 
-                // Add cursor-pointer and onclick to the whole row container as well for easier clicking
                 const firstUciMove = validUcis.length > 0 ? validUcis[0] : '';
                 html += `
-                    <div class="flex items-start gap-2 mb-1.5 leading-tight p-1.5 rounded transition hover:bg-gray-700 cursor-pointer" onclick="playUciSequence('${firstUciMove}')" title="Play move">
+                    <div class="flex items-start gap-2 mb-1 p-1.5 rounded transition hover:bg-gray-700 cursor-pointer" onclick="playUciSequence('${firstUciMove}')" title="Play move">
                         <span class="px-1.5 rounded font-mono text-xs shrink-0 ${colorClass} w-[50px] text-center pt-0.5">${line.score}</span>
                         <div class="flex-1">${sanLineHtml}</div>
                     </div>
@@ -1570,11 +2397,13 @@
             container.innerHTML = html;
         }
 
-        // --- TRAINING LOGIC ---
         function extractPaths(node, currentBranch = []) {
+            if (!node) return [];
             if (node.children.length === 0) return currentBranch.length > 0 ? [currentBranch] : [];
             let paths = [];
-            for (let child of node.children) paths = paths.concat(extractPaths(child, [...currentBranch, child]));
+            for (let child of node.children) {
+                paths = paths.concat(extractPaths(child, [...currentBranch, child]));
+            }
             return paths;
         }
 
@@ -1629,7 +2458,7 @@
             let skipToIndex = 0;
             if (globalForceSkipIndex >= 0) {
                 skipToIndex = globalForceSkipIndex;
-                globalForceSkipIndex = -1; // reset after applying
+                globalForceSkipIndex = -1; 
             } else {
                 let useSmartSkip = document.getElementById('train-smart-skip').checked;
                 if (useSmartSkip && repData.trainedNodes[repData.activeId]) {
@@ -1650,7 +2479,7 @@
             updateLabels();
             
             document.getElementById('train-progress').innerText = `Line ${currentTrainLineIndex + 1} of ${trainingLines.length}`;
-            setTrainFeedback(currentTrainMoveIndex > 0 ? "Fast-forwarded to new moves..." : "Ready...", "text-gray-400");
+            setTrainFeedback(currentTrainMoveIndex > 0 ? "Smart skipped to divergence..." : "Ready...", "text-gray-400");
             checkAutoPlay();
             updateTrainingCommentUI();
         }
@@ -1663,6 +2492,7 @@
             
             const savedFen = game.fen();
             const savedIndex = currentTrainMoveIndex;
+            const delay = settings.playbackSpeed !== undefined ? settings.playbackSpeed : 1200;
             
             demoInterval = setInterval(() => {
                 if (currentTrainMoveIndex >= targetLine.length) {
@@ -1674,7 +2504,7 @@
                         renderPieces(false); updateLabels(); updateTrainingCommentUI();
                         setTrainFeedback("Your turn! Try it now.", "text-green-400");
                         checkAutoPlay();
-                    }, 1000);
+                    }, delay);
                     return;
                 }
                 
@@ -1685,11 +2515,11 @@
                 updateLabels();
                 updateTrainingCommentUI();
                 currentTrainMoveIndex++;
-            }, 1000);
+            }, delay);
         }
 
         function executeTrainMove(moveObj, from, to) {
-            if (demoInterval) return; // Block moves during demo
+            if (demoInterval) return; 
             
             const targetLine = trainingLines[currentTrainLineIndex];
             const expectedNode = targetLine[currentTrainMoveIndex];
@@ -1710,7 +2540,6 @@
             } else {
                 setTrainFeedback(`Mistake! Expected: ${expectedNode.san}`, "text-red-400");
                 
-                // Save mistake with context index
                 const lineId = targetLine.map(n => n.san).join('-');
                 const existing = mistakes.find(m => m.line.map(n=>n.san).join('-') === lineId);
                 if (!existing) { 
@@ -1727,7 +2556,6 @@
 
         function lineCompleteTrigger() {
             const targetLine = trainingLines[currentTrainLineIndex];
-            // Mark line as trained
             if (repData.activeId) {
                 repData.trainedNodes[repData.activeId] = repData.trainedNodes[repData.activeId] || [];
                 targetLine.forEach(node => repData.trainedNodes[repData.activeId].push(node.fen));
@@ -1823,7 +2651,7 @@
 
         function startSpecificReview(mistakeIndex, startAtMistake) {
             const mObj = mistakes[mistakeIndex];
-            mistakes.splice(mistakeIndex, 1); // remove from mistakes
+            mistakes.splice(mistakeIndex, 1); 
             updateMistakesBadge();
             saveState();
             
@@ -1836,7 +2664,6 @@
             }
         }
 
-        // --- STORAGE ---
         function serializeNode(node) { 
             return { 
                 san: node.san, 
@@ -1924,6 +2751,415 @@
                 event.target.value = '';
             };
             reader.readAsText(file);
+        }
+
+        function openEditRepertoireModal(id) {
+            const rep = repData.repertoires[id];
+            if (!rep) return;
+            const lines = extractPaths(rep.root);
+            const listEl = document.getElementById('edit-lines-list');
+            listEl.innerHTML = '';
+            
+            if (lines.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-gray-400 text-center mt-4">No lines built yet.</p>';
+            } else {
+                lines.forEach((line, idx) => {
+                    const btnContainer = document.createElement('div');
+                    btnContainer.className = 'flex justify-between items-center mb-1.5 p-1 bg-gray-700/50 rounded';
+                    
+                    const btn = document.createElement('button');
+                    btn.className = 'text-left p-1 text-xs text-gray-200 transition truncate flex-1';
+                    btn.innerText = `Line ${idx + 1}: ` + line.map(n => n.san).join(' ');
+                    btn.onclick = () => {
+                        document.querySelectorAll('#edit-lines-list button').forEach(b => b.classList.remove('font-bold', 'text-blue-400'));
+                        btn.classList.add('font-bold', 'text-blue-400');
+                        renderEditNodes(line, id);
+                    };
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'text-red-400 hover:text-red-300 p-1 text-xs ml-2';
+                    delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                    delBtn.title = "Delete this sub-variation line";
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        showConfirm("Delete Sub-line", "Are you sure you want to delete this specific sub-variation?", () => {
+                            const leaf = line[line.length - 1];
+                            const parent = leaf.parent;
+                            if (parent) {
+                                parent.children = parent.children.filter(c => c !== leaf);
+                                saveState();
+                                openEditRepertoireModal(id); 
+                            }
+                        });
+                    };
+
+                    btnContainer.appendChild(btn);
+                    btnContainer.appendChild(delBtn);
+                    listEl.appendChild(btnContainer);
+                });
+            }
+            document.getElementById('edit-nodes-list').innerHTML = '<div class="text-gray-500 italic text-center mt-10">Select a line from the left to edit its moves and comments.</div>';
+            document.getElementById('edit-rep-modal').classList.remove('hidden');
+        }
+
+        function closeEditRepertoireModal() {
+            document.getElementById('edit-rep-modal').classList.add('hidden');
+        }
+
+        function renderEditNodes(linePath, repertoireId) {
+            const container = document.getElementById('edit-nodes-list');
+            container.innerHTML = '';
+            
+            linePath.forEach((node, index) => {
+                if (index === 0 && node.san === 'Root') return; 
+                
+                const div = document.createElement('div');
+                div.className = 'bg-gray-800 p-3 mb-2 rounded-lg border border-gray-600 shadow-sm flex flex-col gap-1.5';
+                
+                const header = document.createElement('div');
+                header.className = 'font-bold text-blue-400 text-sm border-b border-gray-700 pb-1 mb-1 flex justify-between items-center';
+                header.innerHTML = `<span>Move: ${node.san}</span>`;
+                
+                const deleteFromHereBtn = document.createElement('button');
+                deleteFromHereBtn.className = 'bg-red-900/50 hover:bg-red-800 text-red-200 text-[10px] px-2 py-0.5 rounded border border-red-700';
+                deleteFromHereBtn.innerText = "Prune tree from here";
+                deleteFromHereBtn.onclick = () => {
+                    showConfirm("Prune Moves", "Are you sure you want to delete this move and all subsequent moves in this variation?", () => {
+                        const parent = node.parent;
+                        if (parent) {
+                            parent.children = parent.children.filter(c => c !== node);
+                            saveState();
+                            openEditRepertoireModal(repertoireId); 
+                        }
+                    });
+                };
+                header.appendChild(deleteFromHereBtn);
+
+                const varLabel = document.createElement('label');
+                varLabel.className = 'text-[10px] uppercase text-gray-500 font-bold';
+                varLabel.innerText = 'Variation Name';
+
+                const varInput = document.createElement('input');
+                varInput.className = 'w-full bg-gray-900 border border-gray-600 text-white px-2 py-1 rounded focus:outline-none focus:border-blue-500 text-xs';
+                varInput.placeholder = 'e.g., Main Line, Trap...';
+                varInput.value = node.variationName || '';
+                varInput.onchange = (e) => { node.variationName = e.target.value; saveState(); updateRepertoireUI(); };
+
+                const commentLabel = document.createElement('label');
+                commentLabel.className = 'text-[10px] uppercase text-gray-500 font-bold';
+                commentLabel.innerText = 'Comment';
+
+                const commentInput = document.createElement('textarea');
+                commentInput.className = 'w-full bg-gray-900 border border-gray-600 text-white px-2 py-1 rounded resize-none h-12 focus:outline-none focus:border-blue-500 text-xs';
+                commentInput.placeholder = 'Add notes on this position...';
+                commentInput.value = node.comment || '';
+                commentInput.onchange = (e) => { node.comment = e.target.value; saveState(); updateRepertoireUI(); };
+
+                div.appendChild(header);
+                div.appendChild(varLabel);
+                div.appendChild(varInput);
+                div.appendChild(commentLabel);
+                div.appendChild(commentInput);
+                container.appendChild(div);
+            });
+        }
+
+        let deviations = [];
+
+        async function fetchAndAnalyzeGames() {
+            if (!repData.activeId) {
+                showMsg('No Repertoire', 'Please activate a repertoire first to check for deviations.');
+                return;
+            }
+            const platform = document.getElementById('games-platform').value;
+            const username = document.getElementById('games-username').value.trim();
+            const limit = parseInt(document.getElementById('games-limit').value) || 25;
+            const devCutoffMove = parseInt(document.getElementById('games-start-move').value) || 3;
+
+            if (!username) {
+                showMsg('Error', 'Please enter a username.');
+                return;
+            }
+
+            const btn = document.getElementById('btn-fetch-games');
+            const listEl = document.getElementById('deviations-list');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fetching Games...';
+            btn.disabled = true;
+            listEl.innerHTML = '<div class="text-gray-400 text-center mt-4">Analyzing public game records...</div>';
+            deviations = [];
+
+            try {
+                let pgns = [];
+                if (platform === 'lichess') {
+                    const res = await fetch(`https://lichess.org/api/games/user/${username}?max=${limit}&perfType=blitz,rapid,bullet`, { headers: { 'Accept': 'application/x-ndjson' } });
+                    const text = await res.text();
+                    const lines = text.split('\n').filter(l => l.trim().length > 0);
+                    lines.forEach(l => {
+                        try {
+                            const g = JSON.parse(l);
+                            if (g.moves) pgns.push({ pgn: g.moves, white: g.players.white.user.name, black: g.players.black.user.name, isSanSequence: true });
+                        } catch(e){}
+                    });
+                } else if (platform === 'chesscom') {
+                    const res = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
+                    const data = await res.json();
+                    if (data.archives && data.archives.length > 0) {
+                        let archiveIndex = data.archives.length - 1;
+                        while (archiveIndex >= 0 && pgns.length < limit) {
+                            const lastArchiveUrl = data.archives[archiveIndex];
+                            const gamesRes = await fetch(lastArchiveUrl);
+                            const gamesData = await gamesRes.json();
+                            
+                            if (gamesData.games && gamesData.games.length > 0) {
+                                const monthlyGames = [...gamesData.games].reverse();
+                                monthlyGames.forEach(g => {
+                                    if (pgns.length < limit) {
+                                        pgns.push({ pgn: g.pgn, isSanSequence: false });
+                                    }
+                                });
+                            }
+                            archiveIndex--;
+                        }
+                    }
+                }
+
+                if (pgns.length === 0) {
+                    listEl.innerHTML = '<div class="text-gray-400 text-center mt-4">No recent games found.</div>';
+                    btn.innerHTML = 'Analyze Recent Games';
+                    btn.disabled = false;
+                    return;
+                }
+
+                const repColor = repData.repertoires[repData.activeId].color;
+                let suggestedAdditions = {};
+
+                pgns.forEach(g => {
+                    const tempGame = new Chess();
+                    let whitePlayer = g.white || '';
+                    let blackPlayer = g.black || '';
+                    let moveHistory = [];
+
+                    if (g.isSanSequence) {
+                        const moves = g.pgn.split(' ');
+                        for (let m of moves) {
+                            const res = tempGame.move(m);
+                            if (res) moveHistory.push(res.san);
+                        }
+                    } else {
+                        try {
+                            tempGame.load_pgn(g.pgn);
+                            whitePlayer = tempGame.header().White || '';
+                            blackPlayer = tempGame.header().Black || '';
+                            moveHistory = tempGame.history();
+                        } catch(e) {
+                            return;
+                        }
+                    }
+
+                    const isWhite = whitePlayer.toLowerCase() === username.toLowerCase();
+                    const isBlack = blackPlayer.toLowerCase() === username.toLowerCase();
+                    
+                    if (repColor === 'w' && !isWhite) return;
+                    if (repColor === 'b' && !isBlack) return;
+
+                    let curr = repData.repertoires[repData.activeId].root;
+                    let path = [];
+
+                    for (let i=0; i<moveHistory.length; i++) {
+                        const move = moveHistory[i];
+                        const moveNum = Math.floor(i/2) + 1;
+                        if (curr.children.length === 0) break; 
+                        
+                        const child = curr.children.find(c => c.san === move);
+                        if (child) {
+                            curr = child;
+                            path.push(child);
+                        } else {
+                            if (moveNum >= devCutoffMove) {
+                                const isUserTurn = (i % 2 === 0 && repColor === 'w') || (i % 2 !== 0 && repColor === 'b');
+                                const expected = curr.children.map(c => c.san);
+                                const oppName = isWhite ? blackPlayer : whitePlayer;
+                                
+                                let outcome = 'draw';
+                                if (tempGame.header().Result === '1-0') outcome = isWhite ? 'win' : 'loss';
+                                if (tempGame.header().Result === '0-1') outcome = isBlack ? 'win' : 'loss';
+
+                                deviations.push({
+                                    isUserTurn: isUserTurn,
+                                    opponent: oppName || 'Opponent',
+                                    played: move,
+                                    expected: expected,
+                                    path: [...path],
+                                    moveNum: moveNum,
+                                    outcome: outcome
+                                });
+
+                                if (!isUserTurn) {
+                                    const key = path.map(n => n.san).join(' ') + ` -> ${move}`;
+                                    if (!suggestedAdditions[key]) {
+                                        suggestedAdditions[key] = { path: [...path], move: move, count: 0, wins: 0, losses: 0 };
+                                    }
+                                    suggestedAdditions[key].count++;
+                                    if (outcome === 'win') suggestedAdditions[key].wins++;
+                                    if (outcome === 'loss') suggestedAdditions[key].losses++;
+                                }
+                            }
+                            break; 
+                        }
+                    }
+                });
+
+                renderDeviations(suggestedAdditions);
+
+            } catch (err) {
+                console.error(err);
+                listEl.innerHTML = '<div class="text-red-400 text-center mt-4">Failed to fetch games. Ensure username is correct.</div>';
+            } finally {
+                btn.innerHTML = 'Analyze Recent Games';
+                btn.disabled = false;
+            }
+        }
+
+        function renderDeviations(suggestedAdditions) {
+            const listEl = document.getElementById('deviations-list');
+            listEl.innerHTML = '';
+            
+            let suggestHtml = '';
+            const sugKeys = Object.keys(suggestedAdditions);
+            if (sugKeys.length > 0) {
+                suggestHtml += `
+                    <div class="bg-indigo-950/40 p-3 mb-4 rounded border border-indigo-700/50">
+                        <h4 class="text-xs font-bold text-indigo-300 mb-1.5 uppercase tracking-wider"><i class="fa-solid fa-lightbulb"></i> Recommended Additions</h4>
+                        <p class="text-[10px] text-gray-400 mb-2">Opponent deviations with high frequencies where your prep can expand:</p>
+                        <div class="space-y-1.5">
+                `;
+                sugKeys.forEach(key => {
+                    const item = suggestedAdditions[key];
+                    const winRate = ((item.losses / item.count) * 100).toFixed(0); 
+                    suggestHtml += `
+                        <div class="text-xs flex justify-between items-center text-gray-300 bg-gray-800/40 p-1 rounded">
+                            <span class="truncate pr-2">${key} <span class="text-[10px] text-gray-500">(${item.count}x)</span></span>
+                            <span class="text-red-400 font-semibold text-[10px] shrink-0">Lose Rate: ${winRate}%</span>
+                        </div>
+                    `;
+                });
+                suggestHtml += `</div></div>`;
+            }
+
+            if (deviations.length === 0) {
+                listEl.innerHTML = suggestHtml + '<div class="text-green-400 text-center mt-4"><i class="fa-solid fa-check-circle text-4xl mb-3 block"></i>Perfect!<br>No deviations from your prep in recent games.</div>';
+                return;
+            }
+
+            let mainHtml = '';
+            deviations.forEach((dev, idx) => {
+                let titleHtml = '';
+                if (dev.isUserTurn) {
+                    titleHtml = `<div class="text-red-400 font-bold mb-1 flex items-center gap-1 text-xs"><i class="fa-solid fa-xmark-circle"></i> You Deviated (vs ${dev.opponent})</div>`;
+                } else {
+                    titleHtml = `<div class="text-yellow-400 font-bold mb-1 flex items-center gap-1 text-xs"><i class="fa-solid fa-triangle-exclamation"></i> Opponent Deviated (vs ${dev.opponent})</div>`;
+                }
+
+                let descHtml = `<div class="text-[11px] text-gray-300 mb-2">Move ${dev.moveNum}: Played <strong class="text-white bg-gray-900 px-1 rounded border border-gray-600">${dev.played}</strong>.<br>`;
+                if (dev.isUserTurn) {
+                    descHtml += `Repertoire expected: <strong class="text-green-400">${dev.expected.join(' or ')}</strong></div>`;
+                } else {
+                    descHtml += `You don't have a response prepared for <strong class="text-yellow-400">${dev.played}</strong>!</div>`;
+                }
+
+                mainHtml += `
+                    <div class="bg-gray-800 p-2.5 mb-2 rounded border border-gray-700 shadow-sm flex flex-col gap-2">
+                        ${titleHtml}
+                        ${descHtml}
+                        <div class="flex gap-2">
+                            <button onclick="jumpToDeviation(${idx})" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-1.5 rounded text-xs font-bold transition flex items-center justify-center gap-1"><i class="fa-solid fa-chess-board text-[10px]"></i> Review</button>
+                            <button onclick="addDeviationToRepertoire(${idx})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded text-xs font-bold transition flex items-center justify-center gap-1"><i class="fa-solid fa-plus text-[10px]"></i> Add to Rep</button>
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = suggestHtml + mainHtml;
+        }
+
+        function addDeviationToRepertoire(idx) {
+            const dev = deviations[idx];
+            if (!repData.activeId) {
+                showMsg("Error", "Please activate a repertoire first.");
+                return;
+            }
+            const root = repData.repertoires[repData.activeId].root;
+            
+            game.load(root.fen);
+            currentNode = root;
+            currentPath = [];
+            
+            for (let i = 0; i < dev.path.length; i++) {
+                const san = dev.path[i].san;
+                const child = currentNode.children.find(c => c.san === san);
+                if (child) {
+                    currentNode = child;
+                    currentPath.push(currentNode);
+                    game.load(currentNode.fen);
+                }
+            }
+            
+            const moveObj = game.move(dev.played);
+            if (!moveObj) {
+                showMsg("Error", `Could not play move: ${dev.played}`);
+                return;
+            }
+            
+            const newFen = game.fen();
+            const san = moveObj.san;
+            let childNode = currentNode.children.find(c => c.san === san);
+            if (!childNode) {
+                childNode = { fen: newFen, san: san, children: [], parent: currentNode, comment: `Added from deviation game vs ${dev.opponent}`, variationName: '' };
+                currentNode.children.push(childNode);
+            }
+            currentNode = childNode;
+            currentPath.push(currentNode);
+            saveState();
+            
+            switchTab('build');
+            afterMoveTrigger(true);
+            
+            showMsg("Added to Repertoire", `Move "${san}" has been successfully added to your preparation! You can now write annotations, add custom comments, or continue theoretical splits from this position.`);
+        }
+
+        function jumpToDeviation(index) {
+            const dev = deviations[index];
+            const root = repData.repertoires[repData.activeId].root;
+            
+            game.load(root.fen);
+            currentNode = root;
+            currentPath = [];
+            
+            for (let i = 0; i < dev.path.length; i++) {
+                const san = dev.path[i].san;
+                const child = currentNode.children.find(c => c.san === san);
+                if (child) {
+                    currentNode = child;
+                    currentPath.push(currentNode);
+                    game.load(currentNode.fen);
+                }
+            }
+
+            switchTab('build');
+            afterMoveTrigger(true);
+
+            if (dev.isUserTurn) {
+                showMsg('Deviation Point', `This is the position before the deviation. You played ${dev.played} in the game. Check the variations list below the board to practice your correct prep (${dev.expected.join(', ')}).`);
+            } else {
+                showMsg('Expand Repertoire', `Opponent played ${dev.played} here. Play it on the board now to add it to your repertoire and begin preparing your response!`);
+            }
+        }
+
+        function clearSavedAccount() {
+            document.getElementById('setting-username').value = '';
+            document.getElementById('games-username').value = '';
+            settings.savedUsername = '';
+            saveState();
+            showMsg("Account Removed", "Your saved chess account details have been cleared from local storage.");
         }
 
         window.onload = init;
