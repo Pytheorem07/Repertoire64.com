@@ -247,6 +247,10 @@
                                     <option value="8" selected>8 plies (4 moves)</option>
                                     <option value="10">10 plies (5 moves)</option>
                                     <option value="12">12 plies (6 moves)</option>
+                                    <option value="14">14 plies (7 moves)</option>
+                                    <option value="16">16 plies (8 moves)</option>
+                                    <option value="18">18 plies (9 moves)</option>
+                                    <option value="20">20 plies (10 moves)</option>
                                     <option value="auto">Auto (Dynamic)</option>
                                 </select>
                             </div>
@@ -256,6 +260,8 @@
                                     <option value="1">1 (Mainlines only)</option>
                                     <option value="2" selected>2 moves (Solid)</option>
                                     <option value="3">3 moves (Thorough)</option>
+                                    <option value="4">4 moves (Wide Coverage)</option>
+                                    <option value="5">5 moves (Extreme Branching)</option>
                                     <option value="auto">Auto (Popularity)</option>
                                 </select>
                             </div>
@@ -468,6 +474,7 @@
                             <option value="Aggressive">Aggressive (Gambits & sharp lines)</option>
                             <option value="Positional">Positional (Solid, strategic setups)</option>
                             <option value="Out of Book">Out of Book (Surprise & off-beat lines)</option>
+                            <option value="Random">Random / Surprise Mix (Unique sound lines)</option>
                         </select>
                     </div>
                 </div>
@@ -480,6 +487,10 @@
                             <option value="6" selected>6 plies (Standard)</option>
                             <option value="8">8 plies (Deep)</option>
                             <option value="10">10 plies (Grandmaster)</option>
+                            <option value="12">12 plies (Extended)</option>
+                            <option value="14">14 plies (Deep Master)</option>
+                            <option value="16">16 plies (Super GM)</option>
+                            <option value="20">20 plies (World Champion)</option>
                         </select>
                     </div>
                     <div>
@@ -490,6 +501,31 @@
                 
                 <button onclick="chessDbCraftRepertoire()" id="btn-chessdb-craft" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg">
                     <i class="fa-solid fa-wand-magic"></i> Craft ChessDB Repertoire
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liability Disclaimer Modal -->
+    <div id="disclaimer-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] hidden">
+        <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-lg w-full mx-4 shadow-2xl">
+            <h2 class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Important Liability Disclaimer
+            </h2>
+            <div class="space-y-4 text-gray-300 text-sm leading-relaxed mb-6">
+                <p>
+                    Welcome to Repertoire64. Before accessing our analytical workspace and database generation modules, you must agree to the following terms:
+                </p>
+                <p class="bg-gray-900 p-3.5 rounded border border-gray-700 text-xs italic font-mono text-gray-400">
+                    The developer and owner of this application assume absolute NO responsibility or liability for any errors, inaccuracies, tactical blunders, system crashes, data loss, or the overall quality of generated opening lines.
+                </p>
+                <p>
+                    <strong class="text-white">Caution:</strong> The <span class="text-indigo-400 font-semibold">ChessDB Repertoire Crafter</span> and <span class="text-indigo-400 font-semibold">Auto-Build Tree</span> features query crowdsourced master databases. While highly standard, automated trees may occasionally recommend theoretical sidelines or unsound variations depending on raw statistic logs. Users are highly encouraged to treat these builds as theoretical frameworks and cross-verify lines utilizing our integrated Stockfish engine.
+                </p>
+            </div>
+            <div class="flex justify-end">
+                <button onclick="agreeDisclaimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold transition">
+                    I Agree & Accept
                 </button>
             </div>
         </div>
@@ -699,7 +735,7 @@
                 </section>
                 <section>
                     <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-network-wired text-indigo-400 mr-2"></i> 2. ChessDB Auto-Build & Repertoire Crafter</h3>
-                    <p>Harness the power of the public ChessDB master games database to auto-generate lines in seconds. Build a brand new complete theoretical opening tree using the <strong>ChessDB Repertoire Crafter</strong> in the repertoires menu (matching Aggressive, Positional, or Out of Book styles), or recursively expand any existing line directly from the board!</p>
+                    <p>Harness the power of the public ChessDB master games database to auto-generate lines in seconds. Build a brand new complete theoretical opening tree using the <strong>ChessDB Repertoire Crafter</strong> in the repertoires menu (matching Aggressive, Positional, Out of Book, or Surprise Mix styles), or recursively expand any existing line directly from the board! (Treat all auto-generated structures with caution as they query crowdsourced data).</p>
                 </section>
                 <section>
                     <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-robot text-gray-400 mr-2"></i> 3. Deep Engine & DB Analysis</h3>
@@ -867,9 +903,15 @@
 
             initEngine();
             
-            if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
-                showInstructions();
-                localStorage.setItem('chess_rep_seen_tutorial_v4', 'true');
+            // Check for liability disclaimer agreement first
+            const agreed = localStorage.getItem('chess_rep_disclaimer_agreed_v5');
+            if (!agreed) {
+                document.getElementById('disclaimer-modal').classList.remove('hidden');
+            } else {
+                if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
+                    showInstructions();
+                    localStorage.setItem('chess_rep_seen_tutorial_v4', 'true');
+                }
             }
 
             document.getElementById('setting-size').addEventListener('input', (e) => {
@@ -909,8 +951,17 @@
         function closeMsgModal() {
             const modal = document.getElementById('msg-modal');
             const content = document.getElementById('msg-modal-content');
-            modal.classList.add('opacity-0'); content.classList.add('scale-95');
+            modal.classList.add('opacity-0'); content.scale-95;
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+        
+        function agreeDisclaimer() {
+            localStorage.setItem('chess_rep_disclaimer_agreed_v5', 'true');
+            document.getElementById('disclaimer-modal').classList.add('hidden');
+            if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
+                showInstructions();
+                localStorage.setItem('chess_rep_seen_tutorial_v4', 'true');
+            }
         }
         
         let confirmCallback = null;
@@ -1307,43 +1358,54 @@
                     if (allowMulti) {
                         movesToExpand = filteredMoves.slice(0, 2);
                     } else {
-                        // Pick exactly ONE best move depending on the selected play style
+                        // Pick exactly ONE sound move. To ensure we get a DIFFERENT repertoire every time:
+                        // We introduce standard randomness.
                         let selectedMove = filteredMoves[0];
-                        if (style === 'Aggressive') {
-                            let bestAggressive = filteredMoves[0];
-                            let maxAbsScore = -1;
-                            const candidates = filteredMoves.slice(0, Math.min(3, filteredMoves.length));
-                            candidates.forEach(c => {
-                                let scoreVal = Math.abs(c.score);
-                                if (scoreVal > maxAbsScore && scoreVal < 600) { 
-                                    maxAbsScore = scoreVal;
-                                    bestAggressive = c;
-                                }
-                            });
-                            selectedMove = bestAggressive;
-                        } else if (style === 'Positional') {
-                            let bestPositional = filteredMoves[0];
-                            let minAbsScore = 99999;
-                            const candidates = filteredMoves.slice(0, Math.min(2, filteredMoves.length));
-                            candidates.forEach(c => {
-                                let scoreVal = Math.abs(c.score);
-                                if (scoreVal < minAbsScore) {
-                                    minAbsScore = scoreVal;
-                                    bestPositional = c;
-                                }
-                            });
-                            selectedMove = bestPositional;
-                        } else if (style === 'Out of Book') {
-                            // Focus on Sidelines (rank 1 choice or secondary branch choice)
-                            if (filteredMoves.length > 1 && filteredMoves[1].rank > 0) {
+
+                        if (style === 'Random') {
+                            // Completely randomized sound choice (Rank > 0)
+                            const randomIndex = Math.floor(Math.random() * filteredMoves.length);
+                            selectedMove = filteredMoves[randomIndex];
+                        } else {
+                            // Introduce entropy so consecutive Positional or Aggressive runs differ slightly (diverging by 30% chance)
+                            const topRankVal = filteredMoves[0].rank;
+                            const topMoves = filteredMoves.filter(m => m.rank === topRankVal);
+
+                            if (topMoves.length > 1) {
+                                // Pick randomly among moves of the same highest rank
+                                const rIdx = Math.floor(Math.random() * topMoves.length);
+                                selectedMove = topMoves[rIdx];
+                            } else if (filteredMoves.length > 1 && Math.random() < 0.30) {
+                                // 30% chance to diverge onto a secondary sound variation
                                 selectedMove = filteredMoves[1];
-                            } else if (filteredMoves.length > 2 && filteredMoves[2].rank > 0) {
-                                selectedMove = filteredMoves[2];
+                            }
+
+                            // Style specific weighted selectors
+                            if (style === 'Aggressive') {
+                                let candidates = filteredMoves.slice(0, Math.min(3, filteredMoves.length));
+                                // Sort by high absolute scores (sharpest lines)
+                                candidates.sort((a, b) => Math.abs(b.score) - Math.abs(a.score));
+                                selectedMove = candidates[Math.floor(Math.random() * Math.min(2, candidates.length))];
+                            } else if (style === 'Positional') {
+                                let candidates = filteredMoves.slice(0, Math.min(2, filteredMoves.length));
+                                // Sort by close-to-draw equalized lines (solid setups)
+                                candidates.sort((a, b) => Math.abs(a.score) - Math.abs(b.score));
+                                selectedMove = candidates[0];
+                            } else if (style === 'Out of Book') {
+                                // Sidelines choices
+                                if (filteredMoves.length > 1 && filteredMoves[1].rank > 0) {
+                                    selectedMove = filteredMoves[1];
+                                } else if (filteredMoves.length > 2 && filteredMoves[2].rank > 0) {
+                                    selectedMove = filteredMoves[2];
+                                }
                             }
                         }
                         movesToExpand = [selectedMove];
                     }
                 } else {
+                    // Opponent's turn:
+                    // Even if style is 'Random', we reply with highly standard, popular opponent responses!
+                    // Opponent moves are kept standard to make sure user prep is optimal.
                     let limit = oppBranching;
                     if (autoBranching) {
                         limit = (currentPlies < 4) ? 2 : 1;
