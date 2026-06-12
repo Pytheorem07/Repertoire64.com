@@ -121,7 +121,7 @@
             <div class="mb-4 flex-shrink-0 flex flex-col max-h-[40%]">
                 <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-2 text-blue-400 flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <span>Stockfish 10</span>
+                        <span>Stockfish</span>
                         <button onclick="toggleSetting('showFullLines')" class="text-gray-400 hover:text-white transition" title="Toggle Full Lines">
                             <i id="icon-full-lines" class="fa-solid fa-list"></i>
                         </button>
@@ -136,18 +136,18 @@
                 </div>
             </div>
 
-            <!-- ChessDB / Lichess Database Interface -->
+            <!-- Database Interface -->
             <div class="flex-1 flex flex-col min-h-0">
                 <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-2 text-blue-400 flex justify-between items-center">
-                    <span id="explorer-db-title">Database (Lichess/ChessDB)</span>
+                    <span id="explorer-db-title">Database</span>
                     <button onclick="toggleSetting('showChessDB')" class="text-gray-400 hover:text-white transition" title="Toggle DB Visibility">
                         <i id="icon-chessdb" class="fa-solid fa-eye"></i>
                     </button>
                 </h2>
-                <div id="db-moves-container" class="overflow-y-auto flex-1 text-sm pr-1">
+                <div id="db-moves-container" class="overflow-y-auto flex-1 text-sm pr-1 max-h-[160px] md:max-h-none">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="text-gray-500 border-b border-gray-700">
+                            <tr class="text-gray-500 border-b border-gray-700 text-xs">
                                 <th class="pb-1 px-1">Move</th>
                                 <th class="pb-1 px-1 text-right" id="db-header-eval">Eval / Stats</th>
                             </tr>
@@ -185,14 +185,20 @@
                     <div class="w-full mt-1 flex justify-between items-center text-sm font-semibold shrink-0">
                         <div id="player-status" class="text-gray-400">White</div>
                         <div class="flex gap-1.5 sm:gap-2">
-                            <button id="btn-watch-rep" onclick="toggleWatchRepertoire()" class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded transition flex items-center gap-1.5 text-xs font-bold" title="Watch Repertoire Tour">
+                            <button id="btn-watch-rep" onclick="toggleWatchRepertoire()" class="bg-indigo-700 hover:bg-indigo-600 text-white px-2.5 py-1.5 rounded transition flex items-center gap-1 text-xs font-bold" title="Watch Repertoire Tour">
                                 <i class="fa-solid fa-play"></i> <span>Watch Rep</span>
                             </button>
-                            <button onclick="flipBoard()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition text-xs" title="Flip Board">
+                            <button onclick="flipBoard()" class="bg-gray-700 hover:bg-gray-600 px-2.5 py-1.5 rounded transition text-xs" title="Flip Board">
                                 <i class="fa-solid fa-retweet"></i>
                             </button>
-                            <button onclick="resetToStart()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition text-xs" title="Reset to Start">
+                            <button onclick="resetToStart()" class="bg-gray-700 hover:bg-gray-600 px-2.5 py-1.5 rounded transition text-xs" title="Reset to Start">
                                 <i class="fa-solid fa-backward-step"></i>
+                            </button>
+                            <button onclick="stepBack()" class="bg-gray-700 hover:bg-gray-600 px-2.5 py-1.5 rounded transition text-xs" title="Previous Move">
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                            <button onclick="stepForward()" class="bg-gray-700 hover:bg-gray-600 px-2.5 py-1.5 rounded transition text-xs" title="Next Move">
+                                <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
                     </div>
@@ -202,8 +208,8 @@
             
             <!-- Dynamic "Build from Here" popup after playing variations -->
             <div id="build-here-container" class="mt-2 hidden bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 shadow-xl">
-                <span class="text-sm text-gray-300">Opening Variation Loaded on Board</span>
-                <button onclick="triggerBuildFromHere()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-xs flex items-center gap-2">
+                <span class="text-sm text-gray-300 font-medium">Opening Variation Loaded on Board</span>
+                <button onclick="triggerBuildFromHere()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-xs flex items-center gap-2 transition">
                     <i class="fa-solid fa-plus"></i> Build Repertoire From Here
                 </button>
             </div>
@@ -219,7 +225,7 @@
                 <button onclick="switchTab('games')" id="tab-games" class="flex-1 py-3 text-xs md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Games</button>
             </div>
 
-            <!-- Build Mode Content -->
+            <!-- Build View Tab -->
             <div id="content-build" class="flex-1 flex flex-col p-4 overflow-hidden relative">
                 <!-- Overlay if no repertoire is active -->
                 <div id="no-rep-overlay" class="absolute inset-0 bg-gray-800/95 z-10 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm">
@@ -279,7 +285,7 @@
                             </div>
                         </div>
                         <div class="flex items-center justify-between py-0.5">
-                            <span class="text-[10px] text-gray-300">Allow multiple moves for my color</span>
+                            <span class="text-[10px] text-gray-300 font-medium">Allow multiple moves for my color</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="autobuild-my-branching" class="sr-only peer">
                                 <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
@@ -349,7 +355,7 @@
                 </div>
             </div>
 
-            <!-- Train Mode Content -->
+            <!-- Train Tab View -->
             <div id="content-train" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
                 <div class="bg-gray-900 rounded-lg p-4 border border-gray-700 mb-4 shrink-0 overflow-y-auto">
                     <h3 class="font-semibold text-base mb-2 text-blue-400">Training Setup</h3>
@@ -396,7 +402,7 @@
                 </div>
             </div>
 
-            <!-- Review Mode Content -->
+            <!-- Review Mode Tab Content -->
             <div id="content-review" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
                 <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 flex-1 overflow-y-auto">
                     <h3 class="font-semibold text-base mb-1 text-red-400">Mistakes to Review</h3>
@@ -408,7 +414,7 @@
                 </div>
             </div>
 
-            <!-- Games Mode Content -->
+            <!-- Games View Tab -->
             <div id="content-games" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
                 
                 <!-- Internal Tab Switching inside Games Tab -->
@@ -475,7 +481,6 @@
                     </div>
                 </div>
 
-                <!-- OPENING STATS SUBTAB VIEW -->
                 <div id="games-view-stats" class="flex flex-col flex-1 min-h-0 hidden overflow-y-auto">
                     <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
                         <h3 class="font-semibold text-base mb-1 text-indigo-400"><i class="fa-solid fa-chart-bar"></i> Opening Stat Analysis</h3>
@@ -530,7 +535,6 @@
         </aside>
     </main>
 
-    <!-- Modals -->
     <!-- Repertoires modal -->
     <div id="reps-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-lg w-full mx-4 shadow-2xl flex flex-col max-h-[90vh]">
@@ -608,7 +612,7 @@
         </div>
     </div>
 
-    <!-- Strict Terms of Service / Liability Disclaimer Modal -->
+    <!-- Persistent Disclaimer / Terms Modal -->
     <div id="disclaimer-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] hidden">
         <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-lg w-full mx-4 shadow-2xl">
             <h2 class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
@@ -619,7 +623,7 @@
                     Welcome to Repertoire64. Before accessing our analytical workspace and database generation modules, you must agree to the following terms:
                 </p>
                 <p class="bg-gray-900 p-3.5 rounded border border-gray-700 text-xs italic font-mono text-gray-400">
-                    The developer and owner of this application assume absolute NO responsibility or liability for any errors, inaccuracies, tactical blunders, system crashes, data loss, or the overall quality of generated opening lines.
+                    The developer and owner of this application assume absolute NO responsibility or liability for any errors, inaccuracies, tactical blunders, system crashes, data loss, or the overall quality of generated opening lines. Users are solely responsible for ensuring they do not abuse, overload, or violate rate limits of Lichess or ChessDB API query clusters.
                 </p>
                 <p>
                     <strong class="text-white">Caution:</strong> The <span class="text-indigo-400 font-semibold">ChessDB Repertoire Crafter</span> and <span class="text-indigo-400 font-semibold">Auto-Build Tree</span> features query crowdsourced master databases. While highly standard, automated trees may occasionally recommend theoretical sidelines or unsound variations depending on raw statistic logs. Users are highly encouraged to treat these builds as theoretical frameworks and cross-verify lines utilizing our integrated Stockfish engine.
@@ -669,7 +673,7 @@
                         <input type="checkbox" id="setting-tos-agree" onchange="handleTosCheckboxChange(event)" checked class="w-4 h-4 bg-gray-800 rounded border-gray-600">
                         <span>I Agree to the Terms & Disclaimer</span>
                     </label>
-                    <p class="text-[10px] text-gray-400 leading-normal">Unchecking will lock analytical features until terms are signed. Owner accepts no responsibility for analysis accuracy.</p>
+                    <p class="text-[10px] text-gray-400 leading-normal">Unchecking will lock analytical features until terms are signed. Owner accepts no responsibility for analysis accuracy or API rate limits.</p>
                 </div>
 
                 <div>
@@ -751,16 +755,28 @@
                     </div>
                 </div>
 
-                <!-- Lichess Personal Access Token (PAT) Configuration Instructions -->
                 <div class="bg-gray-900/80 p-3 rounded-lg border border-gray-700 flex flex-col gap-2">
                     <h3 class="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1">
-                        <i class="fa-solid fa-key"></i> Lichess Token Configuration
+                        <i class="fa-solid fa-key"></i> Lichess Vault Integration
                     </h3>
                     <p class="text-[10px] text-gray-400 leading-normal">
-                        To query the premium Lichess opening database directly, please generate a free access token from your profile. 
-                        <a href="https://lichess.org/account/oauth/token/create?scopes[]=explorer:read" target="_blank" class="text-indigo-400 font-semibold underline hover:text-indigo-300">Click here to generate token</a>, ensure **Read opening explorer** is checked, click **Submit**, then paste it below:
+                        To query the premium Lichess opening database directly, please ensure you are <strong>signed in to Lichess</strong> first, and then click the setup link to auto-navigate to your developer profile. 
+                        <strong>Note:</strong> You do NOT need to check any scope boxes when creating the token as opening database exploration queries are automatically granted on standard bearer authorization.
+                        <a href="https://lichess.org/account/oauth/token/create?scopes[]=" target="_blank" class="text-indigo-400 font-semibold underline hover:text-indigo-300 block mt-1">1. Sign In & Create Lichess Token</a>
                     </p>
-                    <input type="text" id="setting-lichess-token" placeholder="Paste Lichess PAT (Bearer Token)" class="w-full bg-gray-950 border border-gray-600 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    
+                    <div class="flex gap-2 relative items-center" id="lichess-token-field-group">
+                        <input type="password" id="setting-lichess-token" placeholder="Paste Lichess PAT (Bearer Token)" class="w-full bg-gray-950 border border-gray-600 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono pr-8">
+                        <button onclick="revealLichessToken()" class="absolute right-2 text-gray-400 hover:text-white" id="btn-token-visibility">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Secure lock UI -->
+                    <div class="flex items-center justify-between text-xs border-t border-gray-800 pt-2 mt-1">
+                        <span class="text-[10px] text-gray-300">PIN-Lock Token Settings</span>
+                        <button onclick="promptTokenPinSetup()" id="btn-pin-setup" class="bg-indigo-900 hover:bg-indigo-800 text-[10px] px-2 py-1 rounded text-white font-bold transition">Configure Lock Code</button>
+                    </div>
                     
                     <div class="flex items-center justify-between mt-1">
                         <span class="text-xs text-gray-300">Use Lichess Explorer (PAT Required)</span>
@@ -769,15 +785,54 @@
                             <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
                     </div>
-                    
+
+                    <!-- Lichess Game Source selection -->
                     <div>
-                        <label class="block text-[10px] text-gray-400 mb-0.5">Lichess Database Rating Range</label>
-                        <select id="setting-lichess-ratings" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[10px] focus:outline-none">
+                        <label class="block text-[10px] text-gray-400 mb-0.5">Lichess Database Mode</label>
+                        <select id="setting-lichess-source" onchange="toggleLichessSourceUI()" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[10px] focus:outline-none">
+                            <option value="lichess">Lichess Player Games (Online)</option>
+                            <option value="masters">Lichess Masters (FIDE Master games)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="lichess-rating-range-container">
+                        <label class="block text-[10px] text-gray-400 mb-0.5">Lichess Rating Selection</label>
+                        <select id="setting-lichess-ratings-preset" onchange="toggleLichessRatingPreset()" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[10px] focus:outline-none mb-1">
                             <option value="1600,1800,2000,2200,2500" selected>Standard Match Pool (1600-2500)</option>
                             <option value="2000,2200,2500">Expert / Master Only (2000+)</option>
                             <option value="1000,1200,1400,1600">Casual / Under 1600 Only</option>
                             <option value="1000,1200,1400,1600,1800,2000,2200,2500">Complete Player Base</option>
+                            <option value="custom">Custom Rating Range...</option>
                         </select>
+                        
+                        <div id="lichess-custom-ratings-group" class="hidden grid grid-cols-2 gap-2 mt-1">
+                            <div>
+                                <label class="block text-[9px] text-gray-500 mb-0.5">Min Rating</label>
+                                <select id="setting-lichess-ratings-min" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-0.5 text-white text-[10px]">
+                                    <option value="1000" selected>1000</option>
+                                    <option value="1200">1200</option>
+                                    <option value="1400">1400</option>
+                                    <option value="1600">1600</option>
+                                    <option value="1800">1800</option>
+                                    <option value="2000">2000</option>
+                                    <option value="2200">2200</option>
+                                    <option value="2500">2500</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] text-gray-500 mb-0.5">Max Rating</label>
+                                <select id="setting-lichess-ratings-max" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-0.5 text-white text-[10px]">
+                                    <option value="1000">1000</option>
+                                    <option value="1200">1200</option>
+                                    <option value="1400">1400</option>
+                                    <option value="1600">1600</option>
+                                    <option value="1800">1800</option>
+                                    <option value="2000">2000</option>
+                                    <option value="2200">2200</option>
+                                    <option value="2500" selected>2500</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -835,6 +890,24 @@
             
             <div class="mt-6 flex justify-end">
                 <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pin-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[70] hidden">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl">
+            <h3 id="pin-modal-title" class="text-lg font-bold text-white mb-2">Enter Vault Code</h3>
+            <p id="pin-modal-desc" class="text-xs text-gray-400 mb-4">Please input code to authorize changes.</p>
+            <input type="password" id="pin-modal-input" placeholder="Enter PIN / Password" class="w-full bg-gray-950 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 mb-4 text-center">
+            
+            <div id="pin-modal-confirm-group" class="hidden mb-4">
+                <p class="text-xs text-gray-400 mb-1">Confirm PIN / Password:</p>
+                <input type="password" id="pin-modal-input-confirm" placeholder="Confirm PIN / Password" class="w-full bg-gray-950 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 text-center">
+            </div>
+
+            <div class="flex justify-end gap-2 text-xs">
+                <button onclick="closePinModal(false)" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white font-semibold">Cancel</button>
+                <button onclick="closePinModal(true)" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded text-white font-bold">Submit</button>
             </div>
         </div>
     </div>
@@ -915,7 +988,7 @@
             { name: "Scotch Game", moves: ["e4", "e5", "Nf3", "Nc6", "d4"] },
             { name: "Scandinavian Defense", moves: ["e4", "d5"] },
             { name: "Alekhine's Defense", moves: ["e4", "Nf6"] },
-            { name: "Pirc Defense", moves: ["e4", "d6", "d4", "Nf6", "Nc3", "g6"] },
+            { name: "Pirc Defense", moves: ["d4", "Nf6", "Nc3", "g6", "e4", "d6"] },
             { name: "Benoni Defense", moves: ["d4", "Nf6", "c4", "c5"] },
             { name: "Catalan Opening", moves: ["d4", "Nf6", "c4", "e6", "g3", "d5", "Bg2"] },
             { name: "English Opening", moves: ["c4"] },
@@ -979,7 +1052,96 @@
             { name: "Accelerated Dragon Sicilian", moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "g6"] }
         ];
 
-        // --- ASSETS & CONFIGURATIONS ---
+        // --- STREAMING_CHUNK:Initializing state variables... ---
+        // --- GLOBAL STATE ---
+        const game = new Chess();
+        const testGame = new Chess(); 
+        let boardFlipped = false;
+        let selectedSquare = null;
+        
+        let isDragging = false;
+        let dragPieceEl = null;
+        let dragStartSquare = null;
+        let dragOffsetX = 0; 
+        let dragOffsetY = 0;
+        
+        let repData = {
+            activeId: null,
+            repertoires: {},
+            trainedNodes: {} 
+        };
+
+        let currentNode = null;
+        let currentPath = [];
+        let currentMode = 'build';
+        let currentGamesSubTab = 'deviate';
+
+        // Navigation state for back/forth arrows
+        let navigationPath = [];
+        let navigationIdx = -1;
+        
+        let settings = {
+            size: 500,
+            anim: true,
+            sound: true,
+            multipv: 3,
+            boardTheme: 'lichess',
+            pieceTheme: 'standard',
+            showEvalBar: true,
+            showStockfish: true,
+            showChessDB: true,
+            showFullLines: false,
+            legalDots: true,
+            showCoords: true,
+            savedPlatform: 'lichess',
+            savedUsername: '',
+            playbackSpeed: 1200,
+            animSpeed: 0.25,
+            lichessToken: '',
+            lichessTokenPin: '', 
+            useLichessDb: false,
+            lichessSource: 'lichess', // 'lichess' or 'masters'
+            lichessRatingsPreset: '1600,1800,2000,2200,2500',
+            lichessRatingsMin: '1000',
+            lichessRatingsMax: '2500',
+            termsSigned: false
+        };
+
+        let trainingLines = [];
+        let currentTrainLineIndex = 0;
+        let currentTrainMoveIndex = 0;
+        let isTraining = false;
+        let mistakes = []; 
+        let demoInterval = null;
+
+        let engine = null;
+        let stockfishReady = false;
+        let engineLines = [];
+        let engineCurrentFen = "";
+        let globalForceSkipIndex = -1;
+
+        // Repertoire Tour Play Mode variables
+        let isWatchingRepertoire = false;
+        let watchTimeout = null;
+        let watchLines = [];
+        let watchLineIdx = 0;
+        let watchMoveIdx = 0;
+
+        let activeAnalyzedOpeningMoveList = null; 
+        let autoBuildCount = 0;
+        let activePinResolve = null;
+        let deviations = [];
+
+        // Low-latency Woody Sounds via Tone.js
+        const synthMove = new Tone.MembraneSynth({ 
+            pitchDecay: 0.05, octaves: 2, oscillator: { type: "triangle" }, 
+            envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 } 
+        }).toDestination();
+        const synthCapture = new Tone.MembraneSynth({ 
+            pitchDecay: 0.1, octaves: 4, oscillator: { type: "square" }, 
+            envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 } 
+        }).toDestination();
+
         const PIECE_SETS = {
             'standard': {
                 'wP': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
@@ -1032,85 +1194,7 @@
             'wood': { light: '#cba170', dark: '#805634' }
         };
 
-        // --- GLOBAL STATE ---
-        const game = new Chess();
-        const testGame = new Chess(); 
-        let boardFlipped = false;
-        let selectedSquare = null;
-        
-        let isDragging = false;
-        let dragPieceEl = null;
-        let dragStartSquare = null;
-        let dragOffsetX = 0; 
-        let dragOffsetY = 0;
-        
-        let repData = {
-            activeId: null,
-            repertoires: {},
-            trainedNodes: {} 
-        };
-
-        let currentNode = null;
-        let currentPath = [];
-        let currentMode = 'build';
-        let currentGamesSubTab = 'deviate';
-        
-        let settings = {
-            size: 500,
-            anim: true,
-            sound: true,
-            multipv: 3,
-            boardTheme: 'lichess',
-            pieceTheme: 'standard',
-            showEvalBar: true,
-            showStockfish: true,
-            showChessDB: true,
-            showFullLines: false,
-            legalDots: true,
-            showCoords: true,
-            savedPlatform: 'lichess',
-            savedUsername: '',
-            playbackSpeed: 1200,
-            animSpeed: 0.25,
-            lichessToken: '',
-            useLichessDb: false,
-            lichessRatings: '1600,1800,2000,2200,2500',
-            termsSigned: false
-        };
-
-        let trainingLines = [];
-        let currentTrainLineIndex = 0;
-        let currentTrainMoveIndex = 0;
-        let isTraining = false;
-        let mistakes = []; 
-        let demoInterval = null;
-
-        let engine = null;
-        let stockfishReady = false;
-        let engineLines = [];
-        let engineCurrentFen = "";
-        let globalForceSkipIndex = -1;
-
-        // Repertoire Tour Play Mode variables
-        let isWatchingRepertoire = false;
-        let watchTimeout = null;
-        let watchLines = [];
-        let watchLineIdx = 0;
-        let watchMoveIdx = 0;
-
-        let activeAnalyzedOpeningMoveList = null; 
-        let autoBuildCount = 0;
-        
-        // Wood audio synthesis models via Tone.js
-        const synthMove = new Tone.MembraneSynth({ 
-            pitchDecay: 0.05, octaves: 2, oscillator: { type: "triangle" }, 
-            envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 } 
-        }).toDestination();
-        const synthCapture = new Tone.MembraneSynth({ 
-            pitchDecay: 0.1, octaves: 4, oscillator: { type: "square" }, 
-            envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 } 
-        }).toDestination();
-
+        // --- STREAMING_CHUNK:Defining core navigation helpers... ---
         function init() {
             loadState();
             applySettingsToUI();
@@ -1124,7 +1208,6 @@
                 fetchChessDB();
             }
 
-            // Load platform username if saved
             if (settings.savedUsername) {
                 document.getElementById('games-platform').value = settings.savedPlatform || 'lichess';
                 document.getElementById('games-username').value = settings.savedUsername;
@@ -1134,7 +1217,6 @@
 
             initEngine();
             
-            // Check for strict Terms agreement
             if (!settings.termsSigned) {
                 document.getElementById('tos-buttons-container').innerHTML = `
                     <button onclick="agreeDisclaimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold transition w-full">
@@ -1237,17 +1319,70 @@
 
         function showInstructions() { 
             const modal = document.getElementById('instructions-modal');
-            if (modal) {
-                modal.classList.remove('hidden'); 
-            }
+            if (modal) modal.classList.remove('hidden'); 
         }
         function closeInstructions() { 
             const modal = document.getElementById('instructions-modal');
-            if (modal) {
-                modal.classList.add('hidden'); 
+            if (modal) modal.classList.add('hidden'); 
+        }
+
+        // --- STREAMING_CHUNK:Defining moves navigation stack... ---
+        function stepBack() {
+            if (isTraining) return;
+            if (navigationIdx >= 0) {
+                navigationIdx--;
+                applyNavigation();
             }
         }
-        
+
+        function stepForward() {
+            if (isTraining) return;
+            if (navigationIdx < navigationPath.length - 1) {
+                navigationIdx++;
+                applyNavigation();
+            }
+        }
+
+        function applyNavigation() {
+            if (repData.activeId) {
+                const root = repData.repertoires[repData.activeId].root;
+                game.load(root.fen);
+                currentPath = [];
+                currentNode = root;
+                for (let i = 0; i <= navigationIdx; i++) {
+                    const step = navigationPath[i];
+                    const moveResult = game.move(step.san);
+                    if (moveResult) {
+                        let childNode = currentNode.children.find(c => c.san === step.san);
+                        if (!childNode) {
+                            childNode = { fen: game.fen(), san: step.san, children: [], parent: currentNode, comment: '', variationName: '' };
+                            currentNode.children.push(childNode);
+                        }
+                        currentNode = childNode;
+                        currentPath.push(currentNode);
+                    }
+                }
+            } else {
+                game.reset();
+                for (let i = 0; i <= navigationIdx; i++) {
+                    game.move(navigationPath[i].san);
+                }
+            }
+            afterMoveTrigger(false);
+        }
+
+        function populateNavigationFromMainline(node) {
+            navigationPath = [];
+            let curr = node;
+            while (curr && curr.children && curr.children.length > 0) {
+                const child = curr.children[0];
+                navigationPath.push({ san: child.san, node: child });
+                curr = child;
+            }
+            navigationIdx = -1;
+        }
+
+        // --- STREAMING_CHUNK:Configuring settings handlers... ---
         function openSettingsModal() {
             document.getElementById('setting-size').value = settings.size;
             document.getElementById('setting-size-val').innerText = settings.size + 'px';
@@ -1270,9 +1405,26 @@
             document.getElementById('setting-username').value = settings.savedUsername || '';
             document.getElementById('setting-lichess-token').value = settings.lichessToken || '';
             document.getElementById('setting-use-lichess').checked = settings.useLichessDb || false;
-            document.getElementById('setting-lichess-ratings').value = settings.lichessRatings || '1600,1800,2000,2200,2500';
+            document.getElementById('setting-lichess-source').value = settings.lichessSource || 'lichess';
+            document.getElementById('setting-lichess-ratings-preset').value = settings.lichessRatingsPreset || '1600,1800,2000,2200,2500';
+            document.getElementById('setting-lichess-ratings-min').value = settings.lichessRatingsMin || '1000';
+            document.getElementById('setting-lichess-ratings-max').value = settings.lichessRatingsMax || '2500';
             document.getElementById('setting-tos-agree').checked = settings.termsSigned || false;
             
+            toggleLichessSourceUI();
+            toggleLichessRatingPreset();
+
+            const pinSetupBtn = document.getElementById('btn-pin-setup');
+            if (settings.lichessTokenPin) {
+                document.getElementById('setting-lichess-token').readOnly = true;
+                pinSetupBtn.innerText = "Unlock Token Settings";
+                pinSetupBtn.className = "bg-red-900 hover:bg-red-800 text-[10px] px-2 py-1 rounded text-white font-bold transition";
+            } else {
+                document.getElementById('setting-lichess-token').readOnly = false;
+                pinSetupBtn.innerText = "Configure Lock Code";
+                pinSetupBtn.className = "bg-indigo-900 hover:bg-indigo-800 text-[10px] px-2 py-1 rounded text-white font-bold transition";
+            }
+
             document.getElementById('settings-modal').classList.remove('hidden');
         }
         function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
@@ -1284,29 +1436,127 @@
             if (key === 'showFullLines') renderEngineLines();
         }
 
+        function promptTokenPinSetup() {
+            if (settings.lichessTokenPin) {
+                openPinModal("Enter PIN Code", "Provide your existing unlock PIN to write new values.", false, (pinInput) => {
+                    if (pinInput === settings.lichessTokenPin) {
+                        settings.lichessTokenPin = '';
+                        document.getElementById('setting-lichess-token').readOnly = false;
+                        document.getElementById('btn-pin-setup').innerText = "Configure Lock Code";
+                        document.getElementById('btn-pin-setup').className = "bg-indigo-900 hover:bg-indigo-800 text-[10px] px-2 py-1 rounded text-white font-bold transition";
+                        showMsg("Unlocked", "Vault unlocked. You can edit the Lichess token directly.");
+                    } else {
+                        showMsg("Error", "Incorrect PIN provided.");
+                    }
+                });
+            } else {
+                openPinModal("Configure PIN Code", "Set a personal numeric key to lock your Lichess token settings.", true, (newPin, confirmPin) => {
+                    if (newPin !== confirmPin) {
+                        showMsg("Error", "Confirmation code does not match.");
+                        return;
+                    }
+                    if (!newPin) {
+                        showMsg("Error", "PIN cannot be empty.");
+                        return;
+                    }
+                    settings.lichessTokenPin = newPin;
+                    document.getElementById('setting-lichess-token').readOnly = true;
+                    document.getElementById('btn-pin-setup').innerText = "Unlock Token Settings";
+                    document.getElementById('btn-pin-setup').className = "bg-red-900 hover:bg-red-800 text-[10px] px-2 py-1 rounded text-white font-bold transition";
+                    saveState();
+                    showMsg("Success", "Lichess Token is now password-locked.");
+                });
+            }
+        }
+
+        function openPinModal(title, desc, isSetup, callback) {
+            document.getElementById('pin-modal-title').innerText = title;
+            document.getElementById('pin-modal-desc').innerText = desc;
+            document.getElementById('pin-modal-input').value = '';
+            document.getElementById('pin-modal-input-confirm').value = '';
+            
+            if (isSetup) {
+                document.getElementById('pin-modal-confirm-group').classList.remove('hidden');
+            } else {
+                document.getElementById('pin-modal-confirm-group').classList.add('hidden');
+            }
+            
+            activePinResolve = { callback, isSetup };
+            document.getElementById('pin-modal').classList.remove('hidden');
+        }
+
+        function closePinModal(authorized) {
+            document.getElementById('pin-modal').classList.add('hidden');
+            if (authorized && activePinResolve) {
+                const pin = document.getElementById('pin-modal-input').value.trim();
+                const confirmVal = document.getElementById('pin-modal-input-confirm').value.trim();
+                activePinResolve.callback(pin, confirmVal);
+            }
+            activePinResolve = null;
+        }
+
+        function revealLichessToken() {
+            const tokenInput = document.getElementById('setting-lichess-token');
+            const visibilityBtn = document.getElementById('btn-token-visibility');
+            if (settings.lichessTokenPin) {
+                showMsg("Error", "Settings are password locked. Click Unlock Token Settings first.");
+                return;
+            }
+            if (tokenInput.type === "password") {
+                tokenInput.type = "text";
+                visibilityBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+            } else {
+                tokenInput.type = "password";
+                visibilityBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+            }
+        }
+
+        function toggleLichessSourceUI() {
+            const src = document.getElementById('setting-lichess-source').value;
+            const container = document.getElementById('lichess-rating-range-container');
+            if (src === 'masters') {
+                container.classList.add('hidden');
+            } else {
+                container.classList.remove('hidden');
+            }
+        }
+
+        function toggleLichessRatingPreset() {
+            const preset = document.getElementById('setting-lichess-ratings-preset').value;
+            const group = document.getElementById('lichess-custom-ratings-group');
+            if (preset === 'custom') {
+                group.classList.remove('hidden');
+            } else {
+                group.classList.add('hidden');
+            }
+        }
+
         function saveSettings() {
-            settings = {
-                size: parseInt(document.getElementById('setting-size').value),
-                playbackSpeed: parseInt(document.getElementById('setting-playback').value) || 1200,
-                animSpeed: parseFloat(document.getElementById('setting-anim-speed').value) || 0.25,
-                anim: document.getElementById('setting-anim').checked,
-                sound: document.getElementById('setting-sound').checked,
-                showEvalBar: document.getElementById('setting-eval').checked,
-                showStockfish: document.getElementById('setting-sf').checked,
-                showChessDB: document.getElementById('setting-db').checked,
-                legalDots: document.getElementById('setting-dots').checked,
-                showCoords: document.getElementById('setting-coords').checked,
-                showFullLines: settings.showFullLines, 
-                multipv: parseInt(document.getElementById('setting-multipv').value),
-                boardTheme: document.getElementById('setting-board-theme').value,
-                pieceTheme: document.getElementById('setting-piece-theme').value,
-                savedPlatform: document.getElementById('setting-platform').value,
-                savedUsername: document.getElementById('setting-username').value.trim(),
-                lichessToken: document.getElementById('setting-lichess-token').value.trim(),
-                useLichessDb: document.getElementById('setting-use-lichess').checked,
-                lichessRatings: document.getElementById('setting-lichess-ratings').value,
-                termsSigned: document.getElementById('setting-tos-agree').checked
-            };
+            if (!settings.lichessTokenPin) {
+                settings.lichessToken = document.getElementById('setting-lichess-token').value.trim();
+            }
+            
+            settings.size = parseInt(document.getElementById('setting-size').value);
+            settings.playbackSpeed = parseInt(document.getElementById('setting-playback').value) || 1200;
+            settings.animSpeed = parseFloat(document.getElementById('setting-anim-speed').value) || 0.25;
+            settings.anim = document.getElementById('setting-anim').checked;
+            settings.sound = document.getElementById('setting-sound').checked;
+            settings.showEvalBar = document.getElementById('setting-eval').checked;
+            settings.showStockfish = document.getElementById('setting-sf').checked;
+            settings.showChessDB = document.getElementById('setting-db').checked;
+            settings.legalDots = document.getElementById('setting-dots').checked;
+            settings.showCoords = document.getElementById('setting-coords').checked;
+            settings.multipv = parseInt(document.getElementById('setting-multipv').value);
+            settings.boardTheme = document.getElementById('setting-board-theme').value;
+            settings.pieceTheme = document.getElementById('setting-piece-theme').value;
+            settings.savedPlatform = document.getElementById('setting-platform').value;
+            settings.savedUsername = document.getElementById('setting-username').value.trim();
+            settings.useLichessDb = document.getElementById('setting-use-lichess').checked;
+            settings.lichessSource = document.getElementById('setting-lichess-source').value;
+            settings.lichessRatingsPreset = document.getElementById('setting-lichess-ratings-preset').value;
+            settings.lichessRatingsMin = document.getElementById('setting-lichess-ratings-min').value;
+            settings.lichessRatingsMax = document.getElementById('setting-lichess-ratings-max').value;
+            settings.termsSigned = document.getElementById('setting-tos-agree').checked;
             
             document.getElementById('games-platform').value = settings.savedPlatform;
             document.getElementById('games-username').value = settings.savedUsername;
@@ -1361,6 +1611,7 @@
             if (engineLines.length > 0 && engineLines[0]) updateEvalBar(engineLines[0].score);
         }
 
+        // --- STREAMING_CHUNK:Defining Repertoire creation and auto-building... ---
         function toggleCustomPositions() {
             const val = document.getElementById('autobuild-max-positions').value;
             const customInput = document.getElementById('autobuild-custom-positions');
@@ -1382,7 +1633,7 @@
             listEl.innerHTML = '';
             const ids = Object.keys(repData.repertoires);
             if (ids.length === 0) {
-                listEl.innerHTML = '<p class="text-sm text-gray-400 italic">No repertoires created yet.</p>';
+                listEl.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-4">No repertoires created yet.</p>';
                 return;
             }
             ids.forEach(id => {
@@ -1473,6 +1724,8 @@
             game.load(currentNode.fen);
             boardFlipped = (rep.color === 'b');
             
+            populateNavigationFromMainline(rep.root);
+            
             document.getElementById('active-rep-label').innerText = rep.name;
             const trainRepNameEl = document.getElementById('train-rep-name');
             if (trainRepNameEl) {
@@ -1513,7 +1766,6 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating Tree...`;
 
-            // Setup progress dialog overlay
             const progressOverlay = document.createElement('div');
             progressOverlay.id = 'build-progress-overlay';
             progressOverlay.className = 'fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[100] p-6 text-center';
@@ -1540,7 +1792,6 @@
                 root: { fen: tempGame.fen(), san: 'Root', children: [], parent: null, comment: `ChessDB Generated: ${style} style`, variationName: '' }
             };
 
-            // Recursively generate repertoire starting from the root node
             await crawlChessDbNode(repData.repertoires[id].root, 0, maxDepth, 2, style, color, true);
 
             document.getElementById('build-progress-bar').style.width = '100%';
@@ -1560,7 +1811,6 @@
         }
 
         async function crawlChessDbNode(node, currentPlies, maxPlies, oppBranching, style, userColor, autoBranching = false) {
-            // Respect custom position limits to avoid deep lockouts
             const maxPosLimitDropdown = document.getElementById('autobuild-max-positions').value;
             let finalLimit = 100;
             if (maxPosLimitDropdown === 'custom') {
@@ -1575,7 +1825,7 @@
             const isMyTurn = (turn === userColor);
 
             const url = `https://www.chessdb.cn/cdb.php?action=queryall&board=${encodeURIComponent(node.fen)}`;
-            await new Promise(resolve => setTimeout(resolve, 80)); // Rate limiter protection
+            await new Promise(resolve => setTimeout(resolve, 80));
 
             try {
                 const response = await fetch(url);
@@ -1607,7 +1857,7 @@
                                 uci: uci,
                                 san: pMove.san,
                                 score: moveObj.score ? parseInt(moveObj.score) : 0,
-                                rank: moveObj.rank !== undefined ? parseInt(moveObj.rank) : 1, // default to 1 (Good) if not supplied
+                                rank: moveObj.rank !== undefined ? parseInt(moveObj.rank) : 1, 
                                 winRate: moveObj.winrate ? parseFloat(moveObj.winrate) : 50
                             });
                         }
@@ -1616,13 +1866,12 @@
 
                 if (parsedMoves.length === 0) return;
 
-                // FILTER OUT BAD MOVES (rank == 0) to guarantee sound lines, unless no other moves exist
+                // Move filtration block: Prioritize standard moves (Rank 2 and 1). Avoid bad moves (Rank 0).
                 let filteredMoves = parsedMoves.filter(m => m.rank > 0);
                 if (filteredMoves.length === 0) {
-                    filteredMoves = parsedMoves; // fallback
+                    filteredMoves = parsedMoves; // absolute fallback
                 }
 
-                // SORT BY RANK DESCENDING (2 = Best, 1 = Good, 0 = Bad)
                 filteredMoves.sort((a, b) => b.rank - a.rank);
 
                 let movesToExpand = [];
@@ -1632,40 +1881,32 @@
                     if (allowMulti) {
                         movesToExpand = filteredMoves.slice(0, 2);
                     } else {
-                        // Pick exactly ONE sound move. To ensure we get a DIFFERENT repertoire every time:
+                        // Standardize selection depending on Play Style parameters
                         let selectedMove = filteredMoves[0];
 
                         if (style === 'Random') {
-                            // Completely randomized sound choice (Rank > 0)
                             const randomIndex = Math.floor(Math.random() * filteredMoves.length);
                             selectedMove = filteredMoves[randomIndex];
                         } else {
-                            // Introduce entropy so consecutive Positional or Aggressive runs differ slightly (diverging by 30% chance)
                             const topRankVal = filteredMoves[0].rank;
                             const topMoves = filteredMoves.filter(m => m.rank === topRankVal);
 
                             if (topMoves.length > 1) {
-                                // Pick randomly among moves of the same highest rank
                                 const rIdx = Math.floor(Math.random() * topMoves.length);
                                 selectedMove = topMoves[rIdx];
                             } else if (filteredMoves.length > 1 && Math.random() < 0.30) {
-                                // 30% chance to diverge onto a secondary sound variation
                                 selectedMove = filteredMoves[1];
                             }
 
-                            // Style specific weighted selectors
                             if (style === 'Aggressive') {
                                 let candidates = filteredMoves.slice(0, Math.min(3, filteredMoves.length));
-                                // Sort by high absolute scores (sharpest lines)
                                 candidates.sort((a, b) => Math.abs(b.score) - Math.abs(a.score));
                                 selectedMove = candidates[Math.floor(Math.random() * Math.min(2, candidates.length))];
                             } else if (style === 'Positional') {
                                 let candidates = filteredMoves.slice(0, Math.min(2, filteredMoves.length));
-                                // Sort by close-to-draw equalized lines (solid setups)
                                 candidates.sort((a, b) => Math.abs(a.score) - Math.abs(b.score));
                                 selectedMove = candidates[0];
                             } else if (style === 'Out of Book') {
-                                // Sidelines choices
                                 if (filteredMoves.length > 1 && filteredMoves[1].rank > 0) {
                                     selectedMove = filteredMoves[1];
                                 } else if (filteredMoves.length > 2 && filteredMoves[2].rank > 0) {
@@ -1676,8 +1917,6 @@
                         movesToExpand = [selectedMove];
                     }
                 } else {
-                    // Opponent's turn:
-                    // Even if style is 'Random', we reply with highly standard, popular opponent responses!
                     let limit = oppBranching;
                     if (autoBranching) {
                         limit = (currentPlies < 4) ? 2 : 1;
@@ -1725,13 +1964,17 @@
             repData.activeId = null;
             currentNode = null;
             currentPath = [];
+            navigationPath = [];
+            navigationIdx = -1;
             game.reset();
             document.getElementById('active-rep-label').innerText = "Free Analysis";
+            
             saveState();
             switchTab('build');
             afterMoveTrigger(false);
         }
 
+        // --- STREAMING_CHUNK:Rendering board grids and pieces... ---
         function getSquarePosition(square) {
             const files = ['a','b','c','d','e','f','g','h'];
             const file = files.indexOf(square[0]);
@@ -1914,6 +2157,7 @@
             dragOffsetY = clientY - rect.top;
         }
 
+        // --- STREAMING_CHUNK:Moving pieces dynamically... ---
         function handleDragMove(e) {
             if (!isDragging || !dragPieceEl) return;
             const isTouch = e.type === 'touchmove';
@@ -2035,10 +2279,11 @@
             const moveResult = game.move(moveObj);
             if (!moveResult) return;
 
+            let childNode = null;
             if (repData.activeId) {
                 const newFen = game.fen();
                 const san = moveResult.san;
-                let childNode = currentNode.children.find(c => c.san === san);
+                childNode = currentNode.children.find(c => c.san === san);
                 
                 if (!childNode) {
                     childNode = { fen: newFen, san: san, children: [], parent: currentNode, comment: '', variationName: '' };
@@ -2048,9 +2293,18 @@
                 currentPath.push(currentNode);
                 saveState();
             }
+
+            // Sync navigation lists and truncate the redo-stack on deviation
+            if (navigationIdx < navigationPath.length - 1) {
+                navigationPath = navigationPath.slice(0, navigationIdx + 1);
+            }
+            navigationPath.push({ san: moveResult.san, node: childNode });
+            navigationIdx = navigationPath.length - 1;
+
             afterMoveTrigger(settings.anim, from, to);
         }
 
+        // --- STREAMING_CHUNK:Defining node navigations... ---
         function navigateToNode(pathIndex) {
             if (!repData.activeId) return;
             const root = repData.repertoires[repData.activeId].root;
@@ -2064,6 +2318,8 @@
                 currentNode = currentPath[pathIndex];
                 game.load(currentNode.fen);
             }
+            
+            navigationIdx = pathIndex;
             afterMoveTrigger(false);
         }
 
@@ -2073,6 +2329,13 @@
                 game.load(childNode.fen);
                 currentNode = childNode;
                 currentPath.push(currentNode);
+                
+                if (navigationIdx < navigationPath.length - 1) {
+                    navigationPath = navigationPath.slice(0, navigationIdx + 1);
+                }
+                navigationPath.push({ san: san, node: childNode });
+                navigationIdx = navigationPath.length - 1;
+
                 afterMoveTrigger(false);
             }
         }
@@ -2081,12 +2344,13 @@
             if (isTraining) return;
             if (isWatchingRepertoire) stopWatchRepertoire();
             
-            // Hide build from here variation builder
             document.getElementById('build-here-container').classList.add('hidden');
             activeAnalyzedOpeningMoveList = null;
 
             if (!repData.activeId) {
                 game.reset();
+                navigationPath = [];
+                navigationIdx = -1;
                 afterMoveTrigger(false);
                 return;
             }
@@ -2096,6 +2360,8 @@
         function deleteCurrentNode() {
             if (!repData.activeId) {
                 game.undo();
+                navigationPath.pop();
+                navigationIdx = navigationPath.length - 1;
                 afterMoveTrigger(false);
                 return;
             }
@@ -2240,6 +2506,11 @@
                     playSound(moveDetails.captured != null);
                     currentNode = nextNode;
                     currentPath.push(currentNode);
+                    
+                    // Keep navigation stack updated
+                    navigationPath = currentPath.map(n => ({ san: n.san, node: n }));
+                    navigationIdx = navigationPath.length - 1;
+
                     afterMoveTrigger(settings.anim, moveDetails.from, moveDetails.to);
                     watchMoveIdx++;
                     
@@ -2302,6 +2573,7 @@
                     importCount++;
                 }
 
+                syncNavigationFromCurrentPath();
                 saveState();
                 afterMoveTrigger(true);
                 document.getElementById('pgn-import-text').value = '';
@@ -2311,6 +2583,11 @@
                 showMsg("PGN Parse Error", `Failed to parse PGN. Error: ${err.message}`);
                 game.load(currentNode ? currentNode.fen : repData.repertoires[repData.activeId].root.fen);
             }
+        }
+
+        function syncNavigationFromCurrentPath() {
+            navigationPath = currentPath.map(n => ({ san: n.san, node: n }));
+            navigationIdx = navigationPath.length - 1;
         }
 
         function updateRepertoireUI() {
@@ -2441,6 +2718,7 @@
                     const overlay = document.getElementById('build-progress-overlay');
                     if (overlay) overlay.remove();
                     saveState();
+                    syncNavigationFromCurrentPath();
                     afterMoveTrigger(true);
                     showMsg("Success", `Repertoire built successfully! Harvested ${autoBuildCount} master positions into your current branch.`);
                 }, 800);
@@ -2469,6 +2747,7 @@
             fill.style.height = `${pct}%`;
         }
 
+        // --- STREAMING_CHUNK:Querying Lichess Explorer with recommendation heuristics... ---
         async function fetchChessDB() {
             if (!settings.showChessDB) return;
             
@@ -2478,66 +2757,121 @@
             const headerEvalEl = document.getElementById('db-header-eval');
             
             if (game.game_over()) {
-                dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">Game Over</td></tr>';
+                dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2 text-center">Game Over</td></tr>';
                 return;
             }
-            dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">Loading...</td></tr>';
+            dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2 text-center">Loading...</td></tr>';
             
-            // INTEL SWITCH: If Lichess Explorer is enabled AND has Token, fetch Lichess Explorer instead of ChessDB
             if (settings.useLichessDb && settings.lichessToken) {
-                document.getElementById('explorer-db-title').innerText = "Lichess Explorer";
-                headerEvalEl.innerText = "Stats (W / D / B)";
+                document.getElementById('explorer-db-title').innerText = settings.lichessSource === 'masters' ? "Lichess Masters Explorer" : "Lichess Player Explorer";
+                headerEvalEl.innerText = settings.lichessSource === 'masters' ? "Masters Play Count" : "Stats (W / D / B)";
                 
                 try {
-                    const ratingStr = settings.lichessRatings || "1600,1800,2000,2200,2500";
-                    const url = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${encodeURIComponent(fen)}&ratings=${ratingStr}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'Authorization': `Bearer ${settings.lichessToken}`
+                    let url = '';
+                    if (settings.lichessSource === 'masters') {
+                        url = `https://explorer.lichess.ovh/masters?variant=standard&fen=${encodeURIComponent(fen)}`;
+                    } else {
+                        let ratingStr = '';
+                        if (settings.lichessRatingsPreset === 'custom') {
+                            const minRating = parseInt(settings.lichessRatingsMin) || 1000;
+                            const maxRating = parseInt(settings.lichessRatingsMax) || 2500;
+                            const steps = [1000, 1200, 1400, 1600, 1800, 2000, 2200, 2500];
+                            const selectedSteps = steps.filter(s => s >= minRating && s <= maxRating);
+                            ratingStr = selectedSteps.join(',');
+                        } else {
+                            ratingStr = settings.lichessRatingsPreset || "1600,1800,2000,2200,2500";
                         }
+                        url = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${encodeURIComponent(fen)}&ratings=${ratingStr}`;
+                    }
+
+                    const response = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${settings.lichessToken}` }
                     });
                     
                     if (!response.ok) {
-                        throw new Error(`Lichess Explorer returned status: ${response.status}`);
+                        throw new Error(`Lichess API returned status: ${response.status}`);
                     }
                     
                     const data = await response.json();
                     openingEl.innerText = fen === "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" ? "Starting Position" : (data.opening?.name || "Theory Position");
                     
                     if (!data.moves || data.moves.length === 0) {
-                        dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">No Lichess games found</td></tr>';
+                        dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2 text-center">No explorer games found</td></tr>';
                         return;
                     }
                     
+                    // Recommendations processing: Recommend up to 3 options if multiple are popular (> 12% total games)
+                    // If one is heavily dominant (> 70%), only recommend that one
+                    let totalGames = 0;
+                    data.moves.forEach(m => {
+                        totalGames += (m.white + m.draws + m.black);
+                    });
+
+                    let recommendedMoves = [];
+                    if (totalGames > 0 && data.moves.length > 0) {
+                        let sortedMoves = [...data.moves].sort((a,b) => (b.white + b.draws + b.black) - (a.white + a.draws + a.black));
+                        const topPct = (sortedMoves[0].white + sortedMoves[0].draws + sortedMoves[0].black) / totalGames;
+                        
+                        if (topPct > 0.70) {
+                            recommendedMoves.push(sortedMoves[0].san);
+                        } else {
+                            for (let idx = 0; idx < Math.min(3, sortedMoves.length); idx++) {
+                                const m = sortedMoves[idx];
+                                const mCount = m.white + m.draws + m.black;
+                                if ((mCount / totalGames) >= 0.12) {
+                                    recommendedMoves.push(m.san);
+                                }
+                            }
+                        }
+                    }
+
                     let html = '';
                     data.moves.forEach(m => {
                         const san = m.san;
                         const uci = m.uci;
                         const total = m.white + m.draws + m.black;
-                        const wPct = total > 0 ? ((m.white / total) * 100).toFixed(0) : 0;
-                        const dPct = total > 0 ? ((m.draws / total) * 100).toFixed(0) : 0;
-                        const bPct = total > 0 ? ((m.black / total) * 100).toFixed(0) : 0;
                         
-                        html += `
-                            <tr onclick="playUciSequence('${uci}')" class="border-b border-gray-700 last:border-0 hover:bg-gray-700 transition cursor-pointer" title="Click to play move. Games: ${total}">
-                                <td class="py-1.5 font-semibold text-gray-200 px-1">${san}</td>
-                                <td class="py-1.5 text-right px-1 font-mono text-[10px] text-gray-400">
-                                    <span class="text-green-400">${wPct}%</span> / <span class="text-gray-300">${dPct}%</span> / <span class="text-red-400">${bPct}%</span>
-                                </td>
-                            </tr>
-                        `;
+                        const isRec = recommendedMoves.includes(san);
+                        const recBadge = isRec ? `<span class="bg-indigo-900/80 text-indigo-300 border border-indigo-700 text-[9px] font-bold px-1 py-0.5 rounded ml-1.5 shrink-0"><i class="fa-solid fa-star text-[8px] text-amber-400"></i> Rec</span>` : '';
+
+                        if (settings.lichessSource === 'masters') {
+                            html += `
+                                <tr onclick="playUciSequence('${uci}')" class="border-b border-gray-700 last:border-0 hover:bg-gray-700 transition cursor-pointer" title="Click to play move. Master games: ${total}">
+                                    <td class="py-1.5 font-semibold text-gray-200 px-1 flex items-center justify-between">
+                                        <span>${san}</span>
+                                        ${recBadge}
+                                    </td>
+                                    <td class="py-1.5 text-right px-1 font-mono text-[11px] text-gray-400">
+                                        ${total.toLocaleString()} games
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            const wPct = total > 0 ? ((m.white / total) * 100).toFixed(0) : 0;
+                            const dPct = total > 0 ? ((m.draws / total) * 100).toFixed(0) : 0;
+                            const bPct = total > 0 ? ((m.black / total) * 100).toFixed(0) : 0;
+                            
+                            html += `
+                                <tr onclick="playUciSequence('${uci}')" class="border-b border-gray-700 last:border-0 hover:bg-gray-700 transition cursor-pointer" title="Click to play move. Games: ${total}">
+                                    <td class="py-1.5 font-semibold text-gray-200 px-1 flex items-center justify-between">
+                                        <span>${san}</span>
+                                        ${recBadge}
+                                    </td>
+                                    <td class="py-1.5 text-right px-1 font-mono text-[10px] text-gray-400">
+                                        <span class="text-green-400">${wPct}%</span> / <span class="text-gray-300">${dPct}%</span> / <span class="text-red-400">${bPct}%</span>
+                                    </td>
+                                </tr>
+                            `;
+                        }
                     });
                     dbMovesEl.innerHTML = html;
                     return;
                 } catch (err) {
                     console.warn("Lichess database request failed, falling back to ChessDB:", err);
-                    // Dropback notice text
-                    dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-yellow-500 italic text-[10px] px-1">Lichess token failed or unauthorized. Loading ChessDB...</td></tr>';
-                    setTimeout(() => {}, 800);
+                    dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-yellow-500 italic text-[10px] px-1 text-center">Lichess token failed or unauthorized. Loading ChessDB...</td></tr>';
                 }
             }
             
-            // Standard ChessDB Fallback Flow
             document.getElementById('explorer-db-title').innerText = "ChessDB (Public)";
             headerEvalEl.innerText = "Eval Score";
             
@@ -2549,7 +2883,7 @@
                 const text = await response.text();
                 
                 if (text.includes('unknown') || text.trim() === '') {
-                    dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">No master games found</td></tr>';
+                    dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2 text-center">No master games found</td></tr>';
                     return;
                 }
 
@@ -2594,10 +2928,10 @@
                         }
                     }
                 }
-                dbMovesEl.innerHTML = html || '<tr><td colspan="2" class="text-gray-500 italic pt-2">No master games found</td></tr>';
+                dbMovesEl.innerHTML = html || '<tr><td colspan="2" class="text-gray-500 italic pt-2 text-center">No master games found</td></tr>';
             } catch (error) {
                 console.warn("ChessDB API error:", error);
-                dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-red-400 italic text-xs pt-2">Failed to load DB</td></tr>';
+                dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-red-400 italic text-xs pt-2 text-center">Failed to load DB</td></tr>';
             }
         }
 
@@ -2692,7 +3026,6 @@
                 engine.postMessage(`position fen ${engineCurrentFen}`);
                 engine.postMessage('go depth 16'); 
             } else {
-                // Cloud Engine Fallback
                 document.getElementById('engine-depth').innerText = `Cloud Engine`;
                 try {
                     const cloudUrl = `https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(engineCurrentFen)}`;
@@ -2791,6 +3124,7 @@
             container.innerHTML = html;
         }
 
+        // --- STREAMING_CHUNK:Preparing training and mistakes logic... ---
         function extractPaths(node, currentBranch = []) {
             if (!node) return [];
             if (node.children.length === 0) return currentBranch.length > 0 ? [currentBranch] : [];
@@ -3025,7 +3359,7 @@
         function renderMistakesList() {
             const listEl = document.getElementById('mistakes-list');
             if (mistakes.length === 0) {
-                listEl.innerHTML = '<div class="text-gray-500 italic text-sm p-4 bg-gray-800 rounded">No mistakes to review! Great job.</div>';
+                listEl.innerHTML = '<div class="text-gray-500 italic text-sm p-4 bg-gray-800 rounded text-center">No mistakes to review! Great job.</div>';
                 return;
             }
             let html = '';
@@ -3058,6 +3392,7 @@
             }
         }
 
+        // --- STREAMING_CHUNK:Handling state loads, exports and analytical functions... ---
         function serializeNode(node) { 
             return { 
                 san: node.san, 
@@ -3443,7 +3778,7 @@
             if (limitSelect !== 'max') {
                 limit = parseInt(limitSelect) || 100;
             } else {
-                limit = 5000; // Large fetch boundary
+                limit = 5000; 
             }
 
             if (!username) {
@@ -3521,13 +3856,12 @@
                     return;
                 }
 
-                // --- COMPILE STATS IN MEMORY ---
                 let stats = {
                     total: gamesFetched.length,
                     whiteGames: 0,
                     blackGames: 0,
-                    whiteFirstMoves: {}, // { "e4": { played: 0, wins: 0, losses: 0, draws: 0 } }
-                    blackFirstMovesResponses: { // responses to popular white first moves: e4, d4, c4, Nf3, g3, b3
+                    whiteFirstMoves: {}, 
+                    blackFirstMovesResponses: { 
                         'e4': {},
                         'd4': {},
                         'c4': {},
@@ -3535,10 +3869,9 @@
                         'g3': {},
                         'b3': {}
                     },
-                    openingsList: {} // match 75 openings -> { total: 0, wins: 0, losses: 0, draws: 0 }
+                    openingsList: {} 
                 };
 
-                // Initialize 75 openings container
                 CHESS_OPENINGS_75.forEach(op => {
                     stats.openingsList[op.name] = { name: op.name, moves: op.moves, count: 0, wins: 0, losses: 0, draws: 0 };
                 });
@@ -3549,41 +3882,44 @@
                     if (!isWhitePlayer && !isBlackPlayer) return;
 
                     const result = g.result;
-                    let outcome = 'draw'; // win, loss, draw
+                    let outcome = 'draw'; 
                     if (result === '1-0') outcome = isWhitePlayer ? 'win' : 'loss';
                     else if (result === '0-1') outcome = isBlackPlayer ? 'win' : 'loss';
 
-                    // 1. Analyze White First Moves Played
+                    let outcomeField = 'draws';
+                    if (outcome === 'win') outcomeField = 'wins';
+                    else if (outcome === 'loss') outcomeField = 'losses';
+
                     if (isWhitePlayer) {
                         stats.whiteGames++;
                         const firstMove = g.moves[0];
                         if (firstMove) {
-                            if (!stats.whiteFirstMoves[firstMove]) {
-                                stats.whiteFirstMoves[firstMove] = { count: 0, wins: 0, losses: 0, draws: 0 };
+                            const cleanFirstMove = firstMove.replace(/[+#]/, '');
+                            if (!stats.whiteFirstMoves[cleanFirstMove]) {
+                                stats.whiteFirstMoves[cleanFirstMove] = { count: 0, wins: 0, losses: 0, draws: 0 };
                             }
-                            stats.whiteFirstMoves[firstMove].count++;
-                            stats.whiteFirstMoves[firstMove][outcome + 's']++;
+                            stats.whiteFirstMoves[cleanFirstMove].count++;
+                            stats.whiteFirstMoves[cleanFirstMove][outcomeField]++;
                         }
                     }
 
-                    // 2. Analyze Black responses to white first moves
                     if (isBlackPlayer) {
                         stats.blackGames++;
                         const oppFirstMove = g.moves[0];
                         const userResponse = g.moves[1];
                         if (oppFirstMove && userResponse) {
                             const standardOppFirstMove = oppFirstMove.replace(/[+#]/, '');
+                            const cleanUserResponse = userResponse.replace(/[+#]/, '');
                             if (stats.blackFirstMovesResponses[standardOppFirstMove] !== undefined) {
-                                if (!stats.blackFirstMovesResponses[standardOppFirstMove][userResponse]) {
-                                    stats.blackFirstMovesResponses[standardOppFirstMove][userResponse] = { count: 0, wins: 0, losses: 0, draws: 0 };
+                                if (!stats.blackFirstMovesResponses[standardOppFirstMove][cleanUserResponse]) {
+                                    stats.blackFirstMovesResponses[standardOppFirstMove][cleanUserResponse] = { count: 0, wins: 0, losses: 0, draws: 0 };
                                 }
-                                stats.blackFirstMovesResponses[standardOppFirstMove][userResponse].count++;
-                                stats.blackFirstMovesResponses[standardOppFirstMove][userResponse][outcome + 's']++;
+                                stats.blackFirstMovesResponses[standardOppFirstMove][cleanUserResponse].count++;
+                                stats.blackFirstMovesResponses[standardOppFirstMove][cleanUserResponse][outcomeField]++;
                             }
                         }
                     }
 
-                    // 3. Match 75 Openings
                     let bestMatchName = null;
                     let bestMatchLength = 0;
 
@@ -3591,7 +3927,6 @@
                         let matches = true;
                         if (g.moves.length < op.moves.length) return;
                         for (let idx = 0; idx < op.moves.length; idx++) {
-                            // Strip symbols just in case
                             const gameMoveClean = g.moves[idx].replace(/[+#]/, '');
                             const opMoveClean = op.moves[idx];
                             if (gameMoveClean !== opMoveClean) {
@@ -3607,26 +3942,23 @@
 
                     if (bestMatchName) {
                         stats.openingsList[bestMatchName].count++;
-                        stats.openingsList[bestMatchName][outcome + 's']++;
+                        stats.openingsList[bestMatchName][outcomeField]++;
                     }
                 });
 
-                // --- BUILD INTERACTIVE HTML OUTPUT ---
                 let html = '';
 
-                // Summary Badge
                 html += `
                     <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-xs">
-                        <p class="font-bold text-gray-200">Total Analyzed: <span class="text-blue-400">${stats.total} Games</span></p>
+                        <p class="font-bold text-gray-200">Total Games Analyzed: <span class="text-blue-400">${stats.total} Games</span></p>
                         <p class="text-gray-400 mt-1">Played as White: ${stats.whiteGames} | Played as Black: ${stats.blackGames}</p>
                     </div>
                 `;
 
-                // White First Moves HTML
                 html += `<div class="mt-4"><h4 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2"><i class="fa-solid fa-chess-knight"></i> White First Moves</h4>`;
                 let whiteKeys = Object.keys(stats.whiteFirstMoves).sort((a,b) => stats.whiteFirstMoves[b].count - stats.whiteFirstMoves[a].count);
                 if (whiteKeys.length === 0) {
-                    html += `<p class="text-[11px] text-gray-500 italic">No games as White found.</p>`;
+                    html += `<p class="text-[11px] text-gray-500 italic">No games as White found in current archive slice.</p>`;
                 } else {
                     html += `<div class="grid grid-cols-2 gap-2">`;
                     whiteKeys.forEach(k => {
@@ -3637,8 +3969,8 @@
                         html += `
                             <div class="bg-gray-950 p-2 rounded border border-gray-800 text-[11px]">
                                 <p class="font-bold text-white">1. ${k} <span class="text-gray-500">(${mData.count}x)</span></p>
-                                <p class="text-[10px] text-gray-400 mt-1">
-                                    Win: <span class="text-green-400">${winPct}%</span> | Draw: <span>${drawPct}%</span> | Loss: <span class="text-red-400">${lossPct}%</span>
+                                <p class="text-[10px] text-gray-400 mt-1 font-mono">
+                                    Win: <span class="text-green-400">${winPct}%</span> | Draw: <span class="text-gray-300">${drawPct}%</span> | Loss: <span class="text-red-400">${lossPct}%</span>
                                 </p>
                             </div>
                         `;
@@ -3647,7 +3979,6 @@
                 }
                 html += `</div>`;
 
-                // Black Responses HTML
                 html += `<div class="mt-4"><h4 class="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2"><i class="fa-solid fa-chess-rook"></i> Black Responses</h4>`;
                 let popularLines = ['e4', 'd4', 'c4', 'Nf3', 'g3', 'b3'];
                 popularLines.forEach(whiteMove => {
@@ -3668,8 +3999,8 @@
                             html += `
                                 <div class="flex justify-between items-center text-[10px]">
                                     <span class="font-semibold text-white">1... ${blackResp} <span class="text-gray-500">(${rData.count}x)</span></span>
-                                    <span class="text-gray-400 font-mono">
-                                        W:<span class="text-green-400 font-bold">${winPct}%</span> L:<span class="text-red-400 font-bold">${lossPct}%</span>
+                                    <span class="text-gray-400 font-mono text-[9px]">
+                                        W:<span class="text-green-400 font-bold">${winPct}%</span> D:<span class="text-gray-300 font-bold">${drawPct}%</span> L:<span class="text-red-400 font-bold">${lossPct}%</span>
                                     </span>
                                 </div>
                             `;
@@ -3679,18 +4010,17 @@
                 });
                 html += `</div>`;
 
-                // 75 Openings Compilation Index Table
                 html += `
                     <div class="mt-4">
                         <h4 class="text-xs font-bold text-green-400 uppercase tracking-wider mb-2"><i class="fa-solid fa-book-open"></i> Matched Openings Index (75 Lines)</h4>
                         <p class="text-[10px] text-gray-400 mb-2">Click any row below to instantly project variation on board and trigger auto-building.</p>
                         <div class="bg-gray-950 rounded border border-gray-800 overflow-hidden text-[11px]">
                             <table class="w-full text-left">
-                                <thead class="bg-gray-900 text-gray-500 border-b border-gray-800">
+                                <thead class="bg-gray-900 text-gray-500 border-b border-gray-800 text-[10px]">
                                     <tr>
                                         <th class="p-2">Opening Name</th>
                                         <th class="p-2 text-right">Played</th>
-                                        <th class="p-2 text-right">Win/Loss</th>
+                                        <th class="p-2 text-right">W/D/L Rate</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-800/50">
@@ -3699,16 +4029,16 @@
                 let matchedOpeningsArray = Object.values(stats.openingsList).filter(o => o.count > 0);
                 matchedOpeningsArray.sort((a,b) => b.count - a.count);
 
-                // Prepend popular unplayed ones to fill index list up to 75 nicely
                 let unplayedArray = Object.values(stats.openingsList).filter(o => o.count === 0);
                 let fullRenderArray = [...matchedOpeningsArray, ...unplayedArray];
 
                 fullRenderArray.forEach(op => {
                     const winPct = op.count > 0 ? ((op.wins / op.count) * 100).toFixed(0) : 0;
                     const lossPct = op.count > 0 ? ((op.losses / op.count) * 100).toFixed(0) : 0;
+                    const drawPct = op.count > 0 ? ((op.draws / op.count) * 100).toFixed(0) : 0;
                     
                     const countText = op.count > 0 ? `${op.count}x` : `<span class="text-gray-600">-</span>`;
-                    const statsText = op.count > 0 ? `<span class="text-green-400 font-bold">${winPct}%</span>/<span class="text-red-400">${lossPct}%</span>` : `<span class="text-gray-600">-</span>`;
+                    const statsText = op.count > 0 ? `<span class="text-green-400 font-bold">${winPct}%</span>/<span class="text-gray-300 font-bold">${drawPct}%</span>/<span class="text-red-400 font-bold">${lossPct}%</span>` : `<span class="text-gray-600">-</span>`;
 
                     const opMoveString = JSON.stringify(op.moves);
                     html += `
@@ -3722,7 +4052,6 @@
 
                 html += `</tbody></table></div></div>`;
 
-                // Reveal Dashboard
                 placeholder.classList.add('hidden');
                 outputContainer.innerHTML = html;
                 outputContainer.classList.remove('hidden');
@@ -3739,25 +4068,28 @@
         function playSpecificOpeningOnBoard(movesArray, openingName) {
             if (isTraining) return;
             
-            // Reset state
             game.reset();
             renderPieces(false);
             
-            // Force play moves sequentially
             movesArray.forEach(mv => {
                 game.move(mv);
             });
 
+            syncNavigationFromGame();
             afterMoveTrigger(true);
             
-            // Cache current moves sequence for Repertoire auto builder
             activeAnalyzedOpeningMoveList = { name: openingName, moves: movesArray };
             
-            // Trigger popup button below board
             const buildBtn = document.getElementById('build-here-container');
             buildBtn.classList.remove('hidden');
             
             showMsg("Opening Played", `"${openingName}" loaded onto board. Click "[Build Repertoire From Here]" underneath the board if you wish to import this variation directly!`);
+        }
+
+        function syncNavigationFromGame() {
+            const moves = game.history();
+            navigationPath = moves.map(san => ({ san: san, node: null }));
+            navigationIdx = navigationPath.length - 1;
         }
 
         function triggerBuildFromHere() {
@@ -3770,11 +4102,10 @@
                 
                 repData.repertoires[id] = {
                     name: op.name,
-                    color: "w", // Default White focus
+                    color: "w", 
                     root: { fen: tempGame.fen(), san: 'Root', children: [], parent: null, comment: 'Imported from Stats opening variation', variationName: '' }
                 };
 
-                // Inject moves programmatically
                 let node = repData.repertoires[id].root;
                 op.moves.forEach(m => {
                     tempGame.move(m);
@@ -3894,6 +4225,7 @@
             currentPath.push(currentNode);
             saveState();
             
+            syncNavigationFromCurrentPath();
             switchTab('build');
             afterMoveTrigger(true);
             
@@ -3918,6 +4250,7 @@
                 }
             }
 
+            syncNavigationFromCurrentPath();
             switchTab('build');
             afterMoveTrigger(true);
 
