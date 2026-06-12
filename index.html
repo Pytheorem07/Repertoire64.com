@@ -4,21 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <!-- SEO & Meta Tags -->
     <title>Repertoire64 - Interactive Chess Opening Trainer & Builder</title>
     <meta name="description" content="Master your chess openings with Repertoire64. A free, single-file chess repertoire builder and trainer featuring Stockfish evaluation, ChessDB master games, and smart spaced repetition.">
     <meta name="keywords" content="chess, repertoire, opening trainer, chess openings, stockfish, chessdb, chess study, chess tool, web chess, interactive chess">
     <meta name="author" content="PyTheorem07">
     <meta name="robots" content="index, follow">
     
+    <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:title" content="Repertoire64 - Professional Chess Opening Trainer">
     <meta property="og:description" content="Build, train, and study your chess openings with built-in Stockfish analysis and master databases.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
     <meta property="og:url" content="https://repertoire64.com">
 
+    <!-- Favicon -->
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
     
+    <!-- Tailwind CSS & Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -132,10 +136,10 @@
                 </div>
             </div>
 
-            <!-- ChessDB Database Interface -->
+            <!-- ChessDB / Lichess Database Interface -->
             <div class="flex-1 flex flex-col min-h-0">
                 <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mb-2 text-blue-400 flex justify-between items-center">
-                    <span>ChessDB (Public)</span>
+                    <span id="explorer-db-title">Database (Lichess/ChessDB)</span>
                     <button onclick="toggleSetting('showChessDB')" class="text-gray-400 hover:text-white transition" title="Toggle DB Visibility">
                         <i id="icon-chessdb" class="fa-solid fa-eye"></i>
                     </button>
@@ -145,7 +149,7 @@
                         <thead>
                             <tr class="text-gray-500 border-b border-gray-700">
                                 <th class="pb-1 px-1">Move</th>
-                                <th class="pb-1 px-1 text-right">Eval Score</th>
+                                <th class="pb-1 px-1 text-right" id="db-header-eval">Eval / Stats</th>
                             </tr>
                         </thead>
                         <tbody id="db-moves">
@@ -156,7 +160,7 @@
             </div>
         </aside>
 
-        <!-- Center Panel: Board -->
+        <!-- Center Panel: Chessboard Area -->
         <section class="flex-1 p-2 md:p-4 flex flex-col items-center justify-center bg-gray-900 overflow-y-auto relative">
             
             <div id="main-board-area" class="w-full flex gap-2 items-stretch justify-center transition-all duration-300" style="max-width: 530px;">
@@ -194,6 +198,14 @@
                     </div>
                 </div>
 
+            </div>
+            
+            <!-- Dynamic "Build from Here" popup after playing variations -->
+            <div id="build-here-container" class="mt-2 hidden bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 shadow-xl">
+                <span class="text-sm text-gray-300">Opening Variation Loaded on Board</span>
+                <button onclick="triggerBuildFromHere()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Build Repertoire From Here
+                </button>
             </div>
         </section>
 
@@ -273,6 +285,34 @@
                                 <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
+                        
+                        <!-- Auto Build Limits Slider -->
+                        <div class="border-t border-gray-700 pt-1.5">
+                            <label class="block text-[10px] text-gray-400 mb-0.5">Max Target Positions limit</label>
+                            <select id="autobuild-max-positions" onchange="toggleCustomPositions()" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[11px] focus:outline-none mb-1">
+                                <option value="25">25 Positions</option>
+                                <option value="50">50 Positions</option>
+                                <option value="75">75 Positions</option>
+                                <option value="100" selected>100 Positions (Standard)</option>
+                                <option value="125">125 Positions</option>
+                                <option value="150">150 Positions</option>
+                                <option value="175">175 Positions</option>
+                                <option value="200">200 Positions</option>
+                                <option value="225">225 Positions</option>
+                                <option value="250">250 Positions</option>
+                                <option value="275">275 Positions</option>
+                                <option value="300">300 Positions</option>
+                                <option value="325">325 Positions</option>
+                                <option value="350">350 Positions</option>
+                                <option value="375">375 Positions (Intense)</option>
+                                <option value="custom">Custom Value...</option>
+                            </select>
+                            <input type="number" id="autobuild-custom-positions" placeholder="Enter custom maximum" class="hidden w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[11px] mb-1">
+                            <p class="text-[9px] text-amber-500 italic font-medium leading-tight mt-0.5">
+                                Note: 375 is already likely too much, and more is definitely not recommended and will take a really long time.
+                            </p>
+                        </div>
+
                         <button onclick="buildComprehensiveRepertoireFromCurrentMoment()" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white py-2 px-3 rounded text-xs font-bold transition flex items-center justify-center gap-1.5 shadow mt-1">
                             <i class="fa-solid fa-network-wired"></i> Auto-Build Tree from Here
                         </button>
@@ -370,66 +410,128 @@
 
             <!-- Games Mode Content -->
             <div id="content-games" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
-                <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
-                    <h3 class="font-semibold text-base mb-1 text-green-400 flex justify-between items-center">
-                        <span>Find Deviations</span>
-                        <div class="text-[10px] text-gray-500" id="analysis-stats">Unanalyzed</div>
-                    </h3>
-                    <p class="text-[11px] text-gray-400 mb-2">Scan games to identify where you or opponents diverged from your prep.</p>
-                    
-                    <div class="flex gap-1.5 mb-2">
-                        <select id="games-platform" class="bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
-                            <option value="lichess">Lichess</option>
-                            <option value="chesscom">Chess.com</option>
-                        </select>
-                        <input type="text" id="games-username" placeholder="Username" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <div>
-                            <label class="block text-[10px] text-gray-400 mb-0.5">Games limit</label>
-                            <select id="games-limit" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
-                                <option value="10">10 games</option>
-                                <option value="25" selected>25 games</option>
-                                <option value="50">50 games</option>
-                                <option value="100">100 games</option>
-                                <option value="150">150 games</option>
-                                <option value="200">200 games</option>
-                                <option value="250">250 games</option>
-                                <option value="300">300 games</option>
-                                <option value="400">400 games</option>
-                                <option value="500">500 games</option>
-                                <option value="1000">1000 games</option>
-                                <option value="1500">1500 games</option>
-                                <option value="2000">2000 games</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-gray-400 mb-0.5">Deviation starting from</label>
-                            <select id="games-start-move" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
-                                <option value="1">Move 1 and on</option>
-                                <option value="2">Move 2 and on</option>
-                                <option value="3" selected>Move 3 and on</option>
-                                <option value="4">Move 4 and on</option>
-                                <option value="5">Move 5 and on</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button onclick="fetchAndAnalyzeGames()" id="btn-fetch-games" class="w-full bg-green-600 hover:bg-green-700 py-1.5 rounded font-bold transition text-xs text-white">
-                        Analyze Recent Games
-                    </button>
-                </div>
                 
-                <div class="flex-1 overflow-y-auto pr-1" id="deviations-list">
-                    <div class="text-gray-500 text-xs text-center mt-4">Deviations will appear here.</div>
+                <!-- Internal Tab Switching inside Games Tab -->
+                <div class="flex shrink-0 bg-gray-950 p-1 rounded-lg gap-1 mb-3">
+                    <button onclick="switchGamesSubTab('deviate')" id="games-subtab-deviate" class="flex-1 py-1 text-xs font-bold rounded bg-indigo-600 text-white transition">Find Deviations</button>
+                    <button onclick="switchGamesSubTab('stats')" id="games-subtab-stats" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition">Opening Stats</button>
                 </div>
+
+                <!-- FIND DEVIATIONS SUBTAB VIEW -->
+                <div id="games-view-deviate" class="flex flex-col flex-1 min-h-0 overflow-y-auto">
+                    <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
+                        <h3 class="font-semibold text-base mb-1 text-green-400 flex justify-between items-center">
+                            <span>Scan Deviations</span>
+                            <div class="text-[10px] text-gray-500" id="analysis-stats">Unanalyzed</div>
+                        </h3>
+                        <p class="text-[11px] text-gray-400 mb-2">Scan games to identify where you or opponents diverged from your prep.</p>
+                        
+                        <div class="flex gap-1.5 mb-2">
+                            <select id="games-platform" class="bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                                <option value="lichess">Lichess</option>
+                                <option value="chesscom">Chess.com</option>
+                            </select>
+                            <input type="text" id="games-username" placeholder="Username" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">Games limit</label>
+                                <select id="games-limit" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
+                                    <option value="10">10 games</option>
+                                    <option value="25" selected>25 games</option>
+                                    <option value="50">50 games</option>
+                                    <option value="100">100 games</option>
+                                    <option value="150">150 games</option>
+                                    <option value="200">200 games</option>
+                                    <option value="250">250 games</option>
+                                    <option value="300">300 games</option>
+                                    <option value="400">400 games</option>
+                                    <option value="500">500 games</option>
+                                    <option value="1000">1000 games</option>
+                                    <option value="1500">1500 games</option>
+                                    <option value="2000">2000 games</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">Deviation starting from</label>
+                                <select id="games-start-move" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
+                                    <option value="1">Move 1 and on</option>
+                                    <option value="2">Move 2 and on</option>
+                                    <option value="3" selected>Move 3 and on</option>
+                                    <option value="4">Move 4 and on</option>
+                                    <option value="5">Move 5 and on</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="fetchAndAnalyzeGames()" id="btn-fetch-games" class="w-full bg-green-600 hover:bg-green-700 py-1.5 rounded font-bold transition text-xs text-white">
+                            Analyze Recent Games
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto pr-1" id="deviations-list">
+                        <div class="text-gray-500 text-xs text-center mt-4">Deviations will appear here.</div>
+                    </div>
+                </div>
+
+                <!-- OPENING STATS SUBTAB VIEW -->
+                <div id="games-view-stats" class="flex flex-col flex-1 min-h-0 hidden overflow-y-auto">
+                    <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
+                        <h3 class="font-semibold text-base mb-1 text-indigo-400"><i class="fa-solid fa-chart-bar"></i> Opening Stat Analysis</h3>
+                        <p class="text-[11px] text-gray-400 mb-2.5">Comprehensive report of game frequencies, responses and theoretical opening layouts.</p>
+                        
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">Stats Game limit</label>
+                                <select id="stats-games-limit" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
+                                    <option value="100" selected>100 games</option>
+                                    <option value="200">200 games</option>
+                                    <option value="300">300 games</option>
+                                    <option value="400">400 games</option>
+                                    <option value="500">500 games</option>
+                                    <option value="1000">1000 games</option>
+                                    <option value="2000">2000 games</option>
+                                    <option value="3000">3000 games</option>
+                                    <option value="4000">4000 games</option>
+                                    <option value="max">Max games (Rate limited)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">Platform to Query</label>
+                                <select id="stats-platform" class="w-full bg-gray-800 border border-gray-600 rounded px-1.5 py-1 text-xs text-white focus:outline-none">
+                                    <option value="lichess">Lichess Profile</option>
+                                    <option value="chesscom">Chess.com Profile</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-[10px] text-gray-400 mb-0.5">Target Username</label>
+                            <input type="text" id="stats-username" placeholder="Username (Uses settings if empty)" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <button onclick="runOpeningStatAnalysis()" id="btn-run-stats" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 py-1.5 rounded font-bold transition text-xs text-white shadow-lg">
+                            Fetch and Run Deep Analysis
+                        </button>
+                    </div>
+
+                    <!-- Analyzed Stats Output Container -->
+                    <div id="stats-output-container" class="flex-1 overflow-y-auto space-y-4 pr-1 hidden">
+                        <!-- Stats dynamic insertion -->
+                    </div>
+                    <div id="stats-placeholder-text" class="text-gray-500 text-xs text-center mt-6">
+                        No statistical data gathered yet. Click analysis button above.
+                    </div>
+                </div>
+
             </div>
 
         </aside>
     </main>
 
     <!-- Modals -->
+    <!-- Repertoires modal -->
     <div id="reps-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-lg w-full mx-4 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
@@ -506,11 +608,11 @@
         </div>
     </div>
 
-    <!-- Liability Disclaimer Modal -->
+    <!-- Strict Terms of Service / Liability Disclaimer Modal -->
     <div id="disclaimer-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] hidden">
         <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-lg w-full mx-4 shadow-2xl">
             <h2 class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation"></i> Important Liability Disclaimer
+                <i class="fa-solid fa-triangle-exclamation"></i> Terms of Service & Disclaimer
             </h2>
             <div class="space-y-4 text-gray-300 text-sm leading-relaxed mb-6">
                 <p>
@@ -523,8 +625,8 @@
                     <strong class="text-white">Caution:</strong> The <span class="text-indigo-400 font-semibold">ChessDB Repertoire Crafter</span> and <span class="text-indigo-400 font-semibold">Auto-Build Tree</span> features query crowdsourced master databases. While highly standard, automated trees may occasionally recommend theoretical sidelines or unsound variations depending on raw statistic logs. Users are highly encouraged to treat these builds as theoretical frameworks and cross-verify lines utilizing our integrated Stockfish engine.
                 </p>
             </div>
-            <div class="flex justify-end">
-                <button onclick="agreeDisclaimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold transition">
+            <div class="flex justify-end gap-3" id="tos-buttons-container">
+                <button onclick="agreeDisclaimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold transition w-full">
                     I Agree & Accept
                 </button>
             </div>
@@ -560,6 +662,16 @@
             </div>
             
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                
+                <!-- Terms of Service checkbox -->
+                <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 flex flex-col gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold text-red-300">
+                        <input type="checkbox" id="setting-tos-agree" onchange="handleTosCheckboxChange(event)" checked class="w-4 h-4 bg-gray-800 rounded border-gray-600">
+                        <span>I Agree to the Terms & Disclaimer</span>
+                    </label>
+                    <p class="text-[10px] text-gray-400 leading-normal">Unchecking will lock analytical features until terms are signed. Owner accepts no responsibility for analysis accuracy.</p>
+                </div>
+
                 <div>
                     <label class="flex justify-between text-sm text-gray-300 mb-2">
                         <span>Board Size (Max Width)</span>
@@ -639,6 +751,36 @@
                     </div>
                 </div>
 
+                <!-- Lichess Personal Access Token (PAT) Configuration Instructions -->
+                <div class="bg-gray-900/80 p-3 rounded-lg border border-gray-700 flex flex-col gap-2">
+                    <h3 class="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1">
+                        <i class="fa-solid fa-key"></i> Lichess Token Configuration
+                    </h3>
+                    <p class="text-[10px] text-gray-400 leading-normal">
+                        To query the premium Lichess opening database directly, please generate a free access token from your profile. 
+                        <a href="https://lichess.org/account/oauth/token/create?scopes[]=explorer:read" target="_blank" class="text-indigo-400 font-semibold underline hover:text-indigo-300">Click here to generate token</a>, ensure **Read opening explorer** is checked, click **Submit**, then paste it below:
+                    </p>
+                    <input type="text" id="setting-lichess-token" placeholder="Paste Lichess PAT (Bearer Token)" class="w-full bg-gray-950 border border-gray-600 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono">
+                    
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-xs text-gray-300">Use Lichess Explorer (PAT Required)</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-use-lichess" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-0.5">Lichess Database Rating Range</label>
+                        <select id="setting-lichess-ratings" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-1 text-white text-[10px] focus:outline-none">
+                            <option value="1600,1800,2000,2200,2500" selected>Standard Match Pool (1600-2500)</option>
+                            <option value="2000,2200,2500">Expert / Master Only (2000+)</option>
+                            <option value="1000,1200,1400,1600">Casual / Under 1600 Only</option>
+                            <option value="1000,1200,1400,1600,1800,2000,2200,2500">Complete Player Base</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm text-gray-300 mb-2">Stockfish MultiPV (Lines)</label>
                     <select id="setting-multipv" class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
@@ -670,7 +812,7 @@
                     </div>
                 </div>
 
-                <!-- Saved Lichess / Chess.com account profile settings inside local storage -->
+                <!-- Saved Accounts local storage -->
                 <div class="border-t border-gray-700 pt-4 mt-2">
                     <h3 class="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wide"><i class="fa-solid fa-user-gear mr-1"></i> Saved Chess Account</h3>
                     <p class="text-[11px] text-gray-400 mb-2">Save your username to skip entering it in Games tab on every load.</p>
@@ -734,8 +876,8 @@
                     <p>Click and drag pieces (or simply click the destination square) to record moves. Under the <strong>Build</strong> tab, write variation names and comments for any move. Add as many branching alternative moves as you want!</p>
                 </section>
                 <section>
-                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-network-wired text-indigo-400 mr-2"></i> 2. ChessDB Auto-Build & Repertoire Crafter</h3>
-                    <p>Harness the power of the public ChessDB master games database to auto-generate lines in seconds. Build a brand new complete theoretical opening tree using the <strong>ChessDB Repertoire Crafter</strong> in the repertoires menu (matching Aggressive, Positional, Out of Book, or Surprise Mix styles), or recursively expand any existing line directly from the board! (Treat all auto-generated structures with caution as they query crowdsourced data).</p>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-network-wired text-indigo-400 mr-2"></i> 2. ChessDB & Lichess Auto-Build Features</h3>
+                    <p>Harness the power of the public databases (with fallback option to Lichess Personal Access Tokens) to automatically build opening trees directly on your active variations! You can set custom plies deep, and configure the crawler's max branching limit safely with customized warnings for larger generation counts.</p>
                 </section>
                 <section>
                     <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-robot text-gray-400 mr-2"></i> 3. Deep Engine & DB Analysis</h3>
@@ -746,8 +888,8 @@
                     <p>Launch customized study lines in the <strong>Train</strong> tab. By default, the program auto-plays opponent actions. Use the new <strong>Watch Rep</strong> button below the chessboard to automatically sit back and watch your whole repertoire played out beautifully branch-by-branch!</p>
                 </section>
                 <section>
-                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-magnifying-glass-chart text-gray-400 mr-2"></i> 5. Deviation Analysis</h3>
-                    <p>Under the <strong>Games</strong> tab, input your Lichess or Chess.com username. The application downloads and scans recent games, pinpointing exactly where your play strayed from your documented preparation, allowing you to instantly add those lines to your repertoire with a single click.</p>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-magnifying-glass-chart text-gray-400 mr-2"></i> 5. Deviation & Opening Stats Analysis</h3>
+                    <p>Under the <strong>Games</strong> tab, scan recent player archives. Pinpoint exact spots you drifted from prep, or click <strong>Opening Stats</strong> to parse up to 4000 games instantly, extracting white/black response frequencies and a full analytical index of 75 major chess openings.</p>
                 </section>
             </div>
             
@@ -758,6 +900,85 @@
     </div>
 
     <script>
+        // --- 75 COMPREHENSIVE THEORETICAL OPENINGS ---
+        const CHESS_OPENINGS_75 = [
+            { name: "Sicilian Defense", moves: ["e4", "c5"] },
+            { name: "French Defense", moves: ["e4", "e6"] },
+            { name: "Caro-Kann Defense", moves: ["e4", "c6"] },
+            { name: "Ruy Lopez", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5"] },
+            { name: "Italian Game", moves: ["e4", "e5", "Nf3", "Nc6", "Bc4"] },
+            { name: "Queen's Gambit", moves: ["d4", "d5", "c4"] },
+            { name: "King's Indian Defense", moves: ["d4", "Nf6", "c4", "g6"] },
+            { name: "Nimzo-Indian Defense", moves: ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4"] },
+            { name: "Grunfeld Defense", moves: ["d4", "Nf6", "c4", "g6", "Nc3", "d5"] },
+            { name: "Slav Defense", moves: ["d4", "d5", "c4", "c6"] },
+            { name: "Scotch Game", moves: ["e4", "e5", "Nf3", "Nc6", "d4"] },
+            { name: "Scandinavian Defense", moves: ["e4", "d5"] },
+            { name: "Alekhine's Defense", moves: ["e4", "Nf6"] },
+            { name: "Pirc Defense", moves: ["e4", "d6", "d4", "Nf6", "Nc3", "g6"] },
+            { name: "Benoni Defense", moves: ["d4", "Nf6", "c4", "c5"] },
+            { name: "Catalan Opening", moves: ["d4", "Nf6", "c4", "e6", "g3", "d5", "Bg2"] },
+            { name: "English Opening", moves: ["c4"] },
+            { name: "Reti Opening", moves: ["Nf3"] },
+            { name: "Bird's Opening", moves: ["f4"] },
+            { name: "London System", moves: ["d4", "d5", "Bf4"] },
+            { name: "King's Gambit", moves: ["e4", "e5", "f4"] },
+            { name: "Vienna Game", moves: ["e4", "e5", "Nc3"] },
+            { name: "Philidor Defense", moves: ["e4", "e5", "Nf3", "d6"] },
+            { name: "Four Knights Game", moves: ["e4", "e5", "Nf3", "Nc6", "Nc3", "Nf6"] },
+            { name: "Petrov's Defense", moves: ["e4", "e5", "Nf3", "Nf6"] },
+            { name: "Alapin Sicilian", moves: ["e4", "c5", "c3"] },
+            { name: "Closed Sicilian", moves: ["e4", "c5", "Nc3"] },
+            { name: "Najdorf Sicilian", moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6"] },
+            { name: "Dragon Sicilian", moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6"] },
+            { name: "Scheveningen Sicilian", moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "e6"] },
+            { name: "Taimanov Sicilian", moves: ["e4", "c5", "Nf3", "e6", "d4", "cxd4", "Nxd4", "Nc3", "a6"] },
+            { name: "Kan Sicilian", moves: ["e4", "c5", "Nf3", "e6", "d4", "cxd4", "Nxd4", "a6"] },
+            { name: "Classical Sicilian", moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "d6"] },
+            { name: "Sveshnikov Sicilian", moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "e5"] },
+            { name: "Smith-Morra Gambit", moves: ["e4", "c5", "d4", "cxd4", "c3"] },
+            { name: "French Winawer", moves: ["e4", "e6", "d4", "d5", "Nc3", "Bb4"] },
+            { name: "French Classical", moves: ["e4", "e6", "d4", "d5", "Nc3", "Nf6"] },
+            { name: "French Tarrasch", moves: ["e4", "e6", "d4", "d5", "Nd2"] },
+            { name: "French Advance", moves: ["e4", "e6", "d4", "d5", "e5"] },
+            { name: "Caro-Kann Advance", moves: ["e4", "c6", "d4", "d5", "e5"] },
+            { name: "Caro-Kann Classical", moves: ["e4", "c6", "d4", "d5", "Nc3", "dxe4", "Nxe4", "Bf5"] },
+            { name: "Caro-Kann Panov", moves: ["e4", "c6", "d4", "d5", "exd5", "cxd5", "c4"] },
+            { name: "Caro-Kann Exchange", moves: ["e4", "c6", "d4", "d5", "exd5", "cxd5", "Bd3"] },
+            { name: "Caro-Kann Fantasy", moves: ["e4", "c6", "d4", "d5", "f3"] },
+            { name: "Modern Defense", moves: ["e4", "g6", "d4", "Bg7"] },
+            { name: "Queen's Indian Defense", moves: ["d4", "Nf6", "c4", "e6", "Nf3", "b6"] },
+            { name: "Bogo-Indian Defense", moves: ["d4", "Nf6", "c4", "e6", "Nf3", "Bb4+"] },
+            { name: "Budapest Gambit", moves: ["d4", "Nf6", "c4", "e5"] },
+            { name: "Benko Gambit", moves: ["d4", "Nf6", "c4", "c5", "d5", "b5"] },
+            { name: "Dutch Defense", moves: ["d4", "f5"] },
+            { name: "Chigorin Defense", moves: ["d4", "d5", "c4", "Nc6"] },
+            { name: "Tarrasch Defense", moves: ["d4", "d5", "c4", "e6", "Nc3", "c5"] },
+            { name: "Semi-Slav Defense", moves: ["d4", "d5", "c4", "c6", "Nf3", "Nf6", "Nc3", "e6"] },
+            { name: "Marshall Attack (Ruy Lopez)", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "O-O", "c3", "d5"] },
+            { name: "Berlin Defense (Ruy Lopez)", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "Nf6"] },
+            { name: "Exchange Variation (Ruy Lopez)", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Bxc6"] },
+            { name: "Breyer Variation (Ruy Lopez)", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O", "h3", "Nb8"] },
+            { name: "Chigorin Variation (Ruy Lopez)", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7", "Re1", "b5", "Bb3", "d6", "c3", "O-O", "h3", "Na5", "Bc2", "c5", "d4", "Qc7"] },
+            { name: "Closed Ruy Lopez", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Be7"] },
+            { name: "Open Ruy Lopez", moves: ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O", "Nxe4"] },
+            { name: "Giuoco Piano (Italian)", moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5"] },
+            { name: "Two Knights Defense", moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6"] },
+            { name: "Evans Gambit", moves: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "b4"] },
+            { name: "Scotch Gambit", moves: ["e4", "e5", "Nf3", "Nc6", "d4", "exd4", "Bc4"] },
+            { name: "King's Pawn Game", moves: ["e4", "e5"] },
+            { name: "Grob Opening", moves: ["g4"] },
+            { name: "Polish Opening (Sokolsky)", moves: ["b4"] },
+            { name: "Nimzowitsch-Larsen Attack", moves: ["b3"] },
+            { name: "Orangutan Opening", moves: ["b4"] },
+            { name: "King's Indian Attack", moves: ["Nf3", "d5", "g3"] },
+            { name: "Center Game", moves: ["e4", "e5", "d4", "exd4", "Qxd4"] },
+            { name: "Danish Gambit", moves: ["e4", "e5", "d4", "exd4", "c3"] },
+            { name: "Four Knights Sicilian", moves: ["e4", "c5", "Nf3", "e6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "Nc6"] },
+            { name: "Richter-Rauzer Sicilian", moves: ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "Nc6", "Bg5"] },
+            { name: "Accelerated Dragon Sicilian", moves: ["e4", "c5", "Nf3", "Nc6", "d4", "cxd4", "Nxd4", "g6"] }
+        ];
+
         // --- ASSETS & CONFIGURATIONS ---
         const PIECE_SETS = {
             'standard': {
@@ -832,6 +1053,7 @@
         let currentNode = null;
         let currentPath = [];
         let currentMode = 'build';
+        let currentGamesSubTab = 'deviate';
         
         let settings = {
             size: 500,
@@ -849,7 +1071,11 @@
             savedPlatform: 'lichess',
             savedUsername: '',
             playbackSpeed: 1200,
-            animSpeed: 0.25
+            animSpeed: 0.25,
+            lichessToken: '',
+            useLichessDb: false,
+            lichessRatings: '1600,1800,2000,2200,2500',
+            termsSigned: false
         };
 
         let trainingLines = [];
@@ -871,6 +1097,9 @@
         let watchLines = [];
         let watchLineIdx = 0;
         let watchMoveIdx = 0;
+
+        let activeAnalyzedOpeningMoveList = null; 
+        let autoBuildCount = 0;
         
         // Wood audio synthesis models via Tone.js
         const synthMove = new Tone.MembraneSynth({ 
@@ -899,13 +1128,19 @@
             if (settings.savedUsername) {
                 document.getElementById('games-platform').value = settings.savedPlatform || 'lichess';
                 document.getElementById('games-username').value = settings.savedUsername;
+                document.getElementById('stats-platform').value = settings.savedPlatform || 'lichess';
+                document.getElementById('stats-username').value = settings.savedUsername;
             }
 
             initEngine();
             
-            // Check for liability disclaimer agreement first
-            const agreed = localStorage.getItem('chess_rep_disclaimer_agreed_v5');
-            if (!agreed) {
+            // Check for strict Terms agreement
+            if (!settings.termsSigned) {
+                document.getElementById('tos-buttons-container').innerHTML = `
+                    <button onclick="agreeDisclaimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold transition w-full">
+                        I Agree & Accept Terms
+                    </button>
+                `;
                 document.getElementById('disclaimer-modal').classList.remove('hidden');
             } else {
                 if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
@@ -951,16 +1186,31 @@
         function closeMsgModal() {
             const modal = document.getElementById('msg-modal');
             const content = document.getElementById('msg-modal-content');
-            modal.classList.add('opacity-0'); content.scale-95;
+            modal.classList.add('opacity-0'); content.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
         
         function agreeDisclaimer() {
-            localStorage.setItem('chess_rep_disclaimer_agreed_v5', 'true');
+            settings.termsSigned = true;
+            document.getElementById('setting-tos-agree').checked = true;
+            saveState();
             document.getElementById('disclaimer-modal').classList.add('hidden');
             if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
                 showInstructions();
                 localStorage.setItem('chess_rep_seen_tutorial_v4', 'true');
+            }
+        }
+
+        function handleTosCheckboxChange(e) {
+            if (!e.target.checked) {
+                settings.termsSigned = false;
+                saveState();
+                document.getElementById('tos-buttons-container').innerHTML = `
+                    <button onclick="agreeDisclaimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold transition w-full">
+                        I Agree & Accept Terms
+                    </button>
+                `;
+                document.getElementById('disclaimer-modal').classList.remove('hidden');
             }
         }
         
@@ -1018,6 +1268,11 @@
             document.getElementById('setting-piece-theme').value = settings.pieceTheme;
             document.getElementById('setting-platform').value = settings.savedPlatform || 'lichess';
             document.getElementById('setting-username').value = settings.savedUsername || '';
+            document.getElementById('setting-lichess-token').value = settings.lichessToken || '';
+            document.getElementById('setting-use-lichess').checked = settings.useLichessDb || false;
+            document.getElementById('setting-lichess-ratings').value = settings.lichessRatings || '1600,1800,2000,2200,2500';
+            document.getElementById('setting-tos-agree').checked = settings.termsSigned || false;
+            
             document.getElementById('settings-modal').classList.remove('hidden');
         }
         function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
@@ -1046,11 +1301,17 @@
                 boardTheme: document.getElementById('setting-board-theme').value,
                 pieceTheme: document.getElementById('setting-piece-theme').value,
                 savedPlatform: document.getElementById('setting-platform').value,
-                savedUsername: document.getElementById('setting-username').value.trim()
+                savedUsername: document.getElementById('setting-username').value.trim(),
+                lichessToken: document.getElementById('setting-lichess-token').value.trim(),
+                useLichessDb: document.getElementById('setting-use-lichess').checked,
+                lichessRatings: document.getElementById('setting-lichess-ratings').value,
+                termsSigned: document.getElementById('setting-tos-agree').checked
             };
             
             document.getElementById('games-platform').value = settings.savedPlatform;
             document.getElementById('games-username').value = settings.savedUsername;
+            document.getElementById('stats-platform').value = settings.savedPlatform;
+            document.getElementById('stats-username').value = settings.savedUsername;
 
             saveState();
             applySettingsToUI();
@@ -1100,6 +1361,16 @@
             if (engineLines.length > 0 && engineLines[0]) updateEvalBar(engineLines[0].score);
         }
 
+        function toggleCustomPositions() {
+            const val = document.getElementById('autobuild-max-positions').value;
+            const customInput = document.getElementById('autobuild-custom-positions');
+            if (val === 'custom') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
         function openRepertoiresModal() {
             renderRepertoiresList();
             document.getElementById('reps-modal').classList.remove('hidden');
@@ -1122,7 +1393,6 @@
                 const el = document.createElement('div');
                 el.className = `flex justify-between items-center p-3 rounded-lg border ${isActive ? 'bg-blue-900/30 border-blue-500' : 'bg-gray-700 border-gray-600'}`;
                 el.innerHTML = `
-                    <!-- Static view -->
                     <div id="rep-view-${id}" class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 mr-2" onclick="loadRepertoire('${id}')">
                         <div class="w-8 h-8 rounded bg-gray-600 flex items-center justify-center shrink-0">${icon}</div>
                         <div class="min-w-0 flex-1">
@@ -1131,14 +1401,12 @@
                         </div>
                     </div>
                     
-                    <!-- Rename input -->
                     <div id="rep-edit-${id}" class="hidden flex items-center gap-2 flex-1 mr-2">
                         <input type="text" id="rep-input-${id}" value="${rep.name}" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none w-full">
                         <button onclick="saveRename('${id}')" class="text-green-400 hover:text-green-300 p-1 text-sm"><i class="fa-solid fa-check"></i></button>
                         <button onclick="cancelRename('${id}')" class="text-red-400 hover:text-red-300 p-1 text-sm"><i class="fa-solid fa-xmark"></i></button>
                     </div>
 
-                    <!-- Action buttons -->
                     <div class="flex gap-1 shrink-0">
                         <button onclick="startRename('${id}')" class="text-yellow-400 hover:text-yellow-300 p-1.5 text-xs" title="Rename Repertoire"><i class="fa-solid fa-pen"></i></button>
                         <button onclick="openEditRepertoireModal('${id}')" class="text-blue-400 hover:text-blue-300 p-1.5 text-xs" title="Modify Lines"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -1231,8 +1499,6 @@
             });
         }
 
-        let autoBuildCount = 0;
-
         async function chessDbCraftRepertoire() {
             const color = document.getElementById('chessdb-rep-color').value;
             const style = document.getElementById('chessdb-rep-style').value;
@@ -1294,6 +1560,15 @@
         }
 
         async function crawlChessDbNode(node, currentPlies, maxPlies, oppBranching, style, userColor, autoBranching = false) {
+            // Respect custom position limits to avoid deep lockouts
+            const maxPosLimitDropdown = document.getElementById('autobuild-max-positions').value;
+            let finalLimit = 100;
+            if (maxPosLimitDropdown === 'custom') {
+                finalLimit = parseInt(document.getElementById('autobuild-custom-positions').value) || 100;
+            } else {
+                finalLimit = parseInt(maxPosLimitDropdown) || 100;
+            }
+            if (autoBuildCount >= finalLimit) return;
             if (currentPlies >= maxPlies) return;
 
             const turn = (currentPlies % 2 === 0) ? 'w' : 'b';
@@ -1348,7 +1623,6 @@
                 }
 
                 // SORT BY RANK DESCENDING (2 = Best, 1 = Good, 0 = Bad)
-                // This ensures Rank 2 (Best) and Rank 1 (Good) standard moves are always processed first
                 filteredMoves.sort((a, b) => b.rank - a.rank);
 
                 let movesToExpand = [];
@@ -1359,7 +1633,6 @@
                         movesToExpand = filteredMoves.slice(0, 2);
                     } else {
                         // Pick exactly ONE sound move. To ensure we get a DIFFERENT repertoire every time:
-                        // We introduce standard randomness.
                         let selectedMove = filteredMoves[0];
 
                         if (style === 'Random') {
@@ -1405,7 +1678,6 @@
                 } else {
                     // Opponent's turn:
                     // Even if style is 'Random', we reply with highly standard, popular opponent responses!
-                    // Opponent moves are kept standard to make sure user prep is optimal.
                     let limit = oppBranching;
                     if (autoBranching) {
                         limit = (currentPlies < 4) ? 2 : 1;
@@ -1437,7 +1709,7 @@
                         const barEl = document.getElementById('build-progress-bar');
                         if (detailsEl) detailsEl.innerText = `Fetched ${autoBuildCount} positions...`;
                         if (barEl) {
-                            const progressPercent = Math.min(98, (autoBuildCount / (maxPlies * 3.5)) * 100);
+                            const progressPercent = Math.min(98, (autoBuildCount / finalLimit) * 100);
                             barEl.style.width = `${progressPercent}%`;
                         }
 
@@ -1579,7 +1851,6 @@
                     movedDomPiece.style.zIndex = '90';
                     movedDomPiece.dataset.square = moveTo;
                     
-                    // Respect the animation slide speed settings
                     const duration = (settings.animSpeed !== undefined ? settings.animSpeed : 0.25) + 's';
                     movedDomPiece.style.transition = `top ${duration} cubic-bezier(0.25, 1, 0.5, 1), left ${duration} cubic-bezier(0.25, 1, 0.5, 1)`;
                     const pos = getSquarePosition(moveTo);
@@ -1809,6 +2080,11 @@
         function resetToStart() {
             if (isTraining) return;
             if (isWatchingRepertoire) stopWatchRepertoire();
+            
+            // Hide build from here variation builder
+            document.getElementById('build-here-container').classList.add('hidden');
+            activeAnalyzedOpeningMoveList = null;
+
             if (!repData.activeId) {
                 game.reset();
                 afterMoveTrigger(false);
@@ -2124,7 +2400,7 @@
                 return;
             }
             
-            showConfirm("Build from Current Moment?", "This will automatically query ChessDB to recursively build theoretical master lines starting from this current position. Continue?", async () => {
+            showConfirm("Build from Current Moment?", "This will automatically query the database recursively to build theoretical master lines starting from this position. Continue?", async () => {
                 const rawDepth = document.getElementById('autobuild-depth').value;
                 const rawBranching = document.getElementById('autobuild-opp-branching').value;
                 
@@ -2144,7 +2420,7 @@
                     <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full shadow-2xl">
                         <i class="fa-solid fa-gears text-4xl text-indigo-400 animate-spin mb-4"></i>
                         <h3 class="text-lg font-bold text-white mb-2">Building Repertoire...</h3>
-                        <p class="text-sm text-gray-400 mb-4" id="build-progress-text">Querying ChessDB master games...</p>
+                        <p class="text-sm text-gray-400 mb-4" id="build-progress-text">Harvesting database standard theory...</p>
                         <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
                             <div id="build-progress-bar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-300" style="width: 5%"></div>
                         </div>
@@ -2199,6 +2475,7 @@
             const fen = game.fen();
             const dbMovesEl = document.getElementById('db-moves');
             const openingEl = document.getElementById('opening-name');
+            const headerEvalEl = document.getElementById('db-header-eval');
             
             if (game.game_over()) {
                 dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">Game Over</td></tr>';
@@ -2206,10 +2483,65 @@
             }
             dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">Loading...</td></tr>';
             
-            try {
-                const urlInfo = `https://www.chessdb.cn/cdb.php?action=queryboard&board=${encodeURIComponent(fen)}`;
-                fetch(urlInfo).then(r => r.text()).then(text => { });
+            // INTEL SWITCH: If Lichess Explorer is enabled AND has Token, fetch Lichess Explorer instead of ChessDB
+            if (settings.useLichessDb && settings.lichessToken) {
+                document.getElementById('explorer-db-title').innerText = "Lichess Explorer";
+                headerEvalEl.innerText = "Stats (W / D / B)";
                 
+                try {
+                    const ratingStr = settings.lichessRatings || "1600,1800,2000,2200,2500";
+                    const url = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${encodeURIComponent(fen)}&ratings=${ratingStr}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${settings.lichessToken}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Lichess Explorer returned status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    openingEl.innerText = fen === "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" ? "Starting Position" : (data.opening?.name || "Theory Position");
+                    
+                    if (!data.moves || data.moves.length === 0) {
+                        dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic pt-2">No Lichess games found</td></tr>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.moves.forEach(m => {
+                        const san = m.san;
+                        const uci = m.uci;
+                        const total = m.white + m.draws + m.black;
+                        const wPct = total > 0 ? ((m.white / total) * 100).toFixed(0) : 0;
+                        const dPct = total > 0 ? ((m.draws / total) * 100).toFixed(0) : 0;
+                        const bPct = total > 0 ? ((m.black / total) * 100).toFixed(0) : 0;
+                        
+                        html += `
+                            <tr onclick="playUciSequence('${uci}')" class="border-b border-gray-700 last:border-0 hover:bg-gray-700 transition cursor-pointer" title="Click to play move. Games: ${total}">
+                                <td class="py-1.5 font-semibold text-gray-200 px-1">${san}</td>
+                                <td class="py-1.5 text-right px-1 font-mono text-[10px] text-gray-400">
+                                    <span class="text-green-400">${wPct}%</span> / <span class="text-gray-300">${dPct}%</span> / <span class="text-red-400">${bPct}%</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    dbMovesEl.innerHTML = html;
+                    return;
+                } catch (err) {
+                    console.warn("Lichess database request failed, falling back to ChessDB:", err);
+                    // Dropback notice text
+                    dbMovesEl.innerHTML = '<tr><td colspan="2" class="text-yellow-500 italic text-[10px] px-1">Lichess token failed or unauthorized. Loading ChessDB...</td></tr>';
+                    setTimeout(() => {}, 800);
+                }
+            }
+            
+            // Standard ChessDB Fallback Flow
+            document.getElementById('explorer-db-title').innerText = "ChessDB (Public)";
+            headerEvalEl.innerText = "Eval Score";
+            
+            try {
                 openingEl.innerText = fen === "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" ? "Starting Position" : "Theory Position";
 
                 const url = `https://www.chessdb.cn/cdb.php?action=queryall&board=${encodeURIComponent(fen)}`;
@@ -2926,7 +3258,26 @@
             });
         }
 
-        let deviations = [];
+        function switchGamesSubTab(subTab) {
+            currentGamesSubTab = subTab;
+            
+            const btnDeviate = document.getElementById('games-subtab-deviate');
+            const btnStats = document.getElementById('games-subtab-stats');
+            const viewDeviate = document.getElementById('games-view-deviate');
+            const viewStats = document.getElementById('games-view-stats');
+            
+            if (subTab === 'deviate') {
+                btnDeviate.className = "flex-1 py-1 text-xs font-bold rounded bg-indigo-600 text-white transition";
+                btnStats.className = "flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition";
+                viewDeviate.classList.remove('hidden');
+                viewStats.classList.add('hidden');
+            } else {
+                btnStats.className = "flex-1 py-1 text-xs font-bold rounded bg-indigo-600 text-white transition";
+                btnDeviate.className = "flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition";
+                viewStats.classList.remove('hidden');
+                viewDeviate.classList.add('hidden');
+            }
+        }
 
         async function fetchAndAnalyzeGames() {
             if (!repData.activeId) {
@@ -3082,6 +3433,367 @@
             }
         }
 
+        async function runOpeningStatAnalysis() {
+            const platform = document.getElementById('stats-platform').value;
+            const customUsername = document.getElementById('stats-username').value.trim();
+            const username = customUsername || settings.savedUsername;
+            const limitSelect = document.getElementById('stats-games-limit').value;
+            
+            let limit = 200;
+            if (limitSelect !== 'max') {
+                limit = parseInt(limitSelect) || 100;
+            } else {
+                limit = 5000; // Large fetch boundary
+            }
+
+            if (!username) {
+                showMsg('Error', 'Please enter a target username in settings or in stats input.');
+                return;
+            }
+
+            const btn = document.getElementById('btn-run-stats');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin animate-spin"></i> Fetching Games...';
+            btn.disabled = true;
+
+            const placeholder = document.getElementById('stats-placeholder-text');
+            placeholder.innerText = 'Downloading match logs and compiling stats...';
+
+            const outputContainer = document.getElementById('stats-output-container');
+            outputContainer.innerHTML = '';
+            outputContainer.classList.add('hidden');
+
+            try {
+                let gamesFetched = [];
+                if (platform === 'lichess') {
+                    const res = await fetch(`https://lichess.org/api/games/user/${username}?max=${limit}&perfType=blitz,rapid,bullet`, { headers: { 'Accept': 'application/x-ndjson' } });
+                    const text = await res.text();
+                    const lines = text.split('\n').filter(l => l.trim().length > 0);
+                    lines.forEach(l => {
+                        try {
+                            const g = JSON.parse(l);
+                            if (g.moves) {
+                                gamesFetched.push({
+                                    moves: g.moves.split(' '),
+                                    white: g.players.white.user.name,
+                                    black: g.players.black.user.name,
+                                    result: g.winner ? (g.winner === 'white' ? '1-0' : '0-1') : '1/2-1/2'
+                                });
+                            }
+                        } catch(e){}
+                    });
+                } else if (platform === 'chesscom') {
+                    const res = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
+                    const data = await res.json();
+                    if (data.archives && data.archives.length > 0) {
+                        let archiveIndex = data.archives.length - 1;
+                        while (archiveIndex >= 0 && gamesFetched.length < limit) {
+                            const lastArchiveUrl = data.archives[archiveIndex];
+                            const gamesRes = await fetch(lastArchiveUrl);
+                            const gamesData = await gamesRes.json();
+                            
+                            if (gamesData.games && gamesData.games.length > 0) {
+                                const monthlyGames = [...gamesData.games].reverse();
+                                monthlyGames.forEach(g => {
+                                    if (gamesFetched.length < limit) {
+                                        try {
+                                            const tempGame = new Chess();
+                                            tempGame.load_pgn(g.pgn);
+                                            gamesFetched.push({
+                                                moves: tempGame.history(),
+                                                white: tempGame.header().White,
+                                                black: tempGame.header().Black,
+                                                result: tempGame.header().Result
+                                            });
+                                        } catch(e){}
+                                    }
+                                });
+                            }
+                            archiveIndex--;
+                        }
+                    }
+                }
+
+                if (gamesFetched.length === 0) {
+                    placeholder.innerText = 'No matched games found for this profile.';
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    return;
+                }
+
+                // --- COMPILE STATS IN MEMORY ---
+                let stats = {
+                    total: gamesFetched.length,
+                    whiteGames: 0,
+                    blackGames: 0,
+                    whiteFirstMoves: {}, // { "e4": { played: 0, wins: 0, losses: 0, draws: 0 } }
+                    blackFirstMovesResponses: { // responses to popular white first moves: e4, d4, c4, Nf3, g3, b3
+                        'e4': {},
+                        'd4': {},
+                        'c4': {},
+                        'Nf3': {},
+                        'g3': {},
+                        'b3': {}
+                    },
+                    openingsList: {} // match 75 openings -> { total: 0, wins: 0, losses: 0, draws: 0 }
+                };
+
+                // Initialize 75 openings container
+                CHESS_OPENINGS_75.forEach(op => {
+                    stats.openingsList[op.name] = { name: op.name, moves: op.moves, count: 0, wins: 0, losses: 0, draws: 0 };
+                });
+
+                gamesFetched.forEach(g => {
+                    const isWhitePlayer = g.white.toLowerCase() === username.toLowerCase();
+                    const isBlackPlayer = g.black.toLowerCase() === username.toLowerCase();
+                    if (!isWhitePlayer && !isBlackPlayer) return;
+
+                    const result = g.result;
+                    let outcome = 'draw'; // win, loss, draw
+                    if (result === '1-0') outcome = isWhitePlayer ? 'win' : 'loss';
+                    else if (result === '0-1') outcome = isBlackPlayer ? 'win' : 'loss';
+
+                    // 1. Analyze White First Moves Played
+                    if (isWhitePlayer) {
+                        stats.whiteGames++;
+                        const firstMove = g.moves[0];
+                        if (firstMove) {
+                            if (!stats.whiteFirstMoves[firstMove]) {
+                                stats.whiteFirstMoves[firstMove] = { count: 0, wins: 0, losses: 0, draws: 0 };
+                            }
+                            stats.whiteFirstMoves[firstMove].count++;
+                            stats.whiteFirstMoves[firstMove][outcome + 's']++;
+                        }
+                    }
+
+                    // 2. Analyze Black responses to white first moves
+                    if (isBlackPlayer) {
+                        stats.blackGames++;
+                        const oppFirstMove = g.moves[0];
+                        const userResponse = g.moves[1];
+                        if (oppFirstMove && userResponse) {
+                            const standardOppFirstMove = oppFirstMove.replace(/[+#]/, '');
+                            if (stats.blackFirstMovesResponses[standardOppFirstMove] !== undefined) {
+                                if (!stats.blackFirstMovesResponses[standardOppFirstMove][userResponse]) {
+                                    stats.blackFirstMovesResponses[standardOppFirstMove][userResponse] = { count: 0, wins: 0, losses: 0, draws: 0 };
+                                }
+                                stats.blackFirstMovesResponses[standardOppFirstMove][userResponse].count++;
+                                stats.blackFirstMovesResponses[standardOppFirstMove][userResponse][outcome + 's']++;
+                            }
+                        }
+                    }
+
+                    // 3. Match 75 Openings
+                    let bestMatchName = null;
+                    let bestMatchLength = 0;
+
+                    CHESS_OPENINGS_75.forEach(op => {
+                        let matches = true;
+                        if (g.moves.length < op.moves.length) return;
+                        for (let idx = 0; idx < op.moves.length; idx++) {
+                            // Strip symbols just in case
+                            const gameMoveClean = g.moves[idx].replace(/[+#]/, '');
+                            const opMoveClean = op.moves[idx];
+                            if (gameMoveClean !== opMoveClean) {
+                                matches = false;
+                                break;
+                            }
+                        }
+                        if (matches && op.moves.length > bestMatchLength) {
+                            bestMatchLength = op.moves.length;
+                            bestMatchName = op.name;
+                        }
+                    });
+
+                    if (bestMatchName) {
+                        stats.openingsList[bestMatchName].count++;
+                        stats.openingsList[bestMatchName][outcome + 's']++;
+                    }
+                });
+
+                // --- BUILD INTERACTIVE HTML OUTPUT ---
+                let html = '';
+
+                // Summary Badge
+                html += `
+                    <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 text-xs">
+                        <p class="font-bold text-gray-200">Total Analyzed: <span class="text-blue-400">${stats.total} Games</span></p>
+                        <p class="text-gray-400 mt-1">Played as White: ${stats.whiteGames} | Played as Black: ${stats.blackGames}</p>
+                    </div>
+                `;
+
+                // White First Moves HTML
+                html += `<div class="mt-4"><h4 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2"><i class="fa-solid fa-chess-knight"></i> White First Moves</h4>`;
+                let whiteKeys = Object.keys(stats.whiteFirstMoves).sort((a,b) => stats.whiteFirstMoves[b].count - stats.whiteFirstMoves[a].count);
+                if (whiteKeys.length === 0) {
+                    html += `<p class="text-[11px] text-gray-500 italic">No games as White found.</p>`;
+                } else {
+                    html += `<div class="grid grid-cols-2 gap-2">`;
+                    whiteKeys.forEach(k => {
+                        const mData = stats.whiteFirstMoves[k];
+                        const winPct = ((mData.wins / mData.count) * 100).toFixed(0);
+                        const lossPct = ((mData.losses / mData.count) * 100).toFixed(0);
+                        const drawPct = ((mData.draws / mData.count) * 100).toFixed(0);
+                        html += `
+                            <div class="bg-gray-950 p-2 rounded border border-gray-800 text-[11px]">
+                                <p class="font-bold text-white">1. ${k} <span class="text-gray-500">(${mData.count}x)</span></p>
+                                <p class="text-[10px] text-gray-400 mt-1">
+                                    Win: <span class="text-green-400">${winPct}%</span> | Draw: <span>${drawPct}%</span> | Loss: <span class="text-red-400">${lossPct}%</span>
+                                </p>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                html += `</div>`;
+
+                // Black Responses HTML
+                html += `<div class="mt-4"><h4 class="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2"><i class="fa-solid fa-chess-rook"></i> Black Responses</h4>`;
+                let popularLines = ['e4', 'd4', 'c4', 'Nf3', 'g3', 'b3'];
+                popularLines.forEach(whiteMove => {
+                    const responses = stats.blackFirstMovesResponses[whiteMove];
+                    const respKeys = Object.keys(responses).sort((a,b) => responses[b].count - responses[a].count);
+                    
+                    if (respKeys.length > 0) {
+                        html += `
+                            <div class="bg-gray-950 p-2.5 rounded border border-gray-800 text-[11px] mb-2">
+                                <p class="font-bold text-gray-300 border-b border-gray-800 pb-1 mb-1.5">Against 1. ${whiteMove}</p>
+                                <div class="space-y-1.5">
+                        `;
+                        respKeys.slice(0, 3).forEach(blackResp => {
+                            const rData = responses[blackResp];
+                            const winPct = ((rData.wins / rData.count) * 100).toFixed(0);
+                            const lossPct = ((rData.losses / rData.count) * 100).toFixed(0);
+                            const drawPct = ((rData.draws / rData.count) * 100).toFixed(0);
+                            html += `
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span class="font-semibold text-white">1... ${blackResp} <span class="text-gray-500">(${rData.count}x)</span></span>
+                                    <span class="text-gray-400 font-mono">
+                                        W:<span class="text-green-400 font-bold">${winPct}%</span> L:<span class="text-red-400 font-bold">${lossPct}%</span>
+                                    </span>
+                                </div>
+                            `;
+                        });
+                        html += `</div></div>`;
+                    }
+                });
+                html += `</div>`;
+
+                // 75 Openings Compilation Index Table
+                html += `
+                    <div class="mt-4">
+                        <h4 class="text-xs font-bold text-green-400 uppercase tracking-wider mb-2"><i class="fa-solid fa-book-open"></i> Matched Openings Index (75 Lines)</h4>
+                        <p class="text-[10px] text-gray-400 mb-2">Click any row below to instantly project variation on board and trigger auto-building.</p>
+                        <div class="bg-gray-950 rounded border border-gray-800 overflow-hidden text-[11px]">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-900 text-gray-500 border-b border-gray-800">
+                                    <tr>
+                                        <th class="p-2">Opening Name</th>
+                                        <th class="p-2 text-right">Played</th>
+                                        <th class="p-2 text-right">Win/Loss</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-800/50">
+                `;
+
+                let matchedOpeningsArray = Object.values(stats.openingsList).filter(o => o.count > 0);
+                matchedOpeningsArray.sort((a,b) => b.count - a.count);
+
+                // Prepend popular unplayed ones to fill index list up to 75 nicely
+                let unplayedArray = Object.values(stats.openingsList).filter(o => o.count === 0);
+                let fullRenderArray = [...matchedOpeningsArray, ...unplayedArray];
+
+                fullRenderArray.forEach(op => {
+                    const winPct = op.count > 0 ? ((op.wins / op.count) * 100).toFixed(0) : 0;
+                    const lossPct = op.count > 0 ? ((op.losses / op.count) * 100).toFixed(0) : 0;
+                    
+                    const countText = op.count > 0 ? `${op.count}x` : `<span class="text-gray-600">-</span>`;
+                    const statsText = op.count > 0 ? `<span class="text-green-400 font-bold">${winPct}%</span>/<span class="text-red-400">${lossPct}%</span>` : `<span class="text-gray-600">-</span>`;
+
+                    const opMoveString = JSON.stringify(op.moves);
+                    html += `
+                        <tr onclick='playSpecificOpeningOnBoard(${opMoveString}, "${op.name}")' class="hover:bg-gray-800/80 transition cursor-pointer">
+                            <td class="p-2 font-semibold text-gray-300 truncate max-w-[180px]">${op.name}</td>
+                            <td class="p-2 text-right font-mono text-gray-400">${countText}</td>
+                            <td class="p-2 text-right font-mono">${statsText}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div></div>`;
+
+                // Reveal Dashboard
+                placeholder.classList.add('hidden');
+                outputContainer.innerHTML = html;
+                outputContainer.classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                placeholder.innerText = 'Failed to compile stats. Profile could be private or rate limited.';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function playSpecificOpeningOnBoard(movesArray, openingName) {
+            if (isTraining) return;
+            
+            // Reset state
+            game.reset();
+            renderPieces(false);
+            
+            // Force play moves sequentially
+            movesArray.forEach(mv => {
+                game.move(mv);
+            });
+
+            afterMoveTrigger(true);
+            
+            // Cache current moves sequence for Repertoire auto builder
+            activeAnalyzedOpeningMoveList = { name: openingName, moves: movesArray };
+            
+            // Trigger popup button below board
+            const buildBtn = document.getElementById('build-here-container');
+            buildBtn.classList.remove('hidden');
+            
+            showMsg("Opening Played", `"${openingName}" loaded onto board. Click "[Build Repertoire From Here]" underneath the board if you wish to import this variation directly!`);
+        }
+
+        function triggerBuildFromHere() {
+            if (!activeAnalyzedOpeningMoveList) return;
+            const op = activeAnalyzedOpeningMoveList;
+            
+            showConfirm("Build from Variation?", `Do you want to instantly create a new Repertoire branch for "${op.name}" starting with these moves?`, () => {
+                const id = 'rep_' + Date.now();
+                const tempGame = new Chess();
+                
+                repData.repertoires[id] = {
+                    name: op.name,
+                    color: "w", // Default White focus
+                    root: { fen: tempGame.fen(), san: 'Root', children: [], parent: null, comment: 'Imported from Stats opening variation', variationName: '' }
+                };
+
+                // Inject moves programmatically
+                let node = repData.repertoires[id].root;
+                op.moves.forEach(m => {
+                    tempGame.move(m);
+                    const fen = tempGame.fen();
+                    const newNode = { fen: fen, san: m, children: [], parent: node, comment: '', variationName: '' };
+                    node.children.push(newNode);
+                    node = newNode;
+                });
+
+                saveState();
+                loadRepertoire(id);
+                document.getElementById('build-here-container').classList.add('hidden');
+                activeAnalyzedOpeningMoveList = null;
+                
+                switchTab('build');
+                showMsg("Repertoire Created!", `Your new Repertoire "${op.name}" is now fully active! Switch to Build tab to add branches or comments.`);
+            });
+        }
+
         function renderDeviations(suggestedAdditions) {
             const listEl = document.getElementById('deviations-list');
             listEl.innerHTML = '';
@@ -3092,7 +3804,7 @@
                 suggestHtml += `
                     <div class="bg-indigo-950/40 p-3 mb-4 rounded border border-indigo-700/50">
                         <h4 class="text-xs font-bold text-indigo-300 mb-1.5 uppercase tracking-wider"><i class="fa-solid fa-lightbulb"></i> Recommended Additions</h4>
-                        <p class="text-[10px] text-gray-400 mb-2">Opponent deviations with high frequencies where your prep can expand:</p>
+                        <p class="text-[10px] text-gray-400 mb-2">Opponent deviations with high match frequencies where your prep can expand:</p>
                         <div class="space-y-1.5">
                 `;
                 sugKeys.forEach(key => {
@@ -3219,6 +3931,7 @@
         function clearSavedAccount() {
             document.getElementById('setting-username').value = '';
             document.getElementById('games-username').value = '';
+            document.getElementById('stats-username').value = '';
             settings.savedUsername = '';
             saveState();
             showMsg("Account Removed", "Your saved chess account details have been cleared from local storage.");
