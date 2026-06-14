@@ -806,32 +806,58 @@
                         </select>
                         
                         <div id="lichess-custom-ratings-group" class="hidden grid grid-cols-2 gap-2 mt-1">
-                            <div>
-                                <label class="block text-[9px] text-gray-500 mb-0.5">Min Rating</label>
-                                <select id="setting-lichess-ratings-min" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-0.5 text-white text-[10px]">
-                                    <option value="1000" selected>1000</option>
-                                    <option value="1200">1200</option>
-                                    <option value="1400">1400</option>
-                                    <option value="1600">1600</option>
-                                    <option value="1800">1800</option>
-                                    <option value="2000">2000</option>
-                                    <option value="2200">2200</option>
-                                    <option value="2500">2500</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[9px] text-gray-500 mb-0.5">Max Rating</label>
-                                <select id="setting-lichess-ratings-max" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-0.5 text-white text-[10px]">
-                                    <option value="1000">1000</option>
-                                    <option value="1200">1200</option>
-                                    <option value="1400">1400</option>
-                                    <option value="1600">1600</option>
-                                    <option value="1800">1800</option>
-                                    <option value="2000">2000</option>
-                                    <option value="2200">2200</option>
-                                    <option value="2500" selected>2500</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label class="block text-[9px] text-gray-500 mb-0.5">Min Rating</label>
+                            <select id="setting-lichess-ratings-min" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-0.5 text-white text-[10px]">
+                                <option value="1000" selected>1000</option>
+                                <option value="1100">1100</option>
+                                <option value="1200">1200</option>
+                                <option value="1300">1300</option>
+                                <option value="1400">1400</option>
+                                <option value="1500">1500</option>
+                                <option value="1600">1600</option>
+                                <option value="1700">1700</option>
+                                <option value="1800">1800</option>
+                                <option value="1900">1900</option>
+                                <option value="2000">2000</option>
+                                <option value="2100">2100</option>
+                                <option value="2200">2200</option>
+                                <option value="2300">2300</option>
+                                <option value="2400">2400</option>
+                                <option value="2500">2500</option>
+                                <option value="2600">2600</option>
+                                <option value="2700">2700</option>
+                                <option value="2800">2800</option>
+                                <option value="2900">2900</option>
+                                <option value="3000">3000</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-gray-500 mb-0.5">Max Rating</label>
+                            <select id="setting-lichess-ratings-max" class="w-full bg-gray-950 border border-gray-700 rounded px-1.5 py-0.5 text-white text-[10px]">
+                                <option value="1000">1000</option>
+                                <option value="1100">1100</option>
+                                <option value="1200">1200</option>
+                                <option value="1300">1300</option>
+                                <option value="1400">1400</option>
+                                <option value="1500">1500</option>
+                                <option value="1600">1600</option>
+                                <option value="1700">1700</option>
+                                <option value="1800">1800</option>
+                                <option value="1900">1900</option>
+                                <option value="2000">2000</option>
+                                <option value="2100">2100</option>
+                                <option value="2200">2200</option>
+                                <option value="2300">2300</option>
+                                <option value="2400">2400</option>
+                                <option value="2500">2500</option>
+                                <option value="2600">2600</option>
+                                <option value="2700">2700</option>
+                                <option value="2800">2800</option>
+                                <option value="2900">2900</option>
+                                <option value="3000">3000</option>
+                                <option value="max" selected>Max</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -2774,10 +2800,19 @@
                         let ratingStr = '';
                         if (settings.lichessRatingsPreset === 'custom') {
                             const minRating = parseInt(settings.lichessRatingsMin) || 1000;
-                            const maxRating = parseInt(settings.lichessRatingsMax) || 2500;
+                            const maxRatingStr = settings.lichessRatingsMax;
+                            const maxRating = maxRatingStr === 'max' ? 9999 : (parseInt(maxRatingStr) || 3000);
+                            
+                            // Lichess standard explorer rating buckets are: 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2500
+                            // We map custom selections to compatible active API query ranges.
                             const steps = [1000, 1200, 1400, 1600, 1800, 2000, 2200, 2500];
                             const selectedSteps = steps.filter(s => s >= minRating && s <= maxRating);
-                            ratingStr = selectedSteps.join(',');
+                            
+                            if (selectedSteps.length === 0) {
+                                ratingStr = minRating >= 2500 ? '2500' : '1000';
+                            } else {
+                                ratingStr = selectedSteps.join(',');
+                            }
                         } else {
                             ratingStr = settings.lichessRatingsPreset || "1600,1800,2000,2200,2500";
                         }
