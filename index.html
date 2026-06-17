@@ -78,6 +78,54 @@
         
         .engine-move-span:hover { background-color: rgba(255,255,255,0.2); border-radius: 3px; }
     </style>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+      import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+      import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs, updateDoc, deleteDoc, increment, arrayUnion, arrayRemove, where, serverTimestamp, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAGZ8FMYdR3KMUqoQ31_ZfCuOn1YqIJiyw",
+        authDomain: "repertoire64.firebaseapp.com",
+        projectId: "repertoire64",
+        storageBucket: "repertoire64.firebasestorage.app",
+        messagingSenderId: "313228958774",
+        appId: "1:313228958774:web:42ce282473523edcc50c97",
+        measurementId: "G-X68H3XGF8K"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      window._fb = { auth, db, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, doc, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs, updateDoc, deleteDoc, increment, arrayUnion, arrayRemove, where, serverTimestamp, limit, onSnapshot };
+
+      // Auth state listener. Module scripts execute after the DOM is parsed but before
+      // window.onload, and the main app script (at the end of <body>) defines
+      // window.onFirebaseAuthReady synchronously when it runs -- so by the time this
+      // listener actually fires (async, after Firebase checks persisted auth state),
+      // the handler is reliably already defined. We still guard with a queued retry
+      // just in case auth resolves unusually fast.
+      let _pendingAuthUser = undefined;
+      onAuthStateChanged(auth, (user) => {
+        window._fbUser = user;
+        window._fbIsAnon = user ? user.isAnonymous : false;
+        if (window.onFirebaseAuthReady) {
+          window.onFirebaseAuthReady(user);
+        } else {
+          _pendingAuthUser = user;
+          const tryLater = () => {
+            if (window.onFirebaseAuthReady) window.onFirebaseAuthReady(_pendingAuthUser);
+            else setTimeout(tryLater, 50);
+          };
+          setTimeout(tryLater, 50);
+        }
+      });
+    </script>
+
 </head>
 <body class="bg-gray-900 text-gray-100 h-screen flex flex-col overflow-hidden">
 
@@ -102,6 +150,14 @@
             <button onclick="openSettingsModal()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-gear"></i> <span class="hidden sm:inline">Settings</span>
             </button>
+            
+            <button onclick="openAuthModal()" id="auth-btn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-user"></i> <span id="auth-btn-label" class="hidden sm:inline">Sign In</span>
+            </button>
+            <button onclick="openAdminPanel()" id="admin-panel-btn" class="hidden bg-red-700 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved"></i> <span class="hidden sm:inline">Admin</span>
+            </button>
+
             <button onclick="showInstructions()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-circle-info"></i>
             </button>
@@ -218,11 +274,12 @@
         <!-- Right Panel: Repertoire & Controls -->
         <aside class="w-full md:w-1/3 bg-gray-800 border-l border-gray-700 flex flex-col shrink-0 md:max-w-[400px]">
             <!-- Tabs -->
-            <div class="flex border-b border-gray-700 bg-gray-800 shrink-0">
-                <button onclick="switchTab('build')" id="tab-build" class="flex-1 py-3 text-xs md:text-sm font-semibold text-blue-400 border-b-2 border-blue-500 transition">Build</button>
-                <button onclick="switchTab('train')" id="tab-train" class="flex-1 py-3 text-xs md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Train</button>
-                <button onclick="switchTab('review')" id="tab-review" class="flex-1 py-3 text-xs md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Review <span id="mistake-count" class="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
-                <button onclick="switchTab('games')" id="tab-games" class="flex-1 py-3 text-xs md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition">Games</button>
+            <div class="flex border-b border-gray-700 bg-gray-800 shrink-0 overflow-x-auto">
+                <button onclick="switchTab('build')" id="tab-build" class="flex-1 py-3 px-1 text-[11px] md:text-sm font-semibold text-blue-400 border-b-2 border-blue-500 transition whitespace-nowrap">Build</button>
+                <button onclick="switchTab('train')" id="tab-train" class="flex-1 py-3 px-1 text-[11px] md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition whitespace-nowrap">Train</button>
+                <button onclick="switchTab('review')" id="tab-review" class="flex-1 py-3 px-1 text-[11px] md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition whitespace-nowrap">Review <span id="mistake-count" class="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                <button onclick="switchTab('community')" id="tab-community" class="flex-1 py-3 px-1 text-[11px] md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition whitespace-nowrap">Community</button>
+                <button onclick="switchTab('games')" id="tab-games" class="flex-1 py-3 px-1 text-[11px] md:text-sm font-semibold text-gray-400 border-b-2 border-transparent hover:text-gray-200 transition whitespace-nowrap">Games</button>
             </div>
 
             <!-- Build View Tab -->
@@ -532,8 +589,211 @@
 
             </div>
 
+
+            <!-- Community Tab View -->
+            <div id="content-community" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+                <!-- Sub-tabs -->
+                <div class="flex shrink-0 bg-gray-950 p-1 rounded-lg gap-1 mb-3">
+                    <button onclick="switchCommunitySubTab('browse')" id="ctab-browse" class="flex-1 py-1 text-xs font-bold rounded bg-purple-700 text-white transition">Browse</button>
+                    <button onclick="switchCommunitySubTab('publish')" id="ctab-publish" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition">Publish</button>
+                    <button onclick="switchCommunitySubTab('messages')" id="ctab-messages" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition">Messages <span id="msg-badge" class="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                </div>
+
+                <!-- Browse Sub-tab -->
+                <div id="cview-browse" class="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                    <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
+                        <h3 class="font-semibold text-sm text-purple-400 mb-2"><i class="fa-solid fa-globe"></i> Public Repertoires</h3>
+                        <!-- Sort controls -->
+                        <div class="flex gap-1.5 mb-2 flex-wrap">
+                            <select id="pub-sort" onchange="loadPublicRepertoires()" class="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none">
+                                <option value="likes">Most Liked</option>
+                                <option value="views">Most Viewed</option>
+                                <option value="recent_popular">Recently Popular</option>
+                                <option value="admin_recommended">Admin Picks ⭐</option>
+                                <option value="createdAt">Newest First</option>
+                            </select>
+                            <select id="pub-opening-filter" onchange="loadPublicRepertoires()" class="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none flex-1">
+                                <option value="">All Openings</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-1.5 mb-2">
+                            <button onclick="loadPublicRepertoires(true)" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-xs py-1.5 rounded font-bold transition"><i class="fa-solid fa-users mr-1"></i>Specialist Only</button>
+                            <button onclick="loadPublicRepertoires()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs py-1.5 rounded font-bold transition"><i class="fa-solid fa-globe mr-1"></i>All Public</button>
+                        </div>
+                    </div>
+                    <div id="pub-reps-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                        <div class="text-gray-500 text-xs text-center mt-4">Sign in to browse community repertoires.</div>
+                    </div>
+                    <div class="mt-2 shrink-0">
+                        <button id="pub-load-more" onclick="loadMorePublicReps()" class="hidden w-full bg-gray-700 hover:bg-gray-600 text-white text-xs py-1.5 rounded font-bold transition">Load More</button>
+                    </div>
+                </div>
+
+                <!-- Publish Sub-tab -->
+                <div id="cview-publish" class="hidden flex flex-col gap-3">
+                    <div class="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                        <h3 class="font-semibold text-sm text-green-400 mb-2"><i class="fa-solid fa-upload"></i> Publish Repertoire</h3>
+                        <p class="text-xs text-gray-400 mb-3">Share one of your repertoires with the community. Signed-in users (not anonymous) can like and comment on it.</p>
+                        <div class="space-y-2">
+                            <select id="publish-rep-select" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                                <option value="">-- Select a Repertoire --</option>
+                            </select>
+                            <input type="text" id="publish-desc" placeholder="Short description (optional)" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                            <select id="publish-opening-cat" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                                <option value="">-- Opening Category (optional) --</option>
+                            </select>
+                            <button onclick="publishRepertoire()" class="w-full bg-green-700 hover:bg-green-600 text-white text-xs py-2 rounded font-bold transition"><i class="fa-solid fa-share-nodes mr-1"></i> Publish to Community</button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                        <h3 class="font-semibold text-sm text-amber-400 mb-2"><i class="fa-solid fa-star"></i> Become a Repertoire Specialist</h3>
+                        <p class="text-xs text-gray-400 mb-2">Specialists get a badge on their published repertoires. Submit an application to the admin.</p>
+                        <textarea id="specialist-request-text" placeholder="Why should you be a Repertoire Specialist? (chess background, openings you know, etc.)" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white h-16 resize-none focus:outline-none mb-2"></textarea>
+                        <button onclick="submitSpecialistRequest()" class="w-full bg-amber-700 hover:bg-amber-600 text-white text-xs py-2 rounded font-bold transition"><i class="fa-solid fa-paper-plane mr-1"></i> Submit Application</button>
+                    </div>
+                </div>
+
+                <!-- Messages Sub-tab -->
+                <div id="cview-messages" class="hidden flex-1 flex flex-col min-h-0 overflow-y-auto">
+                    <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
+                        <h3 class="font-semibold text-sm text-blue-400 mb-1"><i class="fa-solid fa-envelope"></i> Your Messages</h3>
+                        <p class="text-xs text-gray-400">System notices and admin messages appear here.</p>
+                    </div>
+                    <div id="user-messages-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                        <div class="text-gray-500 text-xs text-center mt-4">No messages yet.</div>
+                    </div>
+                </div>
+            </div>
+
         </aside>
     </main>
+
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[60] hidden">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-user-shield mr-2"></i>Account</h2>
+                <button onclick="closeAuthModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <!-- Logged-out state -->
+            <div id="auth-loggedout" class="space-y-3">
+                <button onclick="fbSignInGoogle()" class="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-bold py-2.5 rounded-lg hover:bg-gray-100 transition text-sm">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" class="w-5 h-5"> Sign in with Google
+                </button>
+                <div class="relative flex items-center"><div class="flex-grow border-t border-gray-600"></div><span class="mx-3 text-xs text-gray-500">or email</span><div class="flex-grow border-t border-gray-600"></div></div>
+                <input type="email" id="auth-email" placeholder="Email" class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                <input type="password" id="auth-password" placeholder="Password" class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                <div class="flex gap-2">
+                    <button onclick="fbSignInEmail()" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white py-2 rounded font-bold text-sm transition">Sign In</button>
+                    <button onclick="fbSignUpEmail()" class="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white py-2 rounded font-bold text-sm transition">Register</button>
+                </div>
+                <button onclick="fbSignInAnon()" class="w-full text-gray-400 hover:text-white text-xs underline transition">Continue as Guest (no privileges)</button>
+                <p id="auth-error" class="text-red-400 text-xs text-center hidden"></p>
+            </div>
+            <!-- Logged-in state -->
+            <div id="auth-loggedin" class="hidden space-y-3">
+                <div class="text-center py-2">
+                    <div class="w-14 h-14 rounded-full bg-purple-700 flex items-center justify-center mx-auto mb-2 text-2xl">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <p class="font-bold text-white" id="auth-display-name">Loading...</p>
+                    <p class="text-xs text-gray-400" id="auth-display-email"></p>
+                    <span id="auth-specialist-badge" class="hidden mt-1 inline-block bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-star mr-1"></i>Repertoire Specialist</span>
+                    <span id="auth-anon-badge" class="hidden mt-1 inline-block bg-gray-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-ghost mr-1"></i>Guest Mode</span>
+                </div>
+                <button onclick="fbSignOut()" class="w-full bg-red-800 hover:bg-red-700 text-white py-2 rounded font-bold text-sm transition"><i class="fa-solid fa-right-from-bracket mr-1"></i>Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Public Repertoire View Modal -->
+    <div id="pub-rep-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[55] hidden">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-lg mx-4 shadow-2xl flex flex-col max-h-[88vh]">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700 shrink-0">
+                <div>
+                    <h2 id="pub-rep-modal-title" class="text-lg font-bold text-white"></h2>
+                    <p id="pub-rep-modal-author" class="text-xs text-gray-400 mt-0.5"></p>
+                </div>
+                <button onclick="closePubRepModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <p id="pub-rep-modal-desc" class="text-sm text-gray-300 mb-3 italic"></p>
+                <div id="pub-rep-modal-stats" class="flex gap-3 text-xs text-gray-400 mb-4"></div>
+                <!-- Import button -->
+                <button id="pub-rep-import-btn" onclick="importPublicRepertoire()" class="w-full bg-blue-700 hover:bg-blue-600 text-white text-xs py-2 rounded font-bold transition mb-4"><i class="fa-solid fa-download mr-1"></i>Import to My Repertoires</button>
+                <!-- Like button -->
+                <button id="pub-rep-like-btn" onclick="toggleLikePublicRep()" class="w-full bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 rounded font-bold transition mb-4"><i class="fa-solid fa-heart mr-1"></i>Like</button>
+                <!-- Comments -->
+                <h3 class="text-sm font-bold text-gray-300 mb-2 border-b border-gray-700 pb-1">Comments</h3>
+                <div id="pub-rep-comments" class="space-y-2 mb-3 max-h-48 overflow-y-auto pr-1"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="pub-rep-comment-input" placeholder="Add a comment..." class="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                    <button onclick="submitComment()" class="bg-purple-700 hover:bg-purple-600 text-white text-xs px-3 rounded font-bold transition">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[70] hidden">
+        <div class="bg-gray-800 border border-red-700/50 rounded-xl w-full max-w-2xl mx-4 shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-4 border-b border-red-700/50 shrink-0">
+                <h2 class="text-lg font-bold text-red-400"><i class="fa-solid fa-shield-halved mr-2"></i>Admin Panel</h2>
+                <button onclick="closeAdminPanel()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <!-- Admin sub-tabs -->
+                <div class="flex bg-gray-900 p-1 rounded-lg gap-1 mb-4">
+                    <button onclick="switchAdminTab('users')" id="admtab-users" class="flex-1 py-1 text-xs font-bold rounded bg-red-700 text-white">Users</button>
+                    <button onclick="switchAdminTab('reps')" id="admtab-reps" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Pub. Reps</button>
+                    <button onclick="switchAdminTab('reports')" id="admtab-reports" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Reports</button>
+                    <button onclick="switchAdminTab('specialist')" id="admtab-specialist" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Specialist Req.</button>
+                </div>
+                <!-- Users -->
+                <div id="admin-view-users">
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="admin-msg-uid" placeholder="User UID" class="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                        <button onclick="adminFetchUser()" class="bg-gray-700 text-xs px-3 py-1.5 rounded text-white font-bold hover:bg-gray-600">Lookup</button>
+                    </div>
+                    <div id="admin-user-detail" class="hidden bg-gray-900 rounded p-3 border border-gray-700 mb-3 text-xs text-gray-300 space-y-2">
+                        <p><span class="text-gray-500">UID:</span> <span id="adm-uid"></span></p>
+                        <p><span class="text-gray-500">Email:</span> <span id="adm-email"></span></p>
+                        <p><span class="text-gray-500">Display Name:</span> <span id="adm-name"></span></p>
+                        <p><span class="text-gray-500">Specialist:</span> <span id="adm-specialist"></span></p>
+                        <p><span class="text-gray-500">Banned:</span> <span id="adm-banned"></span></p>
+                        <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-700">
+                            <button onclick="adminToggleBan()" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Ban</button>
+                            <button onclick="adminToggleSpecialist()" class="bg-amber-700 hover:bg-amber-600 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Specialist</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="admin-msg-text" placeholder="Send message to user..." class="flex-1 bg-gray-950 border border-gray-600 rounded px-2 py-1 text-[10px] text-white focus:outline-none">
+                            <button onclick="adminSendMessage()" class="bg-blue-700 text-[10px] px-2 py-1 rounded text-white font-bold hover:bg-blue-600">Send</button>
+                        </div>
+                    </div>
+                    <div id="admin-all-users" class="space-y-1.5 max-h-64 overflow-y-auto">
+                        <p class="text-xs text-gray-500 italic">Click Lookup or load all users below.</p>
+                        <button onclick="adminLoadAllUsers()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold mt-1">Load All Users</button>
+                    </div>
+                </div>
+                <!-- Pub. Reps -->
+                <div id="admin-view-reps" class="hidden space-y-2 max-h-96 overflow-y-auto">
+                    <button onclick="adminLoadPubReps()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Public Repertoires</button>
+                    <div id="admin-pub-reps-list"></div>
+                </div>
+                <!-- Reports -->
+                <div id="admin-view-reports" class="hidden space-y-2 max-h-96 overflow-y-auto">
+                    <button onclick="adminLoadReports()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Reports</button>
+                    <div id="admin-reports-list"></div>
+                </div>
+                <!-- Specialist Requests -->
+                <div id="admin-view-specialist" class="hidden space-y-2 max-h-96 overflow-y-auto">
+                    <button onclick="adminLoadSpecialistRequests()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Requests</button>
+                    <div id="admin-specialist-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Repertoires modal -->
     <div id="reps-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
@@ -629,6 +889,11 @@
                     <strong class="text-white">Caution:</strong> The <span class="text-indigo-400 font-semibold">ChessDB Repertoire Crafter</span> and <span class="text-indigo-400 font-semibold">Auto-Build Tree</span> features query crowdsourced master databases. While highly standard, automated trees may occasionally recommend theoretical sidelines or unsound variations depending on raw statistic logs. Users are highly encouraged to treat these builds as theoretical frameworks and cross-verify lines utilizing our integrated Stockfish engine.
                 </p>
             </div>
+
+                <p>
+                    <strong class="text-white">Community Standards:</strong> By using the public repertoire community features, you agree to: (1) Only post repertoires you have the right to share. (2) Keep comments respectful and chess-related. (3) Accept that Repertoire64 administrators reserve the right to delete any public repertoire, remove any comment, issue warnings, and permanently ban any user who violates these terms or engages in harassment, spam, or abusive behavior. (4) Anonymous/Guest users may not publish repertoires or comment. All community actions are subject to admin review.
+                </p>
+
             <div class="flex justify-end gap-3" id="tos-buttons-container">
                 <button onclick="agreeDisclaimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold transition w-full">
                     I Agree & Accept
@@ -746,6 +1011,15 @@
                             <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-300">Mute Capture Sound</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="setting-mute-capture" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                        </label>
+                    </div>
+
                     <div class="flex items-center justify-between col-span-2">
                         <span class="text-sm text-gray-300">Show Coordinates</span>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -1130,7 +1404,8 @@
             lichessRatingsPreset: '1600,1800,2000,2200,2500',
             lichessRatingsMin: '1000',
             lichessRatingsMax: '2500',
-            termsSigned: false
+            termsSigned: false,
+            muteCaptureSound: false
         };
 
         let trainingLines = [];
@@ -1276,7 +1551,8 @@
         function playSound(isCapture) {
             if (!settings.sound) return;
             if (Tone.context.state !== 'running') Tone.context.resume();
-            if (isCapture) {
+            // If muteCaptureSound is enabled, captures just use the regular move sound
+            if (isCapture && !settings.muteCaptureSound) {
                 synthCapture.triggerAttackRelease("D2", "16n", Tone.now(), 0.6);
             } else {
                 synthMove.triggerAttackRelease("B1", "16n", Tone.now(), 0.5);
@@ -1436,6 +1712,7 @@
             document.getElementById('setting-lichess-ratings-min').value = settings.lichessRatingsMin || '1000';
             document.getElementById('setting-lichess-ratings-max').value = settings.lichessRatingsMax || '2500';
             document.getElementById('setting-tos-agree').checked = settings.termsSigned || false;
+            document.getElementById('setting-mute-capture').checked = settings.muteCaptureSound || false;
             
             toggleLichessSourceUI();
             toggleLichessRatingPreset();
@@ -1583,6 +1860,7 @@
             settings.lichessRatingsMin = document.getElementById('setting-lichess-ratings-min').value;
             settings.lichessRatingsMax = document.getElementById('setting-lichess-ratings-max').value;
             settings.termsSigned = document.getElementById('setting-tos-agree').checked;
+            settings.muteCaptureSound = document.getElementById('setting-mute-capture').checked;
             
             document.getElementById('games-platform').value = settings.savedPlatform;
             document.getElementById('games-username').value = settings.savedUsername;
@@ -2334,17 +2612,36 @@
         function navigateToNode(pathIndex) {
             if (!repData.activeId) return;
             const root = repData.repertoires[repData.activeId].root;
-            game.load(root.fen);
-            currentNode = root;
-            
+
             if (pathIndex === -1) {
+                game.load(root.fen);
+                currentNode = root;
                 currentPath = [];
-            } else {
-                currentPath = currentPath.slice(0, pathIndex + 1);
-                currentNode = currentPath[pathIndex];
-                game.load(currentNode.fen);
+                navigationIdx = -1;
+                afterMoveTrigger(false);
+                return;
             }
-            
+
+            // Walk forward from root via currentPath first, then via first-children
+            // (the displayed mainline extension), so clicking any node shown in the
+            // move list -- past, present, or future-mainline -- works correctly.
+            let walkNode = root;
+            let walkPath = [];
+            for (let i = 0; i <= pathIndex; i++) {
+                if (i < currentPath.length) {
+                    walkNode = currentPath[i];
+                } else if (walkNode.children && walkNode.children.length > 0) {
+                    walkNode = walkNode.children[0];
+                } else {
+                    break;
+                }
+                walkPath.push(walkNode);
+            }
+
+            currentNode = walkPath[walkPath.length - 1];
+            currentPath = walkPath;
+            game.load(currentNode.fen);
+
             navigationIdx = pathIndex;
             afterMoveTrigger(false);
         }
@@ -2420,7 +2717,7 @@
             if (isWatchingRepertoire && tab !== 'build') {
                 stopWatchRepertoire();
             }
-            ['build', 'train', 'review', 'games'].forEach(t => {
+            ['build', 'train', 'review', 'games', 'community'].forEach(t => {
                 const tabEl = document.getElementById(`tab-${t}`);
                 if (tabEl) {
                     tabEl.classList.remove('text-blue-400', 'border-blue-500');
@@ -2439,6 +2736,9 @@
             const activeContent = document.getElementById(`content-${tab}`);
             if (activeContent) {
                 activeContent.classList.remove('hidden');
+            }
+            if (tab === 'community' && typeof switchCommunitySubTab === 'function') {
+                switchCommunitySubTab(communityCurrentTab || 'browse');
             }
             
             currentMode = tab;
@@ -2664,18 +2964,34 @@
                 document.getElementById('node-comment').value = currentNode.comment || '';
             }
 
-            if (currentPath.length === 0) {
+            if (currentPath.length === 0 && (!currentNode || currentNode.children.length === 0)) {
                 historyEl.innerHTML = '<span class="text-gray-500 italic">Starting position. Play a move to begin building.</span>';
                 annoBox.classList.add('hidden');
             } else {
+                // Build a "display path" that shows the full played-out mainline (currentPath
+                // extended forward via first-children) so stepping back never erases moves.
+                // The currently active node is highlighted; any move played that deviates
+                // from the prior mainline becomes node.children[0] for its parent going
+                // forward, which is exactly how branches persist in the tree -- nothing is
+                // erased, and older siblings remain reachable via the Alternative Moves list.
+                let displayPath = currentPath.slice();
+                let tail = currentNode;
+                while (tail && tail.children && tail.children.length > 0) {
+                    tail = tail.children[0];
+                    displayPath.push(tail);
+                }
+
                 let html = '';
                 let moveNum = 1;
-                for (let i = 0; i < currentPath.length; i++) {
-                    const node = currentPath[i];
+                for (let i = 0; i < displayPath.length; i++) {
+                    const node = displayPath[i];
                     const isWhite = i % 2 === 0;
-                    if (isWhite) html += `<span class="text-gray-500 mr-1">${moveNum}.</span>`; 
-                    const isLast = (i === currentPath.length - 1);
-                    const classes = isLast ? 'bg-blue-600 text-white font-bold' : 'hover:bg-gray-700 cursor-pointer';
+                    if (isWhite) html += `<span class="text-gray-500 mr-1">${moveNum}.</span>`;
+                    const isCurrent = (i === currentPath.length - 1);
+                    const isFuture = (i >= currentPath.length);
+                    let classes = 'hover:bg-gray-700 cursor-pointer';
+                    if (isCurrent) classes = 'bg-blue-600 text-white font-bold ring-2 ring-blue-400';
+                    else if (isFuture) classes = 'hover:bg-gray-700 cursor-pointer text-gray-400 italic';
                     html += `<span onclick="navigateToNode(${i})" class="px-1.5 py-0.5 rounded transition ${classes}">${node.san}</span> `;
                     if (!isWhite) moveNum++;
                 }
@@ -3461,6 +3777,7 @@
             }));
             localStorage.setItem('chess_rep_data_v4', JSON.stringify(toSave));
             localStorage.setItem('chess_rep_settings_v4', JSON.stringify(settings));
+            if (typeof scheduleCloudPush === 'function') scheduleCloudPush();
         }
 
         function loadState() {
@@ -4304,6 +4621,859 @@
             saveState();
             showMsg("Account Removed", "Your saved chess account details have been cleared from local storage.");
         }
+
+        
+
+        /* ============================================================
+           FIREBASE AUTH, CLOUD SYNC, COMMUNITY & ADMIN MODULE
+           ============================================================ */
+
+        const OPENING_CATEGORIES_75 = ["Sicilian Defense", "Ruy Lopez", "Italian Game", "French Defense", "Caro-Kann Defense", "Pirc Defense", "Modern Defense", "Scandinavian Defense", "Alekhine Defense", "Queen's Gambit", "Queen's Gambit Declined", "Queen's Gambit Accepted", "Slav Defense", "Semi-Slav Defense", "King's Indian Defense", "Nimzo-Indian Defense", "Gr\u00fcnfeld Defense", "Catalan Opening", "English Opening", "R\u00e9ti Opening", "King's Indian Attack", "Bird's Opening", "Dutch Defense", "Benoni Defense", "Modern Benoni", "Benko Gambit", "Trompowsky Attack", "London System", "Colle System", "King's Gambit", "Vienna Game", "Four Knights Game", "Scotch Game", "Petrov's Defense", "Philidor Defense", "Bishop's Opening", "Center Game", "Danish Gambit", "Evans Gambit", "Giuoco Piano", "Two Knights Defense", "Berlin Defense", "Marshall Attack", "Open Spanish", "Closed Spanish", "Exchange Spanish", "Breyer Variation", "Zaitsev Variation", "Sicilian Najdorf", "Sicilian Dragon", "Sicilian Scheveningen", "Sicilian Sveshnikov", "Sicilian Taimanov", "Sicilian Kan", "Sicilian Accelerated Dragon", "Sicilian Alapin", "Sicilian Closed", "Sicilian Grand Prix Attack", "Sicilian Smith-Morra Gambit", "French Tarrasch", "French Winawer", "French Advance", "French Exchange", "Caro-Kann Advance", "Caro-Kann Classical", "Caro-Kann Panov-Botvinnik", "Gr\u00fcnfeld Exchange", "King's Indian Classical", "King's Indian Fianchetto", "Nimzo-Indian Classical", "Nimzo-Indian Rubinstein", "Queen's Indian Defense", "Catalan Closed", "English Symmetrical", "R\u00e9ti King's Indian Attack"];
+        const ADMIN_UIDS_KEY = 'chess_rep_admin_uids_v1';
+        // Bootstrap: the FIRST signed-in (non-anonymous) account becomes admin automatically
+        // if no admin has been designated yet. After that, admin status lives in Firestore
+        // under users/{uid}.isAdmin, and additional admins must be granted there manually.
+
+        let cloudUser = null;          // Firebase auth user object
+        let cloudIsAnon = false;       // true if signed in anonymously
+        let cloudProfile = null;       // Firestore users/{uid} doc data
+        let cloudSyncTimer = null;     // debounce timer for pushing state to cloud
+        let pubRepsCache = [];         // cached list for current browse sort/filter
+        let pubRepsLastDoc = null;     // pagination cursor (simple offset-based here)
+        let currentPubRepView = null;  // currently opened public repertoire (full doc)
+        let adminCurrentTab = 'users';
+        let communityCurrentTab = 'browse';
+
+        function fbApi() { return window._fb; }
+
+        // -------------------- AUTH UI --------------------
+
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+            refreshAuthModalUI();
+        }
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function refreshAuthModalUI() {
+            const loggedOut = document.getElementById('auth-loggedout');
+            const loggedIn = document.getElementById('auth-loggedin');
+            const err = document.getElementById('auth-error');
+            err.classList.add('hidden');
+            if (cloudUser) {
+                loggedOut.classList.add('hidden');
+                loggedIn.classList.remove('hidden');
+                document.getElementById('auth-display-name').innerText = cloudUser.isAnonymous ? 'Guest User' : (cloudUser.displayName || cloudUser.email || 'Signed In');
+                document.getElementById('auth-display-email').innerText = cloudUser.isAnonymous ? '' : (cloudUser.email || '');
+                document.getElementById('auth-specialist-badge').classList.toggle('hidden', !(cloudProfile && cloudProfile.isSpecialist));
+                document.getElementById('auth-anon-badge').classList.toggle('hidden', !cloudUser.isAnonymous);
+            } else {
+                loggedOut.classList.remove('hidden');
+                loggedIn.classList.add('hidden');
+            }
+        }
+
+        function showAuthError(msg) {
+            const err = document.getElementById('auth-error');
+            err.innerText = msg;
+            err.classList.remove('hidden');
+        }
+
+        async function fbSignInGoogle() {
+            const f = fbApi();
+            try {
+                const provider = new f.GoogleAuthProvider();
+                await f.signInWithPopup(f.auth, provider);
+                closeAuthModal();
+            } catch (e) { showAuthError(e.message); }
+        }
+
+        async function fbSignInEmail() {
+            const f = fbApi();
+            const email = document.getElementById('auth-email').value.trim();
+            const pw = document.getElementById('auth-password').value;
+            if (!email || !pw) { showAuthError('Enter email and password.'); return; }
+            try {
+                await f.signInWithEmailAndPassword(f.auth, email, pw);
+                closeAuthModal();
+            } catch (e) { showAuthError(e.message); }
+        }
+
+        async function fbSignUpEmail() {
+            const f = fbApi();
+            const email = document.getElementById('auth-email').value.trim();
+            const pw = document.getElementById('auth-password').value;
+            if (!email || !pw) { showAuthError('Enter email and password.'); return; }
+            if (pw.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+            try {
+                await f.createUserWithEmailAndPassword(f.auth, email, pw);
+                closeAuthModal();
+            } catch (e) { showAuthError(e.message); }
+        }
+
+        async function fbSignInAnon() {
+            const f = fbApi();
+            try {
+                await f.signInAnonymously(f.auth);
+                closeAuthModal();
+            } catch (e) { showAuthError(e.message); }
+        }
+
+        async function fbSignOut() {
+            const f = fbApi();
+            try {
+                await f.signOut(f.auth);
+                closeAuthModal();
+                showMsg('Signed Out', 'You have been signed out. Your data remains saved to your account for next time.');
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        // -------------------- AUTH STATE HANDLER --------------------
+
+        window.onFirebaseAuthReady = async function(user) {
+            cloudUser = user;
+            cloudIsAnon = user ? user.isAnonymous : false;
+
+            const btnLabel = document.getElementById('auth-btn-label');
+            const adminBtn = document.getElementById('admin-panel-btn');
+
+            if (!user) {
+                cloudProfile = null;
+                if (btnLabel) btnLabel.innerText = 'Sign In';
+                if (adminBtn) adminBtn.classList.add('hidden');
+                refreshAuthModalUI();
+                return;
+            }
+
+            if (btnLabel) btnLabel.innerText = user.isAnonymous ? 'Guest' : (user.displayName || (user.email ? user.email.split('@')[0] : 'Account'));
+
+            // Load / create the user's Firestore profile (skipped entirely for anon --
+            // anonymous users get NO cloud privileges: no save, no publish, no comments).
+            if (!user.isAnonymous) {
+                await ensureUserProfile(user);
+                await pullCloudStateIntoLocal();
+                checkUserMessagesForBanOrWarning();
+            } else {
+                cloudProfile = null;
+            }
+
+            if (adminBtn) adminBtn.classList.toggle('hidden', !(cloudProfile && cloudProfile.isAdmin));
+            refreshAuthModalUI();
+            populateOpeningFilterDropdowns();
+        };
+
+        async function ensureUserProfile(user) {
+            const f = fbApi();
+            const ref = f.doc(f.db, 'users', user.uid);
+            const snap = await f.getDoc(ref);
+            if (!snap.exists()) {
+                // First-ever non-anonymous account becomes admin automatically (bootstrap).
+                let makeAdmin = false;
+                try {
+                    const adminQuery = f.query(f.collection(f.db, 'users'), f.where('isAdmin', '==', true), f.limit(1));
+                    const adminSnap = await f.getDocs(adminQuery);
+                    if (adminSnap.empty) makeAdmin = true;
+                } catch (e) { /* ignore */ }
+
+                const profile = {
+                    uid: user.uid,
+                    email: user.email || '',
+                    displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Player'),
+                    isAdmin: makeAdmin,
+                    isSpecialist: false,
+                    isBanned: false,
+                    createdAt: f.serverTimestamp(),
+                    messages: []
+                };
+                await f.setDoc(ref, profile);
+                cloudProfile = profile;
+            } else {
+                cloudProfile = snap.data();
+            }
+        }
+
+        async function refreshCloudProfile() {
+            if (!cloudUser || cloudUser.isAnonymous) return;
+            const f = fbApi();
+            const ref = f.doc(f.db, 'users', cloudUser.uid);
+            const snap = await f.getDoc(ref);
+            if (snap.exists()) cloudProfile = snap.data();
+        }
+
+        function checkUserMessagesForBanOrWarning() {
+            if (!cloudProfile) return;
+            if (cloudProfile.isBanned) {
+                showMsg('Account Banned', 'Your account has been banned by an administrator for violating community guidelines. You may still use the app privately, but cannot publish, comment, or like content.');
+            }
+            renderUserMessages();
+        }
+
+        // -------------------- CLOUD STATE SYNC (repertoires, lichess token, settings) --------------------
+
+        async function pullCloudStateIntoLocal() {
+            if (!cloudUser || cloudUser.isAnonymous) return;
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'userData', cloudUser.uid);
+                const snap = await f.getDoc(ref);
+                if (snap.exists()) {
+                    const cloudData = snap.data();
+                    if (cloudData.repData) {
+                        try {
+                            const parsed = JSON.parse(cloudData.repData);
+                            repData.activeId = parsed.activeId;
+                            repData.trainedNodes = parsed.trainedNodes || {};
+                            mistakes = parsed.mistakes || [];
+                            repData.repertoires = {};
+                            for (let id in parsed.repertoires) {
+                                repData.repertoires[id] = { name: parsed.repertoires[id].name, color: parsed.repertoires[id].color, root: deserializeNode(parsed.repertoires[id].root) };
+                            }
+                        } catch (e) { console.error('Cloud repData parse error', e); }
+                    }
+                    if (cloudData.settings) {
+                        try { settings = { ...settings, ...JSON.parse(cloudData.settings) }; } catch(e) {}
+                    }
+                    saveState(); // mirror into localStorage too
+                    applySettingsToUI();
+                    if (repData.activeId && repData.repertoires[repData.activeId]) {
+                        loadRepertoire(repData.activeId);
+                    } else {
+                        updateRepertoireUI();
+                        renderRepertoiresList();
+                    }
+                } else {
+                    // No cloud doc yet -- push current local state up as the initial cloud copy
+                    pushCloudStateNow();
+                }
+            } catch (e) {
+                console.error('Cloud pull failed', e);
+            }
+        }
+
+        function scheduleCloudPush() {
+            if (!cloudUser || cloudUser.isAnonymous) return;
+            if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+            cloudSyncTimer = setTimeout(pushCloudStateNow, 1200);
+        }
+
+        async function pushCloudStateNow() {
+            if (!cloudUser || cloudUser.isAnonymous) return;
+            const f = fbApi();
+            try {
+                const toSave = { activeId: repData.activeId, repertoires: {}, trainedNodes: repData.trainedNodes };
+                for (let id in repData.repertoires) {
+                    toSave.repertoires[id] = { name: repData.repertoires[id].name, color: repData.repertoires[id].color, root: serializeNode(repData.repertoires[id].root) };
+                }
+                toSave.mistakes = mistakes.map(m => ({
+                    line: m.line.map(n => ({ san: n.san, fen: n.fen, variationName: n.variationName, comment: n.comment })),
+                    mistakeIndex: m.mistakeIndex
+                }));
+                const ref = f.doc(f.db, 'userData', cloudUser.uid);
+                await f.setDoc(ref, {
+                    repData: JSON.stringify(toSave),
+                    settings: JSON.stringify(settings),
+                    updatedAt: f.serverTimestamp()
+                }, { merge: true });
+            } catch (e) {
+                console.error('Cloud push failed', e);
+            }
+        }
+
+        // -------------------- COMMUNITY: TAB SWITCHING --------------------
+
+        function switchCommunitySubTab(tab) {
+            communityCurrentTab = tab;
+            ['browse','publish','messages'].forEach(t => {
+                document.getElementById('cview-' + t).classList.toggle('hidden', t !== tab);
+                const btn = document.getElementById('ctab-' + t);
+                if (t === tab) { btn.classList.add('bg-purple-700','text-white'); btn.classList.remove('text-gray-400'); }
+                else { btn.classList.remove('bg-purple-700','text-white'); btn.classList.add('text-gray-400'); }
+            });
+            if (tab === 'browse') { populateOpeningFilterDropdowns(); loadPublicRepertoires(); }
+            if (tab === 'publish') { populatePublishDropdowns(); }
+            if (tab === 'messages') { renderUserMessages(); }
+        }
+
+        function populateOpeningFilterDropdowns() {
+            const filterSel = document.getElementById('pub-opening-filter');
+            const publishSel = document.getElementById('publish-opening-cat');
+            if (filterSel && filterSel.children.length <= 1) {
+                OPENING_CATEGORIES_75.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name; opt.innerText = name;
+                    filterSel.appendChild(opt);
+                });
+            }
+            if (publishSel && publishSel.children.length <= 1) {
+                OPENING_CATEGORIES_75.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name; opt.innerText = name;
+                    publishSel.appendChild(opt);
+                });
+            }
+        }
+
+        function populatePublishDropdowns() {
+            const sel = document.getElementById('publish-rep-select');
+            sel.innerHTML = '<option value="">-- Select a Repertoire --</option>';
+            for (let id in repData.repertoires) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.innerText = repData.repertoires[id].name + ' (' + (repData.repertoires[id].color === 'w' ? 'White' : 'Black') + ')';
+                sel.appendChild(opt);
+            }
+            populateOpeningFilterDropdowns();
+        }
+
+        // -------------------- COMMUNITY: BROWSE / PUBLISH / LIKE / COMMENT --------------------
+
+        function requireSignedInNonAnon(actionLabel) {
+            if (!cloudUser) {
+                showMsg('Sign In Required', 'Please sign in (Google or email) to ' + actionLabel + '. Guest accounts do not have community privileges.');
+                return false;
+            }
+            if (cloudUser.isAnonymous) {
+                showMsg('Account Required', 'Guest accounts cannot ' + actionLabel + '. Please create a free account or sign in with Google.');
+                return false;
+            }
+            if (cloudProfile && cloudProfile.isBanned) {
+                showMsg('Account Banned', 'Your account has been banned and cannot ' + actionLabel + '.');
+                return false;
+            }
+            return true;
+        }
+
+        async function loadPublicRepertoires(specialistOnly) {
+            const f = fbApi();
+            const listEl = document.getElementById('pub-reps-list');
+            listEl.innerHTML = '<div class="text-gray-500 text-xs text-center mt-4"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+
+            const sortMode = document.getElementById('pub-sort').value;
+            const openingFilter = document.getElementById('pub-opening-filter').value;
+
+            try {
+                let constraints = [f.where('isPublic', '==', true)];
+                if (specialistOnly) constraints.push(f.where('isSpecialistRep', '==', true));
+                if (openingFilter) constraints.push(f.where('openingCategory', '==', openingFilter));
+
+                let orderField = 'likeCount';
+                if (sortMode === 'views') orderField = 'viewCount';
+                else if (sortMode === 'recent_popular') orderField = 'recentPopularityScore';
+                else if (sortMode === 'admin_recommended') { constraints.push(f.where('isAdminRecommended', '==', true)); orderField = 'likeCount'; }
+                else if (sortMode === 'createdAt') orderField = 'createdAt';
+                else orderField = 'likeCount';
+
+                const q = f.query(f.collection(f.db, 'publicRepertoires'), ...constraints, f.orderBy(orderField, 'desc'), f.limit(25));
+                const snap = await f.getDocs(q);
+                pubRepsCache = [];
+                snap.forEach(docSnap => pubRepsCache.push({ id: docSnap.id, ...docSnap.data() }));
+                renderPubRepsList();
+            } catch (e) {
+                console.error(e);
+                listEl.innerHTML = '<div class="text-red-400 text-xs text-center mt-4">Could not load (this may require a Firestore index for that sort+filter combo -- check console).</div>';
+            }
+        }
+
+        function loadMorePublicReps() { loadPublicRepertoires(); }
+
+        function renderPubRepsList() {
+            const listEl = document.getElementById('pub-reps-list');
+            if (pubRepsCache.length === 0) {
+                listEl.innerHTML = '<div class="text-gray-500 text-xs text-center mt-4">No public repertoires found for this filter.</div>';
+                return;
+            }
+            listEl.innerHTML = '';
+            pubRepsCache.forEach(rep => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-900 border border-gray-700 rounded-lg p-2.5 hover:border-purple-600 transition cursor-pointer';
+                card.onclick = () => openPubRepModal(rep.id);
+                let badges = '';
+                if (rep.isAdminRecommended) badges += '<span class="bg-yellow-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold mr-1"><i class="fa-solid fa-star"></i> Admin Pick</span>';
+                if (rep.isSpecialistRep) badges += '<span class="bg-amber-700 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold mr-1"><i class="fa-solid fa-medal"></i> Specialist</span>';
+                if (rep.openingCategory) badges += '<span class="bg-gray-700 text-gray-300 text-[9px] px-1.5 py-0.5 rounded-full mr-1">' + rep.openingCategory + '</span>';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-sm text-white">${escapeHtml(rep.name || 'Untitled')}</h4>
+                        <span class="text-[10px] text-gray-500">${rep.color === 'w' ? '⚪' : '⚫'}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mb-1">by ${escapeHtml(rep.authorName || 'Unknown')}</p>
+                    <div class="mb-1">${badges}</div>
+                    <div class="flex gap-3 text-[10px] text-gray-500">
+                        <span><i class="fa-solid fa-heart"></i> ${rep.likeCount || 0}</span>
+                        <span><i class="fa-solid fa-eye"></i> ${rep.viewCount || 0}</span>
+                        <span><i class="fa-solid fa-comment"></i> ${rep.commentCount || 0}</span>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.innerText = str || '';
+            return div.innerHTML;
+        }
+
+        async function publishRepertoire() {
+            if (!requireSignedInNonAnon('publish repertoires')) return;
+            const repId = document.getElementById('publish-rep-select').value;
+            if (!repId || !repData.repertoires[repId]) { showMsg('Select Repertoire', 'Please select a repertoire to publish.'); return; }
+            const desc = document.getElementById('publish-desc').value.trim();
+            const openingCat = document.getElementById('publish-opening-cat').value;
+            const f = fbApi();
+            try {
+                const rep = repData.repertoires[repId];
+                await f.addDoc(f.collection(f.db, 'publicRepertoires'), {
+                    name: rep.name,
+                    color: rep.color,
+                    root: serializeNode(rep.root),
+                    description: desc,
+                    openingCategory: openingCat || null,
+                    authorUid: cloudUser.uid,
+                    authorName: cloudProfile.displayName || cloudUser.email,
+                    isSpecialistRep: !!(cloudProfile && cloudProfile.isSpecialist),
+                    isPublic: true,
+                    isAdminRecommended: false,
+                    likeCount: 0,
+                    viewCount: 0,
+                    commentCount: 0,
+                    recentPopularityScore: 0,
+                    likedBy: [],
+                    createdAt: f.serverTimestamp()
+                });
+                showMsg('Published!', 'Your repertoire is now live in the community section.');
+                document.getElementById('publish-desc').value = '';
+            } catch (e) { showMsg('Error', 'Could not publish: ' + e.message); }
+        }
+
+        async function submitSpecialistRequest() {
+            if (!requireSignedInNonAnon('apply for Repertoire Specialist status')) return;
+            const text = document.getElementById('specialist-request-text').value.trim();
+            if (!text) { showMsg('Required', 'Please describe your chess background.'); return; }
+            const f = fbApi();
+            try {
+                await f.addDoc(f.collection(f.db, 'specialistRequests'), {
+                    uid: cloudUser.uid,
+                    name: cloudProfile.displayName || cloudUser.email,
+                    message: text,
+                    status: 'pending',
+                    createdAt: f.serverTimestamp()
+                });
+                showMsg('Application Sent', 'Your Repertoire Specialist application has been sent to the admins for review.');
+                document.getElementById('specialist-request-text').value = '';
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function openPubRepModal(id) {
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'publicRepertoires', id);
+                const snap = await f.getDoc(ref);
+                if (!snap.exists()) { showMsg('Not Found', 'This repertoire is no longer available.'); return; }
+                currentPubRepView = { id, ...snap.data() };
+
+                // increment view count (best-effort, fire and forget)
+                f.updateDoc(ref, { viewCount: f.increment(1) }).catch(()=>{});
+
+                document.getElementById('pub-rep-modal-title').innerText = currentPubRepView.name || 'Untitled';
+                document.getElementById('pub-rep-modal-author').innerText = 'by ' + (currentPubRepView.authorName || 'Unknown') + (currentPubRepView.isSpecialistRep ? '  •  ⭐ Specialist' : '');
+                document.getElementById('pub-rep-modal-desc').innerText = currentPubRepView.description || '';
+                document.getElementById('pub-rep-modal-stats').innerHTML = `
+                    <span><i class="fa-solid fa-heart text-red-400"></i> ${currentPubRepView.likeCount || 0} likes</span>
+                    <span><i class="fa-solid fa-eye"></i> ${currentPubRepView.viewCount || 0} views</span>
+                    <span><i class="fa-solid fa-comment"></i> ${currentPubRepView.commentCount || 0} comments</span>
+                `;
+                const likeBtn = document.getElementById('pub-rep-like-btn');
+                const alreadyLiked = cloudUser && currentPubRepView.likedBy && currentPubRepView.likedBy.includes(cloudUser.uid);
+                likeBtn.innerHTML = alreadyLiked ? '<i class="fa-solid fa-heart mr-1"></i>Liked' : '<i class="fa-regular fa-heart mr-1"></i>Like';
+                likeBtn.className = alreadyLiked ? 'w-full bg-red-700 text-white text-xs py-2 rounded font-bold transition mb-4' : 'w-full bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 rounded font-bold transition mb-4';
+
+                document.getElementById('pub-rep-modal').classList.remove('hidden');
+                loadPubRepComments(id);
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        function closePubRepModal() {
+            document.getElementById('pub-rep-modal').classList.add('hidden');
+            currentPubRepView = null;
+        }
+
+        async function importPublicRepertoire() {
+            if (!currentPubRepView) return;
+            try {
+                const id = 'rep_' + Date.now();
+                repData.repertoires[id] = { name: currentPubRepView.name + ' (Imported)', color: currentPubRepView.color, root: deserializeNode(currentPubRepView.root) };
+                saveState();
+                scheduleCloudPush();
+                renderRepertoiresList();
+                showMsg('Imported!', 'Repertoire added to your collection.');
+                closePubRepModal();
+            } catch (e) { showMsg('Error', 'Could not import: ' + e.message); }
+        }
+
+        async function toggleLikePublicRep() {
+            if (!requireSignedInNonAnon('like repertoires')) return;
+            if (!currentPubRepView) return;
+            const f = fbApi();
+            const ref = f.doc(f.db, 'publicRepertoires', currentPubRepView.id);
+            const alreadyLiked = currentPubRepView.likedBy && currentPubRepView.likedBy.includes(cloudUser.uid);
+            try {
+                if (alreadyLiked) {
+                    await f.updateDoc(ref, { likeCount: f.increment(-1), likedBy: f.arrayRemove(cloudUser.uid) });
+                    currentPubRepView.likedBy = currentPubRepView.likedBy.filter(u => u !== cloudUser.uid);
+                    currentPubRepView.likeCount = (currentPubRepView.likeCount || 1) - 1;
+                } else {
+                    await f.updateDoc(ref, { likeCount: f.increment(1), likedBy: f.arrayUnion(cloudUser.uid), recentPopularityScore: f.increment(1) });
+                    currentPubRepView.likedBy = [...(currentPubRepView.likedBy||[]), cloudUser.uid];
+                    currentPubRepView.likeCount = (currentPubRepView.likeCount || 0) + 1;
+                }
+                openPubRepModalRefreshOnly();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        function openPubRepModalRefreshOnly() {
+            const likeBtn = document.getElementById('pub-rep-like-btn');
+            const alreadyLiked = cloudUser && currentPubRepView.likedBy && currentPubRepView.likedBy.includes(cloudUser.uid);
+            likeBtn.innerHTML = alreadyLiked ? '<i class="fa-solid fa-heart mr-1"></i>Liked' : '<i class="fa-regular fa-heart mr-1"></i>Like';
+            likeBtn.className = alreadyLiked ? 'w-full bg-red-700 text-white text-xs py-2 rounded font-bold transition mb-4' : 'w-full bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 rounded font-bold transition mb-4';
+            document.getElementById('pub-rep-modal-stats').innerHTML = `
+                <span><i class="fa-solid fa-heart text-red-400"></i> ${currentPubRepView.likeCount || 0} likes</span>
+                <span><i class="fa-solid fa-eye"></i> ${currentPubRepView.viewCount || 0} views</span>
+                <span><i class="fa-solid fa-comment"></i> ${currentPubRepView.commentCount || 0} comments</span>
+            `;
+        }
+
+        async function loadPubRepComments(repId) {
+            const f = fbApi();
+            const commentsEl = document.getElementById('pub-rep-comments');
+            commentsEl.innerHTML = '<div class="text-gray-500 text-xs"><i class="fa-solid fa-spinner fa-spin"></i> Loading comments...</div>';
+            try {
+                const q = f.query(f.collection(f.db, 'publicRepertoires', repId, 'comments'), f.orderBy('createdAt', 'desc'), f.limit(50));
+                const snap = await f.getDocs(q);
+                if (snap.empty) { commentsEl.innerHTML = '<div class="text-gray-500 text-xs italic">No comments yet. Be the first!</div>'; return; }
+                commentsEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const c = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 rounded p-2 text-xs border border-gray-700';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-purple-300">${escapeHtml(c.authorName || 'User')}</span>
+                            <button onclick="reportComment('${repId}','${docSnap.id}')" class="text-gray-500 hover:text-red-400 text-[10px]" title="Report comment"><i class="fa-solid fa-flag"></i></button>
+                        </div>
+                        <p class="text-gray-300 mt-0.5">${escapeHtml(c.text)}</p>
+                    `;
+                    commentsEl.appendChild(div);
+                });
+            } catch (e) { commentsEl.innerHTML = '<div class="text-red-400 text-xs">Could not load comments.</div>'; }
+        }
+
+        async function submitComment() {
+            if (!requireSignedInNonAnon('comment')) return;
+            if (!currentPubRepView) return;
+            const input = document.getElementById('pub-rep-comment-input');
+            const text = input.value.trim();
+            if (!text) return;
+            const f = fbApi();
+            try {
+                await f.addDoc(f.collection(f.db, 'publicRepertoires', currentPubRepView.id, 'comments'), {
+                    text: text,
+                    authorUid: cloudUser.uid,
+                    authorName: cloudProfile.displayName || cloudUser.email,
+                    createdAt: f.serverTimestamp()
+                });
+                await f.updateDoc(f.doc(f.db, 'publicRepertoires', currentPubRepView.id), { commentCount: f.increment(1) });
+                currentPubRepView.commentCount = (currentPubRepView.commentCount || 0) + 1;
+                input.value = '';
+                loadPubRepComments(currentPubRepView.id);
+                openPubRepModalRefreshOnly();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function reportComment(repId, commentId) {
+            if (!requireSignedInNonAnon('report comments')) return;
+            const reason = prompt('Why are you reporting this comment? (sent to admins)');
+            if (reason === null) return;
+            const f = fbApi();
+            try {
+                await f.addDoc(f.collection(f.db, 'reports'), {
+                    repId, commentId,
+                    reportedBy: cloudUser.uid,
+                    reporterName: cloudProfile.displayName || cloudUser.email,
+                    reason: reason || '(no reason given)',
+                    status: 'open',
+                    createdAt: f.serverTimestamp()
+                });
+                showMsg('Report Sent', 'Thank you, an administrator will review this comment.');
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        // -------------------- USER MESSAGES (warnings / admin messages) --------------------
+
+        function renderUserMessages() {
+            const listEl = document.getElementById('user-messages-list');
+            const badge = document.getElementById('msg-badge');
+            if (!cloudProfile || !cloudProfile.messages || cloudProfile.messages.length === 0) {
+                listEl.innerHTML = '<div class="text-gray-500 text-xs text-center mt-4">No messages yet.</div>';
+                if (badge) badge.classList.add('hidden');
+                return;
+            }
+            listEl.innerHTML = '';
+            let unread = 0;
+            cloudProfile.messages.slice().reverse().forEach(m => {
+                if (!m.read) unread++;
+                const div = document.createElement('div');
+                const isWarning = m.type === 'warning';
+                div.className = 'bg-gray-900 rounded p-2.5 text-xs border ' + (isWarning ? 'border-red-700' : 'border-gray-700');
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 mb-1">
+                        ${isWarning ? '<i class="fa-solid fa-triangle-exclamation text-red-400"></i><span class="font-bold text-red-400">Warning Notice</span>' : '<i class="fa-solid fa-envelope text-blue-400"></i><span class="font-bold text-blue-400">Admin Message</span>'}
+                    </div>
+                    <p class="text-gray-300">${escapeHtml(m.text)}</p>
+                `;
+                listEl.appendChild(div);
+            });
+            if (badge) { badge.innerText = unread; badge.classList.toggle('hidden', unread === 0); }
+        }
+
+        // -------------------- ADMIN PANEL --------------------
+
+        function openAdminPanel() {
+            if (!cloudProfile || !cloudProfile.isAdmin) { showMsg('Access Denied', 'Admin access only.'); return; }
+            document.getElementById('admin-modal').classList.remove('hidden');
+            switchAdminTab('users');
+        }
+        function closeAdminPanel() { document.getElementById('admin-modal').classList.add('hidden'); }
+
+        function switchAdminTab(tab) {
+            adminCurrentTab = tab;
+            ['users','reps','reports','specialist'].forEach(t => {
+                document.getElementById('admin-view-' + t).classList.toggle('hidden', t !== tab);
+                const btn = document.getElementById('admtab-' + t);
+                if (t === tab) { btn.classList.add('bg-red-700','text-white'); btn.classList.remove('text-gray-400'); }
+                else { btn.classList.remove('bg-red-700','text-white'); btn.classList.add('text-gray-400'); }
+            });
+        }
+
+        let adminLookupUid = null;
+
+        async function adminFetchUser() {
+            const uid = document.getElementById('admin-msg-uid').value.trim();
+            if (!uid) return;
+            const f = fbApi();
+            try {
+                const snap = await f.getDoc(f.doc(f.db, 'users', uid));
+                if (!snap.exists()) { showMsg('Not Found', 'No user with that UID.'); return; }
+                const u = snap.data();
+                adminLookupUid = uid;
+                document.getElementById('admin-user-detail').classList.remove('hidden');
+                document.getElementById('adm-uid').innerText = uid;
+                document.getElementById('adm-email').innerText = u.email || '(anonymous or unknown)';
+                document.getElementById('adm-name').innerText = u.displayName || '';
+                document.getElementById('adm-specialist').innerText = u.isSpecialist ? 'Yes' : 'No';
+                document.getElementById('adm-banned').innerText = u.isBanned ? 'YES - BANNED' : 'No';
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminToggleBan() {
+            if (!adminLookupUid) return;
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'users', adminLookupUid);
+                const snap = await f.getDoc(ref);
+                const current = snap.data();
+                await f.updateDoc(ref, { isBanned: !current.isBanned });
+                showMsg('Updated', 'Ban status toggled.');
+                adminFetchUser();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminToggleSpecialist() {
+            if (!adminLookupUid) return;
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'users', adminLookupUid);
+                const snap = await f.getDoc(ref);
+                const current = snap.data();
+                await f.updateDoc(ref, { isSpecialist: !current.isSpecialist });
+                showMsg('Updated', 'Specialist status toggled.');
+                adminFetchUser();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminSendMessage(presetText, presetType) {
+            if (!adminLookupUid) return;
+            const f = fbApi();
+            const text = presetText || document.getElementById('admin-msg-text').value.trim();
+            if (!text) return;
+            try {
+                const ref = f.doc(f.db, 'users', adminLookupUid);
+                await f.updateDoc(ref, { messages: f.arrayUnion({ text: text, type: presetType || 'message', read: false, sentAt: Date.now() }) });
+                showMsg('Sent', 'Message delivered to user account.');
+                document.getElementById('admin-msg-text').value = '';
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminLoadAllUsers() {
+            const f = fbApi();
+            const listEl = document.getElementById('admin-all-users');
+            listEl.innerHTML = '<div class="text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'users'), f.limit(100)));
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const u = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 border border-gray-700 rounded p-2 text-xs flex justify-between items-center';
+                    div.innerHTML = `
+                        <div>
+                            <span class="font-bold text-white">${escapeHtml(u.displayName || u.email || docSnap.id)}</span>
+                            ${u.isAdmin ? '<span class="ml-1 bg-red-700 text-[9px] px-1 rounded">ADMIN</span>' : ''}
+                            ${u.isSpecialist ? '<span class="ml-1 bg-amber-700 text-[9px] px-1 rounded">SPECIALIST</span>' : ''}
+                            ${u.isBanned ? '<span class="ml-1 bg-red-900 text-[9px] px-1 rounded">BANNED</span>' : ''}
+                            <div class="text-gray-500 text-[10px]">${docSnap.id}</div>
+                        </div>
+                        <button onclick="document.getElementById('admin-msg-uid').value='${docSnap.id}'; adminFetchUser();" class="bg-gray-700 hover:bg-gray-600 text-[10px] px-2 py-1 rounded">Manage</button>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (e) { listEl.innerHTML = '<div class="text-red-400 text-xs">' + e.message + '</div>'; }
+        }
+
+        async function adminLoadPubReps() {
+            const f = fbApi();
+            const listEl = document.getElementById('admin-pub-reps-list');
+            listEl.innerHTML = '<div class="text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'publicRepertoires'), f.orderBy('createdAt', 'desc'), f.limit(50)));
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const r = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 border border-gray-700 rounded p-2 text-xs mb-1.5';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-bold text-white">${escapeHtml(r.name)}</span>
+                            <span class="text-gray-500">${r.likeCount||0}❤ ${r.viewCount||0}👁</span>
+                        </div>
+                        <div class="text-gray-500 mb-1.5">by ${escapeHtml(r.authorName||'?')} ${r.openingCategory ? '• '+escapeHtml(r.openingCategory) : ''}</div>
+                        <div class="flex gap-1.5 flex-wrap">
+                            <button onclick="adminToggleRecommend('${docSnap.id}', ${!r.isAdminRecommended})" class="bg-yellow-700 hover:bg-yellow-600 text-white text-[10px] px-2 py-1 rounded font-bold">${r.isAdminRecommended ? 'Unrecommend' : 'Recommend ⭐'}</button>
+                            <button onclick="adminDeletePubRep('${docSnap.id}')" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold">Delete</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (e) { listEl.innerHTML = '<div class="text-red-400 text-xs">' + e.message + '</div>'; }
+        }
+
+        async function adminToggleRecommend(repId, value) {
+            const f = fbApi();
+            try {
+                await f.updateDoc(f.doc(f.db, 'publicRepertoires', repId), { isAdminRecommended: value });
+                adminLoadPubReps();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminDeletePubRep(repId) {
+            if (!confirm('Delete this public repertoire permanently?')) return;
+            const f = fbApi();
+            try {
+                await f.deleteDoc(f.doc(f.db, 'publicRepertoires', repId));
+                adminLoadPubReps();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminLoadReports() {
+            const f = fbApi();
+            const listEl = document.getElementById('admin-reports-list');
+            listEl.innerHTML = '<div class="text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'reports'), f.where('status', '==', 'open'), f.orderBy('createdAt', 'desc'), f.limit(50)));
+                if (snap.empty) { listEl.innerHTML = '<div class="text-gray-500 text-xs">No open reports.</div>'; return; }
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const r = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 border border-red-700/40 rounded p-2 text-xs mb-1.5';
+                    div.innerHTML = `
+                        <p class="text-gray-300 mb-1"><span class="text-gray-500">Reported by:</span> ${escapeHtml(r.reporterName||'?')}</p>
+                        <p class="text-gray-300 mb-1"><span class="text-gray-500">Reason:</span> ${escapeHtml(r.reason)}</p>
+                        <p class="text-gray-500 mb-1.5">Rep ID: ${r.repId} • Comment ID: ${r.commentId}</p>
+                        <div class="flex gap-1.5 flex-wrap">
+                            <button onclick="adminDeleteReportedComment('${docSnap.id}','${r.repId}','${r.commentId}')" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold">Delete Comment</button>
+                            <button onclick="document.getElementById('admin-msg-uid').value=''; switchAdminTab('users'); showMsg('Tip','Look up the commenter\'s UID from the comment author to ban or warn them.')" class="bg-amber-800 hover:bg-amber-700 text-white text-[10px] px-2 py-1 rounded font-bold">Go Ban/Warn User</button>
+                            <button onclick="adminDismissReport('${docSnap.id}')" class="bg-gray-700 hover:bg-gray-600 text-white text-[10px] px-2 py-1 rounded font-bold">Dismiss</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (e) { listEl.innerHTML = '<div class="text-red-400 text-xs">' + e.message + '</div>'; }
+        }
+
+        async function adminDeleteReportedComment(reportId, repId, commentId) {
+            const f = fbApi();
+            try {
+                await f.deleteDoc(f.doc(f.db, 'publicRepertoires', repId, 'comments', commentId));
+                await f.updateDoc(f.doc(f.db, 'publicRepertoires', repId), { commentCount: f.increment(-1) });
+                await f.updateDoc(f.doc(f.db, 'reports', reportId), { status: 'resolved' });
+                showMsg('Done', 'Comment deleted and report resolved.');
+                adminLoadReports();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminDismissReport(reportId) {
+            const f = fbApi();
+            try {
+                await f.updateDoc(f.doc(f.db, 'reports', reportId), { status: 'dismissed' });
+                adminLoadReports();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminLoadSpecialistRequests() {
+            const f = fbApi();
+            const listEl = document.getElementById('admin-specialist-list');
+            listEl.innerHTML = '<div class="text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'specialistRequests'), f.where('status', '==', 'pending'), f.orderBy('createdAt', 'desc'), f.limit(50)));
+                if (snap.empty) { listEl.innerHTML = '<div class="text-gray-500 text-xs">No pending requests.</div>'; return; }
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const r = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 border border-amber-700/40 rounded p-2 text-xs mb-1.5';
+                    div.innerHTML = `
+                        <p class="font-bold text-white mb-1">${escapeHtml(r.name)}</p>
+                        <p class="text-gray-300 mb-1.5">${escapeHtml(r.message)}</p>
+                        <div class="flex gap-1.5">
+                            <button onclick="adminApproveSpecialist('${docSnap.id}','${r.uid}')" class="bg-green-700 hover:bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Approve</button>
+                            <button onclick="adminDenySpecialist('${docSnap.id}')" class="bg-gray-700 hover:bg-gray-600 text-white text-[10px] px-2 py-1 rounded font-bold">Deny</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (e) { listEl.innerHTML = '<div class="text-red-400 text-xs">' + e.message + '</div>'; }
+        }
+
+        async function adminApproveSpecialist(reqId, uid) {
+            const f = fbApi();
+            try {
+                await f.updateDoc(f.doc(f.db, 'users', uid), { isSpecialist: true });
+                await f.updateDoc(f.doc(f.db, 'specialistRequests', reqId), { status: 'approved' });
+                showMsg('Approved', 'User is now a Repertoire Specialist.');
+                adminLoadSpecialistRequests();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminDenySpecialist(reqId) {
+            const f = fbApi();
+            try {
+                await f.updateDoc(f.doc(f.db, 'specialistRequests', reqId), { status: 'denied' });
+                adminLoadSpecialistRequests();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
 
         window.onload = init;
     </script>
