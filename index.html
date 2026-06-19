@@ -597,6 +597,7 @@
                     <button onclick="switchCommunitySubTab('browse')" id="ctab-browse" class="flex-1 py-1 text-xs font-bold rounded bg-purple-700 text-white transition">Browse</button>
                     <button onclick="switchCommunitySubTab('publish')" id="ctab-publish" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition">Publish</button>
                     <button onclick="switchCommunitySubTab('messages')" id="ctab-messages" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition">Messages <span id="msg-badge" class="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                    <button onclick="switchCommunitySubTab('feedback')" id="ctab-feedback" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition">Feedback</button>
                 </div>
 
                 <!-- Browse Sub-tab -->
@@ -663,6 +664,23 @@
                         <div class="text-gray-500 text-xs text-center mt-4">No messages yet.</div>
                     </div>
                 </div>
+
+                <!-- Feedback Sub-tab -->
+                <div id="cview-feedback" class="flex flex-col gap-3" style="display:none">
+                    <div class="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                        <h3 class="font-semibold text-sm text-cyan-400 mb-2"><i class="fa-solid fa-comment-dots"></i> Send Feedback</h3>
+                        <p class="text-xs text-gray-400 mb-3">Report a bug or suggest a feature. Admins read every submission.</p>
+                        <div class="space-y-2">
+                            <select id="feedback-type" class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                                <option value="bug">🐛 Bug Report</option>
+                                <option value="suggestion">💡 Suggestion</option>
+                                <option value="other">💬 Other</option>
+                            </select>
+                            <textarea id="feedback-text" placeholder="Describe the bug or your suggestion in detail..." class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white h-24 resize-none focus:outline-none"></textarea>
+                            <button onclick="submitFeedback(document.getElementById('feedback-type').value)" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white text-xs py-2 rounded font-bold transition"><i class="fa-solid fa-paper-plane mr-1"></i> Submit Feedback</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </aside>
@@ -699,8 +717,18 @@
                     </div>
                     <p class="font-bold text-white" id="auth-display-name">Loading...</p>
                     <p class="text-xs text-gray-400" id="auth-display-email"></p>
+                    <p class="text-xs text-blue-300 mt-0.5">@<span id="auth-display-username">...</span></p>
                     <span id="auth-specialist-badge" class="hidden mt-1 inline-block bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-star mr-1"></i>Repertoire Specialist</span>
                     <span id="auth-anon-badge" class="hidden mt-1 inline-block bg-gray-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-ghost mr-1"></i>Guest Mode</span>
+                </div>
+                <!-- Username change -->
+                <div id="auth-username-section" class="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                    <p class="text-xs text-gray-400 mb-2"><i class="fa-solid fa-at mr-1"></i>Username <span id="auth-username-note" class="text-amber-400"></span></p>
+                    <div class="flex gap-2">
+                        <input type="text" id="auth-new-username" placeholder="New username..." maxlength="24" class="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                        <button onclick="requestUsernameChange()" class="bg-blue-700 hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded font-bold transition">Change</button>
+                    </div>
+                    <p id="auth-username-pending" class="text-xs text-amber-400 mt-1 hidden">⏳ Username change pending admin approval</p>
                 </div>
                 <button onclick="fbSignOut()" class="w-full bg-red-800 hover:bg-red-700 text-white py-2 rounded font-bold text-sm transition"><i class="fa-solid fa-right-from-bracket mr-1"></i>Sign Out</button>
             </div>
@@ -744,31 +772,55 @@
             </div>
             <div class="p-4 flex-1 overflow-y-auto">
                 <!-- Admin sub-tabs -->
-                <div class="flex bg-gray-900 p-1 rounded-lg gap-1 mb-4">
+                <div class="flex bg-gray-900 p-1 rounded-lg gap-1 mb-4 flex-wrap">
                     <button onclick="switchAdminTab('users')" id="admtab-users" class="flex-1 py-1 text-xs font-bold rounded bg-red-700 text-white">Users</button>
                     <button onclick="switchAdminTab('reps')" id="admtab-reps" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Pub. Reps</button>
                     <button onclick="switchAdminTab('reports')" id="admtab-reports" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Reports</button>
-                    <button onclick="switchAdminTab('specialist')" id="admtab-specialist" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Specialist Req.</button>
+                    <button onclick="switchAdminTab('specialist')" id="admtab-specialist" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Specialist</button>
+                    <button onclick="switchAdminTab('usernames')" id="admtab-usernames" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Usernames</button>
+                    <button onclick="switchAdminTab('feedback')" id="admtab-feedback" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Feedback</button>
                 </div>
                 <!-- Users -->
                 <div id="admin-view-users">
-                    <div class="flex gap-2 mb-3">
-                        <input type="text" id="admin-msg-uid" placeholder="User UID" class="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
-                        <button onclick="adminFetchUser()" class="bg-gray-700 text-xs px-3 py-1.5 rounded text-white font-bold hover:bg-gray-600">Lookup</button>
+                    <div class="bg-gray-900 rounded p-2.5 border border-gray-700 mb-3">
+                        <p class="text-[10px] text-gray-500 mb-1.5">Look up a user by UID, email, or username:</p>
+                        <div class="flex gap-2 mb-1.5">
+                            <select id="admin-lookup-type" class="bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                                <option value="uid">UID</option>
+                                <option value="email">Email</option>
+                                <option value="username">Username (current or past)</option>
+                            </select>
+                            <input type="text" id="admin-msg-uid" placeholder="Search value..." class="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                            <button onclick="adminFetchUser()" class="bg-gray-700 text-xs px-3 py-1.5 rounded text-white font-bold hover:bg-gray-600">Lookup</button>
+                        </div>
                     </div>
                     <div id="admin-user-detail" class="hidden bg-gray-900 rounded p-3 border border-gray-700 mb-3 text-xs text-gray-300 space-y-2">
                         <p><span class="text-gray-500">UID:</span> <span id="adm-uid"></span></p>
                         <p><span class="text-gray-500">Email:</span> <span id="adm-email"></span></p>
                         <p><span class="text-gray-500">Display Name:</span> <span id="adm-name"></span></p>
+                        <p><span class="text-gray-500">Current Username:</span> <span id="adm-username" class="text-blue-300"></span></p>
+                        <p><span class="text-gray-500">Past Usernames:</span> <span id="adm-username-history" class="text-gray-400"></span></p>
                         <p><span class="text-gray-500">Specialist:</span> <span id="adm-specialist"></span></p>
                         <p><span class="text-gray-500">Banned:</span> <span id="adm-banned"></span></p>
                         <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-700">
                             <button onclick="adminToggleBan()" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Ban</button>
                             <button onclick="adminToggleSpecialist()" class="bg-amber-700 hover:bg-amber-600 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Specialist</button>
                         </div>
+                        <div class="flex gap-2 pt-2 border-t border-gray-700">
+                            <input type="text" id="admin-set-username" placeholder="Set new username for this user..." class="flex-1 bg-gray-950 border border-gray-600 rounded px-2 py-1 text-[10px] text-white focus:outline-none">
+                            <button onclick="adminSetUsername()" class="bg-indigo-700 text-[10px] px-2 py-1 rounded text-white font-bold hover:bg-indigo-600">Set Username</button>
+                        </div>
                         <div class="flex gap-2">
                             <input type="text" id="admin-msg-text" placeholder="Send message to user..." class="flex-1 bg-gray-950 border border-gray-600 rounded px-2 py-1 text-[10px] text-white focus:outline-none">
                             <button onclick="adminSendMessage()" class="bg-blue-700 text-[10px] px-2 py-1 rounded text-white font-bold hover:bg-blue-600">Send</button>
+                        </div>
+                        <div id="admin-user-messages-list" class="space-y-1 pt-2 border-t border-gray-700"></div>
+                    </div>
+                    <div class="bg-gray-900 rounded p-2.5 border border-blue-700/40 mb-3">
+                        <p class="text-[10px] text-blue-400 font-bold mb-1.5"><i class="fa-solid fa-bullhorn"></i> Broadcast System-Wide Message</p>
+                        <div class="flex gap-2">
+                            <input type="text" id="admin-broadcast-text" placeholder="Message to send to ALL users..." class="flex-1 bg-gray-950 border border-gray-600 rounded px-2 py-1 text-[10px] text-white focus:outline-none">
+                            <button onclick="adminBroadcastMessage()" class="bg-blue-800 hover:bg-blue-700 text-[10px] px-2 py-1 rounded text-white font-bold">Broadcast</button>
                         </div>
                     </div>
                     <div id="admin-all-users" class="space-y-1.5 max-h-64 overflow-y-auto">
@@ -777,19 +829,29 @@
                     </div>
                 </div>
                 <!-- Pub. Reps -->
-                <div id="admin-view-reps" class="hidden space-y-2 max-h-96 overflow-y-auto">
+                <div id="admin-view-reps" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
                     <button onclick="adminLoadPubReps()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Public Repertoires</button>
                     <div id="admin-pub-reps-list"></div>
                 </div>
                 <!-- Reports -->
-                <div id="admin-view-reports" class="hidden space-y-2 max-h-96 overflow-y-auto">
+                <div id="admin-view-reports" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
                     <button onclick="adminLoadReports()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Reports</button>
                     <div id="admin-reports-list"></div>
                 </div>
                 <!-- Specialist Requests -->
-                <div id="admin-view-specialist" class="hidden space-y-2 max-h-96 overflow-y-auto">
+                <div id="admin-view-specialist" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
                     <button onclick="adminLoadSpecialistRequests()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Requests</button>
                     <div id="admin-specialist-list"></div>
+                </div>
+                <!-- Username Change Requests -->
+                <div id="admin-view-usernames" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
+                    <button onclick="adminLoadUsernameRequests()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Username Requests</button>
+                    <div id="admin-usernames-list"></div>
+                </div>
+                <!-- Feedback -->
+                <div id="admin-view-feedback" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
+                    <button onclick="adminLoadFeedback()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Feedback</button>
+                    <div id="admin-feedback-list"></div>
                 </div>
             </div>
         </div>
@@ -1213,7 +1275,7 @@
     </div>
 
     <!-- Message Popup Modal -->
-    <div id="msg-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[61] opacity-0 transition-opacity" style="display:none">
+    <div id="msg-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[102] opacity-0 transition-opacity" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="msg-modal-content">
             <h3 id="msg-title" class="text-xl font-bold mb-2">Message</h3>
             <p id="msg-body" class="text-gray-300 mb-6 text-sm leading-relaxed"></p>
@@ -1236,7 +1298,7 @@
     </div>
 
     <!-- Instructions Modal (Explainer Menu) -->
-    <div id="instructions-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[58]" style="display:none">
+    <div id="instructions-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[104]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-2xl w-full mx-4 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                 <h2 class="text-2xl font-bold text-blue-400"><i class="fa-solid fa-graduation-cap mr-2"></i> How to Use Repertoire64</h2>
@@ -3949,6 +4011,18 @@
                 children: node.children.map(c => serializeNode(c)) 
             }; 
         }
+        // Safety check: confirms a serialized tree round-trips through JSON.stringify
+        // as a plain string with no residual nested-array structure, before it's ever
+        // sent to Firestore. This exists purely to catch this category of bug early
+        // and with a clear message, rather than a cryptic API error.
+        function safeStringifyTree(rootNode) {
+            const serialized = serializeNode(rootNode);
+            const str = JSON.stringify(serialized);
+            if (typeof str !== 'string') {
+                throw new Error('Repertoire could not be serialized to a string (got ' + typeof str + '). This indicates a corrupted repertoire structure.');
+            }
+            return str;
+        }
         function deserializeNode(data, parent = null) {
             const node = { 
                 san: data.san, 
@@ -4875,6 +4949,19 @@
                 document.getElementById('auth-display-email').innerText = cloudUser.isAnonymous ? '' : (cloudUser.email || '');
                 document.getElementById('auth-specialist-badge').classList.toggle('hidden', !(cloudProfile && cloudProfile.isSpecialist));
                 document.getElementById('auth-anon-badge').classList.toggle('hidden', !cloudUser.isAnonymous);
+
+                const unameEl = document.getElementById('auth-display-username');
+                const unameSection = document.getElementById('auth-username-section');
+                const unameNote = document.getElementById('auth-username-note');
+                const unamePending = document.getElementById('auth-username-pending');
+                if (!cloudUser.isAnonymous && cloudProfile) {
+                    if (unameEl) unameEl.innerText = cloudProfile.username || '(not set)';
+                    if (unameSection) unameSection.style.display = 'block';
+                    if (unameNote) unameNote.innerText = cloudProfile.usernameChangedOnce ? '(further changes need admin approval)' : '(one free change)';
+                    if (unamePending) unamePending.style.display = cloudProfile.pendingUsernameRequest ? 'block' : 'none';
+                } else {
+                    if (unameSection) unameSection.style.display = 'none';
+                }
             } else {
                 loggedOut.classList.remove('hidden');
                 loggedIn.classList.add('hidden');
@@ -4975,7 +5062,6 @@
             const ref = f.doc(f.db, 'users', user.uid);
             const snap = await f.getDoc(ref);
             if (!snap.exists()) {
-                // First-ever non-anonymous account becomes admin automatically (bootstrap).
                 let makeAdmin = false;
                 try {
                     const adminQuery = f.query(f.collection(f.db, 'users'), f.where('isAdmin', '==', true), f.limit(1));
@@ -4983,10 +5069,15 @@
                     if (adminSnap.empty) makeAdmin = true;
                 } catch (e) { /* ignore */ }
 
+                const defaultUsername = (user.displayName || (user.email ? user.email.split('@')[0] : 'Player')).replace(/\s+/g, '_').substring(0, 20);
                 const profile = {
                     uid: user.uid,
                     email: user.email || '',
                     displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Player'),
+                    username: defaultUsername,
+                    usernameChangedOnce: false,
+                    usernameHistory: [defaultUsername],
+                    pendingUsernameRequest: null,
                     isAdmin: makeAdmin,
                     isSpecialist: false,
                     isBanned: false,
@@ -4997,6 +5088,17 @@
                 cloudProfile = profile;
             } else {
                 cloudProfile = snap.data();
+                // Backfill username for existing accounts that predate this field
+                if (!cloudProfile.username) {
+                    const defaultUsername = (cloudProfile.displayName || 'Player').replace(/\s+/g, '_').substring(0, 20);
+                    await f.updateDoc(ref, {
+                        username: defaultUsername,
+                        usernameChangedOnce: false,
+                        usernameHistory: [defaultUsername],
+                        pendingUsernameRequest: null
+                    });
+                    cloudProfile = { ...cloudProfile, username: defaultUsername, usernameChangedOnce: false, usernameHistory: [defaultUsername], pendingUsernameRequest: null };
+                }
             }
         }
 
@@ -5006,6 +5108,73 @@
             const ref = f.doc(f.db, 'users', cloudUser.uid);
             const snap = await f.getDoc(ref);
             if (snap.exists()) cloudProfile = snap.data();
+        }
+
+        async function requestUsernameChange() {
+            if (!requireSignedInNonAnon('change username')) return;
+            const newName = (document.getElementById('auth-new-username').value || '').trim().replace(/[^a-zA-Z0-9_\-\.]/g, '');
+            if (!newName || newName.length < 3) { showMsg('Invalid Username', 'Username must be at least 3 characters and contain only letters, numbers, _, - or .'); return; }
+            if (newName.length > 24) { showMsg('Invalid Username', 'Username must be 24 characters or less.'); return; }
+            const f = fbApi();
+            const ref = f.doc(f.db, 'users', cloudUser.uid);
+            try {
+                if (!cloudProfile.usernameChangedOnce) {
+                    // First change: apply immediately, mark flag
+                    await f.updateDoc(ref, {
+                        username: newName,
+                        usernameChangedOnce: true,
+                        usernameHistory: f.arrayUnion(newName),
+                        pendingUsernameRequest: null
+                    });
+                    cloudProfile.username = newName;
+                    cloudProfile.usernameChangedOnce = true;
+                    if (!cloudProfile.usernameHistory) cloudProfile.usernameHistory = [];
+                    cloudProfile.usernameHistory.push(newName);
+                    document.getElementById('auth-new-username').value = '';
+                    showMsg('Username Changed', 'Your username is now @' + newName);
+                } else {
+                    // Subsequent changes: submit to admin for approval
+                    if (cloudProfile.pendingUsernameRequest) {
+                        showMsg('Already Pending', 'You already have a username change request pending admin approval. Please wait for a response before submitting another.');
+                        return;
+                    }
+                    await f.updateDoc(ref, { pendingUsernameRequest: { requested: newName, requestedAt: f.serverTimestamp() } });
+                    await f.addDoc(f.collection(f.db, 'usernameRequests'), {
+                        uid: cloudUser.uid,
+                        currentUsername: cloudProfile.username,
+                        requestedUsername: newName,
+                        email: cloudProfile.email,
+                        displayName: cloudProfile.displayName,
+                        status: 'pending',
+                        createdAt: f.serverTimestamp()
+                    });
+                    cloudProfile.pendingUsernameRequest = { requested: newName };
+                    document.getElementById('auth-new-username').value = '';
+                    showMsg('Request Submitted', 'Your username change to @' + newName + ' has been sent to the admin for approval.');
+                }
+                await refreshCloudProfile();
+                refreshAuthModalUI();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function submitFeedback(type) {
+            const text = document.getElementById('feedback-text').value.trim();
+            if (!text) { showMsg('Required', 'Please describe your feedback.'); return; }
+            const f = fbApi();
+            try {
+                await f.addDoc(f.collection(f.db, 'feedback'), {
+                    type: type,
+                    text: text,
+                    authorUid: cloudUser ? cloudUser.uid : null,
+                    authorEmail: cloudProfile ? cloudProfile.email : 'anonymous',
+                    authorName: cloudProfile ? cloudProfile.displayName : 'Guest',
+                    status: 'open',
+                    createdAt: f.serverTimestamp()
+                });
+                document.getElementById('feedback-text').value = '';
+                document.getElementById('feedback-type').value = 'bug';
+                showMsg('Feedback Sent', 'Thank you! Your ' + type + ' report has been submitted. We read every one.');
+            } catch (e) { showMsg('Error', e.message); }
         }
 
         function checkUserMessagesForBanOrWarning() {
@@ -5049,6 +5218,12 @@
                         updateRepertoireUI();
                         renderRepertoiresList();
                     }
+                    // Re-evaluate disclaimer/tutorial after cloud settings loaded --
+                    // init() ran earlier with stale local state; now cloud may have
+                    // termsSigned:true which means the disclaimer should close.
+                    if (settings.termsSigned) {
+                        document.getElementById('disclaimer-modal').style.display = 'none';
+                    }
                 } else {
                     // No cloud doc yet -- push current local state up as the initial cloud copy
                     pushCloudStateNow();
@@ -5091,9 +5266,9 @@
 
         function switchCommunitySubTab(tab) {
             communityCurrentTab = tab;
-            ['browse','publish','messages'].forEach(t => {
+            ['browse','publish','messages','feedback'].forEach(t => {
                 const el = document.getElementById('cview-' + t);
-                if (el) el.style.display = (t === tab) ? (t === 'browse' || t === 'messages' ? 'flex' : 'flex') : 'none';
+                if (el) el.style.display = (t === tab) ? 'flex' : 'none';
                 const btn = document.getElementById('ctab-' + t);
                 if (btn) {
                     if (t === tab) { btn.classList.add('bg-purple-700','text-white'); btn.classList.remove('text-gray-400'); }
@@ -5244,7 +5419,7 @@
                 await f.addDoc(f.collection(f.db, 'publicRepertoires'), {
                     name: rep.name,
                     color: rep.color,
-                    rootData: JSON.stringify(serializeNode(rep.root)),
+                    rootData: safeStringifyTree(rep.root),
                     description: desc,
                     openingCategory: openingCat || null,
                     authorUid: cloudUser.uid,
@@ -5434,25 +5609,44 @@
             const badge = document.getElementById('msg-badge');
             if (!cloudProfile || !cloudProfile.messages || cloudProfile.messages.length === 0) {
                 listEl.innerHTML = '<div class="text-gray-500 text-xs text-center mt-4">No messages yet.</div>';
-                if (badge) badge.classList.add('hidden');
+                if (badge) { badge.innerText = '0'; badge.classList.add('hidden'); }
                 return;
             }
             listEl.innerHTML = '';
             let unread = 0;
-            cloudProfile.messages.slice().reverse().forEach(m => {
+            cloudProfile.messages.slice().reverse().forEach((m, i) => {
                 if (!m.read) unread++;
-                const div = document.createElement('div');
+                const origIdx = cloudProfile.messages.length - 1 - i;
                 const isWarning = m.type === 'warning';
-                div.className = 'bg-gray-900 rounded p-2.5 text-xs border ' + (isWarning ? 'border-red-700' : 'border-gray-700');
+                const isSystem = m.type === 'system';
+                let borderCls = isWarning ? 'border-red-700' : (isSystem ? 'border-blue-700' : 'border-gray-700');
+                const div = document.createElement('div');
+                div.className = 'bg-gray-900 rounded p-2.5 text-xs border ' + borderCls;
+                let icon = isWarning
+                    ? '<i class="fa-solid fa-triangle-exclamation text-red-400"></i><span class="font-bold text-red-400">Warning Notice</span>'
+                    : isSystem
+                        ? '<i class="fa-solid fa-bullhorn text-blue-400"></i><span class="font-bold text-blue-400">System Message</span>'
+                        : '<i class="fa-solid fa-envelope text-green-400"></i><span class="font-bold text-green-400">Admin Message</span>';
                 div.innerHTML = `
-                    <div class="flex items-center gap-2 mb-1">
-                        ${isWarning ? '<i class="fa-solid fa-triangle-exclamation text-red-400"></i><span class="font-bold text-red-400">Warning Notice</span>' : '<i class="fa-solid fa-envelope text-blue-400"></i><span class="font-bold text-blue-400">Admin Message</span>'}
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-2">${icon}</div>
+                        ${!m.read ? '<span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>' : ''}
                     </div>
                     <p class="text-gray-300">${escapeHtml(m.text)}</p>
                 `;
                 listEl.appendChild(div);
             });
             if (badge) { badge.innerText = unread; badge.classList.toggle('hidden', unread === 0); }
+            // Mark all messages as read in Firestore
+            if (unread > 0 && cloudUser && !cloudUser.isAnonymous) {
+                const updatedMessages = cloudProfile.messages.map(m => ({ ...m, read: true }));
+                const f = fbApi();
+                f.updateDoc(f.doc(f.db, 'users', cloudUser.uid), { messages: updatedMessages })
+                    .then(() => {
+                        cloudProfile.messages = updatedMessages;
+                        if (badge) { badge.innerText = '0'; badge.classList.add('hidden'); }
+                    }).catch(() => {});
+            }
         }
 
         // -------------------- ADMIN PANEL --------------------
@@ -5466,32 +5660,89 @@
 
         function switchAdminTab(tab) {
             adminCurrentTab = tab;
-            ['users','reps','reports','specialist'].forEach(t => {
-                document.getElementById('admin-view-' + t).classList.toggle('hidden', t !== tab);
+            ['users','reps','reports','specialist','usernames','feedback'].forEach(t => {
+                const el = document.getElementById('admin-view-' + t);
+                if (el) el.style.display = (t === tab) ? 'block' : 'none';
                 const btn = document.getElementById('admtab-' + t);
-                if (t === tab) { btn.classList.add('bg-red-700','text-white'); btn.classList.remove('text-gray-400'); }
-                else { btn.classList.remove('bg-red-700','text-white'); btn.classList.add('text-gray-400'); }
+                if (btn) {
+                    if (t === tab) { btn.classList.add('bg-red-700','text-white'); btn.classList.remove('text-gray-400'); }
+                    else { btn.classList.remove('bg-red-700','text-white'); btn.classList.add('text-gray-400'); }
+                }
             });
         }
 
         let adminLookupUid = null;
 
         async function adminFetchUser() {
-            const uid = document.getElementById('admin-msg-uid').value.trim();
-            if (!uid) return;
+            const lookupType = document.getElementById('admin-lookup-type').value;
+            const query = document.getElementById('admin-msg-uid').value.trim();
+            if (!query) return;
             const f = fbApi();
             try {
-                const snap = await f.getDoc(f.doc(f.db, 'users', uid));
-                if (!snap.exists()) { showMsg('Not Found', 'No user with that UID.'); return; }
-                const u = snap.data();
-                adminLookupUid = uid;
-                document.getElementById('admin-user-detail').classList.remove('hidden');
-                document.getElementById('adm-uid').innerText = uid;
-                document.getElementById('adm-email').innerText = u.email || '(anonymous or unknown)';
-                document.getElementById('adm-name').innerText = u.displayName || '';
-                document.getElementById('adm-specialist').innerText = u.isSpecialist ? 'Yes' : 'No';
-                document.getElementById('adm-banned').innerText = u.isBanned ? 'YES - BANNED' : 'No';
+                let userData = null;
+                let foundUid = null;
+
+                if (lookupType === 'uid') {
+                    const snap = await f.getDoc(f.doc(f.db, 'users', query));
+                    if (snap.exists()) { userData = snap.data(); foundUid = query; }
+                } else if (lookupType === 'email') {
+                    const q = f.query(f.collection(f.db, 'users'), f.where('email', '==', query), f.limit(1));
+                    const snap = await f.getDocs(q);
+                    snap.forEach(docSnap => { userData = docSnap.data(); foundUid = docSnap.id || userData.uid; });
+                } else if (lookupType === 'username') {
+                    // Check current username first
+                    let q = f.query(f.collection(f.db, 'users'), f.where('username', '==', query), f.limit(1));
+                    let snap = await f.getDocs(q);
+                    snap.forEach(docSnap => { userData = docSnap.data(); foundUid = docSnap.id || userData.uid; });
+                    if (!userData) {
+                        // Fall back to searching username history (past usernames)
+                        q = f.query(f.collection(f.db, 'users'), f.where('usernameHistory', 'array-contains', query), f.limit(1));
+                        snap = await f.getDocs(q);
+                        snap.forEach(docSnap => { userData = docSnap.data(); foundUid = docSnap.id || userData.uid; });
+                    }
+                }
+
+                if (!userData) { showMsg('Not Found', 'No user found for that ' + lookupType + '.'); return; }
+                adminLookupUid = foundUid || userData.uid;
+                renderAdminUserDetail(userData);
             } catch (e) { showMsg('Error', e.message); }
+        }
+
+        function renderAdminUserDetail(u) {
+            document.getElementById('admin-user-detail').classList.remove('hidden');
+            document.getElementById('adm-uid').innerText = adminLookupUid;
+            document.getElementById('adm-email').innerText = u.email || '(anonymous or unknown)';
+            document.getElementById('adm-name').innerText = u.displayName || '';
+            document.getElementById('adm-username').innerText = u.username ? ('@' + u.username) : '(not set)';
+            const history = (u.usernameHistory || []).filter(h => h !== u.username);
+            document.getElementById('adm-username-history').innerText = history.length > 0 ? history.map(h => '@' + h).join(', ') : '(none)';
+            document.getElementById('adm-specialist').innerText = u.isSpecialist ? 'Yes' : 'No';
+            document.getElementById('adm-banned').innerText = u.isBanned ? 'YES - BANNED' : 'No';
+
+            // Render this user's message history with read status
+            const msgListEl = document.getElementById('admin-user-messages-list');
+            if (msgListEl) {
+                if (!u.messages || u.messages.length === 0) {
+                    msgListEl.innerHTML = '<p class="text-[10px] text-gray-500 italic">No messages sent to this user yet.</p>';
+                } else {
+                    msgListEl.innerHTML = '<p class="text-[10px] text-gray-500 mb-1">Message history:</p>' + u.messages.slice().reverse().map((m, revI) => {
+                        const origIdx = u.messages.length - 1 - revI;
+                        const typeLabel = m.type === 'warning' ? '⚠️ Warning' : (m.type === 'system' ? '📢 System' : '✉️ Message');
+                        const readLabel = m.read ? '<span class="text-green-400">Read</span>' : '<span class="text-amber-400">Unread</span>';
+                        return `<div class="bg-gray-950 rounded p-1.5 mb-1 flex justify-between items-start gap-2">
+                            <div class="flex-1"><span class="text-gray-400">${typeLabel}:</span> <span class="text-gray-300">${escapeHtml(m.text)}</span> <span class="text-[9px]">(${readLabel})</span></div>
+                            <button onclick="adminDeleteUserMessage(${origIdx})" class="text-red-400 hover:text-red-300 text-[10px]" title="Delete message"><i class="fa-solid fa-trash"></i></button>
+                        </div>`;
+                    }).join('');
+                }
+            }
+        }
+
+        async function adminRefreshUserDetail() {
+            if (!adminLookupUid) return;
+            const f = fbApi();
+            const snap = await f.getDoc(f.doc(f.db, 'users', adminLookupUid));
+            if (snap.exists()) renderAdminUserDetail(snap.data());
         }
 
         async function adminToggleBan() {
@@ -5503,7 +5754,7 @@
                 const current = snap.data();
                 await f.updateDoc(ref, { isBanned: !current.isBanned });
                 showMsg('Updated', 'Ban status toggled.');
-                adminFetchUser();
+                adminRefreshUserDetail();
             } catch (e) { showMsg('Error', e.message); }
         }
 
@@ -5516,7 +5767,25 @@
                 const current = snap.data();
                 await f.updateDoc(ref, { isSpecialist: !current.isSpecialist });
                 showMsg('Updated', 'Specialist status toggled.');
-                adminFetchUser();
+                adminRefreshUserDetail();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminSetUsername() {
+            if (!adminLookupUid) return;
+            const newName = (document.getElementById('admin-set-username').value || '').trim().replace(/[^a-zA-Z0-9_\-\.]/g, '');
+            if (!newName) { showMsg('Required', 'Enter a username to set.'); return; }
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'users', adminLookupUid);
+                await f.updateDoc(ref, {
+                    username: newName,
+                    usernameHistory: f.arrayUnion(newName),
+                    pendingUsernameRequest: null
+                });
+                showMsg('Updated', 'Username set to @' + newName + '. Admins can change a username any number of times.');
+                document.getElementById('admin-set-username').value = '';
+                adminRefreshUserDetail();
             } catch (e) { showMsg('Error', e.message); }
         }
 
@@ -5530,6 +5799,40 @@
                 await f.updateDoc(ref, { messages: f.arrayUnion({ text: text, type: presetType || 'message', read: false, sentAt: Date.now() }) });
                 showMsg('Sent', 'Message delivered to user account.');
                 document.getElementById('admin-msg-text').value = '';
+                adminRefreshUserDetail();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminDeleteUserMessage(msgIdx) {
+            if (!adminLookupUid) return;
+            if (!confirm('Delete this message from this user\'s account?')) return;
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'users', adminLookupUid);
+                const snap = await f.getDoc(ref);
+                const u = snap.data();
+                const updatedMessages = (u.messages || []).filter((m, i) => i !== msgIdx);
+                await f.updateDoc(ref, { messages: updatedMessages });
+                showMsg('Deleted', 'Message removed from user account.');
+                adminRefreshUserDetail();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminBroadcastMessage() {
+            const text = document.getElementById('admin-broadcast-text').value.trim();
+            if (!text) { showMsg('Required', 'Enter a broadcast message.'); return; }
+            if (!confirm('Send this message to ALL users? This cannot be undone.')) return;
+            const f = fbApi();
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'users'), f.limit(500)));
+                const updates = [];
+                snap.forEach(docSnap => {
+                    const ref = f.doc(f.db, 'users', docSnap.id || docSnap.data().uid);
+                    updates.push(f.updateDoc(ref, { messages: f.arrayUnion({ text: text, type: 'system', read: false, sentAt: Date.now() }) }));
+                });
+                await Promise.all(updates);
+                showMsg('Broadcast Sent', 'System message delivered to ' + updates.length + ' user(s).');
+                document.getElementById('admin-broadcast-text').value = '';
             } catch (e) { showMsg('Error', e.message); }
         }
 
@@ -5689,6 +5992,106 @@
             try {
                 await f.updateDoc(f.doc(f.db, 'specialistRequests', reqId), { status: 'denied' });
                 adminLoadSpecialistRequests();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        // -------------------- ADMIN: USERNAME CHANGE REQUESTS --------------------
+
+        async function adminLoadUsernameRequests() {
+            const f = fbApi();
+            const listEl = document.getElementById('admin-usernames-list');
+            listEl.innerHTML = '<div class="text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'usernameRequests'), f.where('status', '==', 'pending'), f.orderBy('createdAt', 'desc'), f.limit(50)));
+                if (snap.empty) { listEl.innerHTML = '<div class="text-gray-500 text-xs">No pending username requests.</div>'; return; }
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const r = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 border border-indigo-700/40 rounded p-2 text-xs mb-1.5';
+                    div.innerHTML = `
+                        <p class="text-gray-300 mb-1"><span class="text-gray-500">User:</span> ${escapeHtml(r.displayName||'?')} (${escapeHtml(r.email||'?')})</p>
+                        <p class="text-gray-300 mb-1.5"><span class="text-gray-500">Change:</span> @${escapeHtml(r.currentUsername||'?')} → <span class="text-indigo-300 font-bold">@${escapeHtml(r.requestedUsername)}</span></p>
+                        <div class="flex gap-1.5">
+                            <button onclick="adminApproveUsernameRequest('${docSnap.id}','${r.uid}','${r.requestedUsername}')" class="bg-green-700 hover:bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Approve</button>
+                            <button onclick="adminDenyUsernameRequest('${docSnap.id}','${r.uid}')" class="bg-gray-700 hover:bg-gray-600 text-white text-[10px] px-2 py-1 rounded font-bold">Deny</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (e) { listEl.innerHTML = '<div class="text-red-400 text-xs">' + e.message + '</div>'; }
+        }
+
+        async function adminApproveUsernameRequest(reqId, uid, requestedUsername) {
+            const f = fbApi();
+            try {
+                await f.updateDoc(f.doc(f.db, 'users', uid), {
+                    username: requestedUsername,
+                    usernameHistory: f.arrayUnion(requestedUsername),
+                    pendingUsernameRequest: null
+                });
+                await f.updateDoc(f.doc(f.db, 'usernameRequests', reqId), { status: 'approved' });
+                showMsg('Approved', 'Username changed to @' + requestedUsername + '.');
+                adminLoadUsernameRequests();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminDenyUsernameRequest(reqId, uid) {
+            const f = fbApi();
+            try {
+                await f.updateDoc(f.doc(f.db, 'users', uid), { pendingUsernameRequest: null });
+                await f.updateDoc(f.doc(f.db, 'usernameRequests', reqId), { status: 'denied' });
+                showMsg('Denied', 'Username change request denied.');
+                adminLoadUsernameRequests();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        // -------------------- ADMIN: FEEDBACK --------------------
+
+        async function adminLoadFeedback() {
+            const f = fbApi();
+            const listEl = document.getElementById('admin-feedback-list');
+            listEl.innerHTML = '<div class="text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'feedback'), f.orderBy('createdAt', 'desc'), f.limit(100)));
+                if (snap.empty) { listEl.innerHTML = '<div class="text-gray-500 text-xs">No feedback yet.</div>'; return; }
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const r = docSnap.data();
+                    const icon = r.type === 'bug' ? '🐛' : (r.type === 'suggestion' ? '💡' : '💬');
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 border ' + (r.status === 'resolved' ? 'border-green-700/40' : 'border-cyan-700/40') + ' rounded p-2 text-xs mb-1.5';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-bold text-white">${icon} ${escapeHtml(r.type)}</span>
+                            <span class="text-gray-500 text-[10px]">${r.status === 'resolved' ? '✅ Resolved' : '🟡 Open'}</span>
+                        </div>
+                        <p class="text-gray-300 mb-1">${escapeHtml(r.text)}</p>
+                        <p class="text-gray-500 mb-1.5 text-[10px]">From: ${escapeHtml(r.authorName||'Guest')} (${escapeHtml(r.authorEmail||'anonymous')})</p>
+                        <div class="flex gap-1.5">
+                            ${r.status !== 'resolved' ? `<button onclick="adminResolveFeedback('${docSnap.id}')" class="bg-green-700 hover:bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Mark Resolved</button>` : ''}
+                            <button onclick="adminDeleteFeedback('${docSnap.id}')" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold">Delete</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (e) { listEl.innerHTML = '<div class="text-red-400 text-xs">' + e.message + '</div>'; }
+        }
+
+        async function adminResolveFeedback(id) {
+            const f = fbApi();
+            try {
+                await f.updateDoc(f.doc(f.db, 'feedback', id), { status: 'resolved' });
+                adminLoadFeedback();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminDeleteFeedback(id) {
+            if (!confirm('Delete this feedback item?')) return;
+            const f = fbApi();
+            try {
+                await f.deleteDoc(f.doc(f.db, 'feedback', id));
+                adminLoadFeedback();
             } catch (e) { showMsg('Error', e.message); }
         }
 
