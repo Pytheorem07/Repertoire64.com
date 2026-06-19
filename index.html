@@ -764,7 +764,7 @@
     </div>
 
     <!-- Admin Panel Modal -->
-    <div id="admin-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[70]" style="display:none">
+    <div id="admin-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[106]" style="display:none">
         <div class="bg-gray-800 border border-red-700/50 rounded-xl w-full max-w-2xl mx-4 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-4 border-b border-red-700/50 shrink-0">
                 <h2 class="text-lg font-bold text-red-400"><i class="fa-solid fa-shield-halved mr-2"></i>Admin Panel</h2>
@@ -1256,7 +1256,7 @@
         </div>
     </div>
 
-    <div id="pin-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[71]" style="display:none">
+    <div id="pin-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[107]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl">
             <h3 id="pin-modal-title" class="text-lg font-bold text-white mb-2">Enter Vault Code</h3>
             <p id="pin-modal-desc" class="text-xs text-gray-400 mb-4">Please input code to authorize changes.</p>
@@ -1286,7 +1286,7 @@
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[65] opacity-0 transition-opacity" style="display:none">
+    <div id="confirm-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[105] opacity-0 transition-opacity" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="confirm-modal-content">
             <h3 id="confirm-title" class="text-xl font-bold mb-2 text-white">Confirm</h3>
             <p id="confirm-body" class="text-gray-300 mb-6 text-sm leading-relaxed"></p>
@@ -1674,7 +1674,7 @@
             confirmCallback = callback;
             const m = document.getElementById('confirm-modal');
             const c = document.getElementById('confirm-modal-content');
-            m.classList.remove('hidden');
+            m.style.display = 'flex';
             setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); }, 10);
         }
         function closeConfirmModal(result) {
@@ -1682,7 +1682,7 @@
             const c = document.getElementById('confirm-modal-content');
             m.classList.add('opacity-0'); c.classList.add('scale-95');
             setTimeout(() => { 
-                m.classList.add('hidden'); 
+                m.style.display = 'none'; 
                 if(result && confirmCallback) confirmCallback(); 
                 confirmCallback = null;
             }, 300);
@@ -2051,12 +2051,12 @@
 
         function startRename(id) {
             document.getElementById(`rep-view-${id}`).classList.add('hidden');
-            document.getElementById(`rep-edit-${id}`).classList.remove('hidden');
+            document.getElementById(`rep-edit-${id}`).style.display = 'flex';
             document.getElementById(`rep-input-${id}`).focus();
         }
         function cancelRename(id) {
             document.getElementById(`rep-view-${id}`).classList.remove('hidden');
-            document.getElementById(`rep-edit-${id}`).classList.add('hidden');
+            document.getElementById(`rep-edit-${id}`).style.display = 'none';
         }
         function saveRename(id) {
             const input = document.getElementById(`rep-input-${id}`);
@@ -2864,7 +2864,7 @@
             if (isTraining) return;
             if (isWatchingRepertoire) stopWatchRepertoire();
             
-            document.getElementById('build-here-container').classList.add('hidden');
+            document.getElementById('build-here-container').style.display = 'none';
             activeAnalyzedOpeningMoveList = null;
 
             if (!repData.activeId) {
@@ -4703,7 +4703,7 @@
             activeAnalyzedOpeningMoveList = { name: openingName, moves: movesArray };
             
             const buildBtn = document.getElementById('build-here-container');
-            buildBtn.classList.remove('hidden');
+            buildBtn.style.display = 'flex';
             
             showMsg("Opening Played", `"${openingName}" loaded onto board. Click "[Build Repertoire From Here]" underneath the board if you wish to import this variation directly!`);
         }
@@ -4739,7 +4739,7 @@
 
                 saveState();
                 loadRepertoire(id);
-                document.getElementById('build-here-container').classList.add('hidden');
+                document.getElementById('build-here-container').style.display = 'none';
                 activeAnalyzedOpeningMoveList = null;
                 
                 switchTab('build');
@@ -4934,7 +4934,7 @@
 
         function updateAdminButtonVisibility() {
             const adminBtn = document.getElementById('admin-panel-btn');
-            if (adminBtn) adminBtn.classList.toggle('hidden', !(cloudProfile && cloudProfile.isAdmin));
+            if (adminBtn) adminBtn.style.display = (cloudProfile && cloudProfile.isAdmin) ? 'flex' : 'none';
         }
 
         function refreshAuthModalUI() {
@@ -5035,7 +5035,7 @@
             if (!user) {
                 cloudProfile = null;
                 if (btnLabel) btnLabel.innerText = 'Sign In';
-                if (adminBtn) adminBtn.classList.add('hidden');
+                if (adminBtn) adminBtn.style.display = 'none';
                 refreshAuthModalUI();
                 return;
             }
