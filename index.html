@@ -154,7 +154,7 @@
             <button onclick="openAuthModal()" id="auth-btn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-user"></i> <span id="auth-btn-label" class="hidden sm:inline">Sign In</span>
             </button>
-            <button onclick="openAdminPanel()" id="admin-panel-btn" class="hidden bg-red-700 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2">
+            <button onclick="openAdminPanel()" id="admin-panel-btn" class="bg-red-700 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2" style="display:none">
                 <i class="fa-solid fa-shield-halved"></i> <span class="hidden sm:inline">Admin</span>
             </button>
 
@@ -263,7 +263,7 @@
             </div>
             
             <!-- Dynamic "Build from Here" popup after playing variations -->
-            <div id="build-here-container" class="mt-2 hidden bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 shadow-xl">
+            <div id="build-here-container" class="mt-2 bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 shadow-xl" style="display:none">
                 <span class="text-sm text-gray-300 font-medium">Opening Variation Loaded on Board</span>
                 <button onclick="triggerBuildFromHere()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-xs flex items-center gap-2 transition">
                     <i class="fa-solid fa-plus"></i> Build Repertoire From Here
@@ -413,7 +413,7 @@
             </div>
 
             <!-- Train Tab View -->
-            <div id="content-train" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+            <div id="content-train" class="flex-1 flex flex-col p-4 overflow-hidden" style="display:none">
                 <div class="bg-gray-900 rounded-lg p-4 border border-gray-700 mb-4 shrink-0 overflow-y-auto">
                     <h3 class="font-semibold text-base mb-2 text-blue-400">Training Setup</h3>
                     <p class="text-sm text-gray-400 mb-2">You will be tested on lines in <span id="train-rep-name" class="text-white font-semibold"></span>.</p>
@@ -441,7 +441,7 @@
                     </button>
                 </div>
 
-                <div id="training-status" class="flex-1 flex flex-col items-center justify-center text-center hidden">
+                <div id="training-status" class="flex-1 flex flex-col items-center justify-center text-center" style="display:none">
                     <div class="text-3xl mb-1 text-blue-500"><i class="fa-solid fa-dumbbell"></i></div>
                     <h3 class="text-lg font-bold mb-0.5">Training Active</h3>
                     <p id="train-progress" class="text-gray-400 text-xs mb-1">Line 1 of 5</p>
@@ -460,7 +460,7 @@
             </div>
 
             <!-- Review Mode Tab Content -->
-            <div id="content-review" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+            <div id="content-review" class="flex-1 flex flex-col p-4 overflow-hidden" style="display:none">
                 <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 flex-1 overflow-y-auto">
                     <h3 class="font-semibold text-base mb-1 text-red-400">Mistakes to Review</h3>
                     <p class="text-xs text-gray-400 mb-2">Lines where you played an incorrect move.</p>
@@ -472,7 +472,7 @@
             </div>
 
             <!-- Games View Tab -->
-            <div id="content-games" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+            <div id="content-games" class="flex-1 flex flex-col p-4 overflow-hidden" style="display:none">
                 
                 <!-- Internal Tab Switching inside Games Tab -->
                 <div class="flex shrink-0 bg-gray-950 p-1 rounded-lg gap-1 mb-3">
@@ -538,7 +538,7 @@
                     </div>
                 </div>
 
-                <div id="games-view-stats" class="flex flex-col flex-1 min-h-0 hidden overflow-y-auto">
+                <div id="games-view-stats" class="flex flex-col flex-1 min-h-0 overflow-y-auto" style="display:none">
                     <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
                         <h3 class="font-semibold text-base mb-1 text-indigo-400"><i class="fa-solid fa-chart-bar"></i> Opening Stat Analysis</h3>
                         <p class="text-[11px] text-gray-400 mb-2.5">Comprehensive report of game frequencies, responses and theoretical opening layouts.</p>
@@ -591,7 +591,7 @@
 
 
             <!-- Community Tab View -->
-            <div id="content-community" class="flex-1 flex flex-col p-4 overflow-hidden hidden">
+            <div id="content-community" class="flex-1 flex flex-col p-4 overflow-hidden" style="display:none">
                 <!-- Sub-tabs -->
                 <div class="flex shrink-0 bg-gray-950 p-1 rounded-lg gap-1 mb-3">
                     <button onclick="switchCommunitySubTab('browse')" id="ctab-browse" class="flex-1 py-1 text-xs font-bold rounded bg-purple-700 text-white transition">Browse</button>
@@ -600,7 +600,7 @@
                 </div>
 
                 <!-- Browse Sub-tab -->
-                <div id="cview-browse" class="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                <div id="cview-browse" class="flex-1 flex flex-col min-h-0 overflow-y-auto" style="display:flex">
                     <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
                         <h3 class="font-semibold text-sm text-purple-400 mb-2"><i class="fa-solid fa-globe"></i> Public Repertoires</h3>
                         <!-- Sort controls -->
@@ -630,7 +630,7 @@
                 </div>
 
                 <!-- Publish Sub-tab -->
-                <div id="cview-publish" class="hidden flex flex-col gap-3">
+                <div id="cview-publish" class="flex flex-col gap-3" style="display:none">
                     <div class="bg-gray-900 rounded-lg p-3 border border-gray-700">
                         <h3 class="font-semibold text-sm text-green-400 mb-2"><i class="fa-solid fa-upload"></i> Publish Repertoire</h3>
                         <p class="text-xs text-gray-400 mb-3">Share one of your repertoires with the community. Signed-in users (not anonymous) can like and comment on it.</p>
@@ -654,7 +654,7 @@
                 </div>
 
                 <!-- Messages Sub-tab -->
-                <div id="cview-messages" class="hidden flex-1 flex flex-col min-h-0 overflow-y-auto">
+                <div id="cview-messages" class="flex-1 flex flex-col min-h-0 overflow-y-auto" style="display:none">
                     <div class="bg-gray-900 rounded-lg p-3 border border-gray-700 mb-3 shrink-0">
                         <h3 class="font-semibold text-sm text-blue-400 mb-1"><i class="fa-solid fa-envelope"></i> Your Messages</h3>
                         <p class="text-xs text-gray-400">System notices and admin messages appear here.</p>
@@ -670,7 +670,7 @@
 
 
     <!-- Auth Modal -->
-    <div id="auth-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[60] hidden">
+    <div id="auth-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[60]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                 <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-user-shield mr-2"></i>Account</h2>
@@ -708,7 +708,7 @@
     </div>
 
     <!-- Public Repertoire View Modal -->
-    <div id="pub-rep-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[55] hidden">
+    <div id="pub-rep-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[55]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-lg mx-4 shadow-2xl flex flex-col max-h-[88vh]">
             <div class="flex justify-between items-center p-4 border-b border-gray-700 shrink-0">
                 <div>
@@ -736,7 +736,7 @@
     </div>
 
     <!-- Admin Panel Modal -->
-    <div id="admin-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[70] hidden">
+    <div id="admin-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[70]" style="display:none">
         <div class="bg-gray-800 border border-red-700/50 rounded-xl w-full max-w-2xl mx-4 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-4 border-b border-red-700/50 shrink-0">
                 <h2 class="text-lg font-bold text-red-400"><i class="fa-solid fa-shield-halved mr-2"></i>Admin Panel</h2>
@@ -796,7 +796,7 @@
     </div>
 
     <!-- Repertoires modal -->
-    <div id="reps-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
+    <div id="reps-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[51]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-lg w-full mx-4 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                 <h2 class="text-xl font-bold text-white">Your Repertoires</h2>
@@ -873,7 +873,7 @@
     </div>
 
     <!-- Persistent Disclaimer / Terms Modal -->
-    <div id="disclaimer-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] hidden">
+    <div id="disclaimer-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[100]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-lg w-full mx-4 shadow-2xl">
             <h2 class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
                 <i class="fa-solid fa-triangle-exclamation"></i> Terms of Service & Disclaimer
@@ -903,7 +903,7 @@
     </div>
 
     <!-- Edit Repertoire Lines Modal -->
-    <div id="edit-rep-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[55] hidden">
+    <div id="edit-rep-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[56]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-4xl mx-4 shadow-2xl flex flex-col h-[85vh]">
             <div class="flex justify-between items-center p-4 border-b border-gray-700 shrink-0">
                 <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-pen-to-square mr-2"></i> Modify Repertoire Lines</h2>
@@ -923,7 +923,7 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[52]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-md w-full mx-4 shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
                 <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-gear mr-2"></i> Settings</h2>
@@ -1194,7 +1194,7 @@
         </div>
     </div>
 
-    <div id="pin-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[70] hidden">
+    <div id="pin-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-[71]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl">
             <h3 id="pin-modal-title" class="text-lg font-bold text-white mb-2">Enter Vault Code</h3>
             <p id="pin-modal-desc" class="text-xs text-gray-400 mb-4">Please input code to authorize changes.</p>
@@ -1213,7 +1213,7 @@
     </div>
 
     <!-- Message Popup Modal -->
-    <div id="msg-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] hidden opacity-0 transition-opacity">
+    <div id="msg-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[61] opacity-0 transition-opacity" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="msg-modal-content">
             <h3 id="msg-title" class="text-xl font-bold mb-2">Message</h3>
             <p id="msg-body" class="text-gray-300 mb-6 text-sm leading-relaxed"></p>
@@ -1224,7 +1224,7 @@
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[65] hidden opacity-0 transition-opacity">
+    <div id="confirm-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[65] opacity-0 transition-opacity" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="confirm-modal-content">
             <h3 id="confirm-title" class="text-xl font-bold mb-2 text-white">Confirm</h3>
             <p id="confirm-body" class="text-gray-300 mb-6 text-sm leading-relaxed"></p>
@@ -1236,7 +1236,7 @@
     </div>
 
     <!-- Instructions Modal (Explainer Menu) -->
-    <div id="instructions-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[50] hidden">
+    <div id="instructions-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[58]" style="display:none">
         <div class="bg-gray-800 border border-gray-700 p-6 md:p-8 rounded-xl max-w-2xl w-full mx-4 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                 <h2 class="text-2xl font-bold text-blue-400"><i class="fa-solid fa-graduation-cap mr-2"></i> How to Use Repertoire64</h2>
@@ -1376,9 +1376,16 @@
         let currentMode = 'build';
         let currentGamesSubTab = 'deviate';
 
-        // Navigation state for back/forth arrows
+        // Navigation state for back/forth arrows. Each entry is { san, node, alternates }.
+        // "alternates" holds branches that existed at this point in the line before the
+        // user played a different move here -- so switching lines never erases history;
+        // the old continuation is preserved and shown in parentheses in the move list,
+        // and remains clickable to jump back into it.
         let navigationPath = [];
         let navigationIdx = -1;
+        // Alternates that branched off at the very start (before any move) -- e.g. user
+        // steps back to the starting position and then plays a different first move.
+        let rootAlternates = [];
         
         let settings = {
             size: 500,
@@ -1524,7 +1531,7 @@
                         I Agree & Accept Terms
                     </button>
                 `;
-                document.getElementById('disclaimer-modal').classList.remove('hidden');
+                document.getElementById('disclaimer-modal').style.display = 'flex';
             } else {
                 if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
                     showInstructions();
@@ -1564,21 +1571,21 @@
             document.getElementById('msg-body').innerText = body;
             const modal = document.getElementById('msg-modal');
             const content = document.getElementById('msg-modal-content');
-            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
         }
         function closeMsgModal() {
             const modal = document.getElementById('msg-modal');
             const content = document.getElementById('msg-modal-content');
             modal.classList.add('opacity-0'); content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
         
         function agreeDisclaimer() {
             settings.termsSigned = true;
             document.getElementById('setting-tos-agree').checked = true;
             saveState();
-            document.getElementById('disclaimer-modal').classList.add('hidden');
+            document.getElementById('disclaimer-modal').style.display = 'none';
             if(!localStorage.getItem('chess_rep_seen_tutorial_v4')) {
                 showInstructions();
                 localStorage.setItem('chess_rep_seen_tutorial_v4', 'true');
@@ -1594,7 +1601,7 @@
                         I Agree & Accept Terms
                     </button>
                 `;
-                document.getElementById('disclaimer-modal').classList.remove('hidden');
+                document.getElementById('disclaimer-modal').style.display = 'flex';
             }
         }
         
@@ -1620,12 +1627,19 @@
         }
 
         function showInstructions() { 
+            // Defensively close Settings if it's open underneath -- previously these
+            // two modals shared the same z-index and could end up visually stacked
+            // in a confusing way depending on click order.
+            const settingsModal = document.getElementById('settings-modal');
+            if (settingsModal && settingsModal.style.display !== 'none') {
+                settingsModal.style.display = 'none';
+            }
             const modal = document.getElementById('instructions-modal');
-            if (modal) modal.classList.remove('hidden'); 
+            if (modal) modal.style.display = 'flex'; 
         }
         function closeInstructions() { 
             const modal = document.getElementById('instructions-modal');
-            if (modal) modal.classList.add('hidden'); 
+            if (modal) modal.style.display = 'none'; 
         }
 
         // --- STREAMING_CHUNK:Defining moves navigation stack... ---
@@ -1675,10 +1689,11 @@
 
         function populateNavigationFromMainline(node) {
             navigationPath = [];
+            rootAlternates = [];
             let curr = node;
             while (curr && curr.children && curr.children.length > 0) {
                 const child = curr.children[0];
-                navigationPath.push({ san: child.san, node: child });
+                navigationPath.push({ san: child.san, node: child, alternates: [] });
                 curr = child;
             }
             navigationIdx = -1;
@@ -1728,9 +1743,9 @@
                 pinSetupBtn.className = "bg-indigo-900 hover:bg-indigo-800 text-[10px] px-2 py-1 rounded text-white font-bold transition";
             }
 
-            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('settings-modal').style.display = 'flex';
         }
-        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+        function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
         
         function toggleSetting(key) {
             settings[key] = !settings[key];
@@ -1785,11 +1800,11 @@
             }
             
             activePinResolve = { callback, isSetup };
-            document.getElementById('pin-modal').classList.remove('hidden');
+            document.getElementById('pin-modal').style.display = 'flex';
         }
 
         function closePinModal(authorized) {
-            document.getElementById('pin-modal').classList.add('hidden');
+            document.getElementById('pin-modal').style.display = 'none';
             if (authorized && activePinResolve) {
                 const pin = document.getElementById('pin-modal-input').value.trim();
                 const confirmVal = document.getElementById('pin-modal-input-confirm').value.trim();
@@ -1928,9 +1943,9 @@
 
         function openRepertoiresModal() {
             renderRepertoiresList();
-            document.getElementById('reps-modal').classList.remove('hidden');
+            document.getElementById('reps-modal').style.display = 'flex';
         }
-        function closeRepertoiresModal() { document.getElementById('reps-modal').classList.add('hidden'); }
+        function closeRepertoiresModal() { document.getElementById('reps-modal').style.display = 'none'; }
 
         function renderRepertoiresList() {
             const listEl = document.getElementById('reps-list');
@@ -1956,7 +1971,7 @@
                         </div>
                     </div>
                     
-                    <div id="rep-edit-${id}" class="hidden flex items-center gap-2 flex-1 mr-2">
+                    <div id="rep-edit-${id}" class="flex items-center gap-2 flex-1 mr-2" style="display:none">
                         <input type="text" id="rep-input-${id}" value="${rep.name}" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none w-full">
                         <button onclick="saveRename('${id}')" class="text-green-400 hover:text-green-300 p-1 text-sm"><i class="fa-solid fa-check"></i></button>
                         <button onclick="cancelRename('${id}')" class="text-red-400 hover:text-red-300 p-1 text-sm"><i class="fa-solid fa-xmark"></i></button>
@@ -2270,6 +2285,7 @@
             currentPath = [];
             navigationPath = [];
             navigationIdx = -1;
+            rootAlternates = [];
             game.reset();
             document.getElementById('active-rep-label').innerText = "Free Analysis";
             
@@ -2598,17 +2614,131 @@
                 saveState();
             }
 
-            // Sync navigation lists and truncate the redo-stack on deviation
-            if (navigationIdx < navigationPath.length - 1) {
-                navigationPath = navigationPath.slice(0, navigationIdx + 1);
+            // If the move played is identical to what was already next in the
+            // navigation stack, this isn't a real deviation -- just continuing
+            // forward along the same line, so nothing should be touched/truncated.
+            const existingNext = navigationPath[navigationIdx + 1];
+            const isReplayingSameMove = existingNext && existingNext.san === moveResult.san;
+
+            if (isReplayingSameMove) {
+                navigationIdx++;
+            } else {
+                // Real deviation: preserve whatever was previously next (and beyond)
+                // as a clickable parenthetical alternate, rather than erasing it.
+                truncateNavigationPathWithMemory(navigationIdx);
+                navigationPath.push({ san: moveResult.san, node: childNode, alternates: [] });
+                navigationIdx = navigationPath.length - 1;
             }
-            navigationPath.push({ san: moveResult.san, node: childNode });
-            navigationIdx = navigationPath.length - 1;
 
             afterMoveTrigger(settings.anim, from, to);
         }
 
         // --- STREAMING_CHUNK:Defining node navigations... ---
+
+        // Unified click handler for the move list, working identically in Explore Mode
+        // and Build Mode. `anchorIdx` is the navigationPath index this entry/branch hangs
+        // off of (-1 means "hangs off the very start", i.e. rootAlternates). `altPath` is
+        // null for a plain mainline click, or an array of alternating [branchIndex, moveIndex]
+        // pairs describing how to descend into nested parenthetical variations.
+        function goToNavEntry(anchorIdx, altPath) {
+            if (altPath && altPath.length > 0) {
+                promoteAlternateToMainline(anchorIdx, altPath);
+                // navigationIdx is set inside promoteAlternateToMainline
+            } else {
+                navigationIdx = anchorIdx;
+            }
+            replayNavigationPathToCurrentIdx();
+        }
+
+        // Replays navigationPath[0..navigationIdx] as actual moves on `game`, and -- when
+        // a repertoire is active -- also rebuilds currentNode/currentPath by walking the
+        // repertoire tree in parallel (find-or-create exactly like normal move entry, so
+        // a freshly-promoted branch gets properly merged into the saved repertoire tree too).
+        function replayNavigationPathToCurrentIdx() {
+            if (repData.activeId) {
+                const root = repData.repertoires[repData.activeId].root;
+                game.load(root.fen);
+                currentNode = root;
+                currentPath = [];
+                for (let i = 0; i <= navigationIdx; i++) {
+                    const step = navigationPath[i];
+                    const moveResult = game.move(step.san);
+                    if (moveResult) {
+                        let childNode = currentNode.children.find(c => c.san === step.san);
+                        if (!childNode) {
+                            childNode = { fen: game.fen(), san: step.san, children: [], parent: currentNode, comment: '', variationName: '' };
+                            currentNode.children.push(childNode);
+                        }
+                        currentNode = childNode;
+                        currentPath.push(currentNode);
+                        step.node = currentNode;
+                    }
+                }
+                saveState();
+            } else {
+                game.reset();
+                for (let i = 0; i <= navigationIdx; i++) {
+                    game.move(navigationPath[i].san);
+                }
+            }
+            afterMoveTrigger(false);
+        }
+
+        // Splices a clicked parenthetical branch into the mainline at `anchorIdx`,
+        // demoting whatever used to continue from there into a new alternate -- so
+        // nothing is ever lost, the "active" line just swaps. `altPath` descends through
+        // nested alternates: [branchIndex0, moveIndex0, branchIndex1, moveIndex1, ...].
+        function promoteAlternateToMainline(anchorIdx, altPath) {
+            // Resolve the container (an {alternates: [...]} -- either a navigationPath
+            // entry, or the virtual root which uses rootAlternates) and walk down through
+            // altPath, collecting the full chain of moves to promote, while also stashing
+            // every "skipped over" sibling branch and the old continuation as alternates.
+            let container = anchorIdx === -1 ? { alternates: rootAlternates } : navigationPath[anchorIdx];
+
+            // Build the new chain of entries (in order) that will become the new mainline
+            // continuation after anchorIdx, by walking altPath two-at-a-time.
+            let newChain = [];
+            let i = 0;
+            while (i < altPath.length) {
+                const branchIdx = altPath[i];
+                const moveIdx = altPath[i + 1];
+                const chosenBranch = container.alternates[branchIdx];
+
+                // Every entry in chosenBranch up to and including moveIdx joins the chain.
+                for (let m = 0; m <= moveIdx; m++) {
+                    newChain.push(chosenBranch[m]);
+                }
+                // Remove the chosen branch from this container's alternates (it's being
+                // promoted, not staying as an alternate alongside itself).
+                container.alternates.splice(branchIdx, 1);
+
+                // Descend: the next container is the entry we just landed on.
+                container = chosenBranch[moveIdx];
+                i += 2;
+            }
+
+            if (anchorIdx === -1) {
+                // Demote the entire old mainline (and any of its own remaining
+                // alternates structure) into rootAlternates as a single branch.
+                if (navigationPath.length > 0) {
+                    rootAlternates.push(navigationPath.slice());
+                }
+                navigationPath = newChain;
+                // Re-attach whatever alternates existed on the final promoted entry
+                // (already preserved on the entry object itself -- nothing to do).
+                navigationIdx = newChain.length - 1;
+            } else {
+                const anchorEntry = navigationPath[anchorIdx];
+                const oldTail = navigationPath.slice(anchorIdx + 1);
+                if (oldTail.length > 0) {
+                    if (!anchorEntry.alternates) anchorEntry.alternates = [];
+                    anchorEntry.alternates.push(oldTail);
+                }
+                navigationPath = navigationPath.slice(0, anchorIdx + 1).concat(newChain);
+                navigationIdx = navigationPath.length - 1;
+            }
+        }
+
         function navigateToNode(pathIndex) {
             if (!repData.activeId) return;
             const root = repData.repertoires[repData.activeId].root;
@@ -2652,12 +2782,17 @@
                 game.load(childNode.fen);
                 currentNode = childNode;
                 currentPath.push(currentNode);
-                
-                if (navigationIdx < navigationPath.length - 1) {
-                    navigationPath = navigationPath.slice(0, navigationIdx + 1);
+
+                const existingNext = navigationPath[navigationIdx + 1];
+                const isReplayingSameMove = existingNext && existingNext.san === san;
+
+                if (isReplayingSameMove) {
+                    navigationIdx++;
+                } else {
+                    truncateNavigationPathWithMemory(navigationIdx);
+                    navigationPath.push({ san: san, node: childNode, alternates: [] });
+                    navigationIdx = navigationPath.length - 1;
                 }
-                navigationPath.push({ san: san, node: childNode });
-                navigationIdx = navigationPath.length - 1;
 
                 afterMoveTrigger(false);
             }
@@ -2674,6 +2809,7 @@
                 game.reset();
                 navigationPath = [];
                 navigationIdx = -1;
+                rootAlternates = [];
                 afterMoveTrigger(false);
                 return;
             }
@@ -2724,9 +2860,7 @@
                     tabEl.classList.add('text-gray-400', 'border-transparent');
                 }
                 const contentEl = document.getElementById(`content-${t}`);
-                if (contentEl) {
-                    contentEl.classList.add('hidden');
-                }
+                if (contentEl) contentEl.style.display = 'none';
             });
             const activeTab = document.getElementById(`tab-${tab}`);
             if (activeTab) {
@@ -2734,9 +2868,7 @@
                 activeTab.classList.remove('text-gray-400', 'border-transparent');
             }
             const activeContent = document.getElementById(`content-${tab}`);
-            if (activeContent) {
-                activeContent.classList.remove('hidden');
-            }
+            if (activeContent) activeContent.style.display = 'flex';
             if (tab === 'community' && typeof switchCommunitySubTab === 'function') {
                 switchCommunitySubTab(communityCurrentTab || 'browse');
             }
@@ -2912,8 +3044,31 @@
         }
 
         function syncNavigationFromCurrentPath() {
-            navigationPath = currentPath.map(n => ({ san: n.san, node: n }));
+            navigationPath = currentPath.map(n => ({ san: n.san, node: n, alternates: [] }));
             navigationIdx = navigationPath.length - 1;
+        }
+
+        // Truncates navigationPath after `keepIdx` (i.e. keeps indices 0..keepIdx),
+        // but instead of discarding the moves that come after, stashes them as a
+        // clickable "alternate" branch hanging off the entry at keepIdx. This is what
+        // lets the move list show "...(old continuation)" in parentheses rather than
+        // silently erasing it whenever the user plays a different move after stepping back.
+        function truncateNavigationPathWithMemory(keepIdx) {
+            if (keepIdx >= navigationPath.length - 1) return; // nothing to truncate
+            const removedTail = navigationPath.slice(keepIdx + 1);
+            navigationPath = navigationPath.slice(0, keepIdx + 1);
+            if (removedTail.length > 0) {
+                const anchor = keepIdx >= 0 ? navigationPath[keepIdx] : null;
+                const alternatesHolder = anchor ? anchor : null;
+                if (alternatesHolder) {
+                    if (!alternatesHolder.alternates) alternatesHolder.alternates = [];
+                    alternatesHolder.alternates.push(removedTail);
+                } else {
+                    // Deviation right at the very start (keepIdx === -1): store on a
+                    // dedicated root-level bucket.
+                    rootAlternates.push(removedTail);
+                }
+            }
         }
 
         function updateRepertoireUI() {
@@ -2925,12 +3080,30 @@
             const varsList = document.getElementById('variations-list');
             const annoBox = document.getElementById('node-annotations');
             historyEl.innerHTML = '';
-            
-            if (!repData.activeId) {
-                let html = '<div class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-2"><i class="fa-solid fa-magnifying-glass"></i> Free Analysis Mode</div>';
-                let history = game.history();
-                if (history.length === 0) {
-                    html += `
+
+            const inExploreMode = !repData.activeId;
+
+            if (inExploreMode) {
+                const deleteBtn = document.querySelector('button[onclick="deleteCurrentNode()"]');
+                if (deleteBtn) deleteBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Undo Move';
+                annoBox.classList.add('hidden');
+                varsContainer.classList.add('hidden');
+            } else {
+                const deleteBtn = document.querySelector('button[onclick="deleteCurrentNode()"]');
+                if (deleteBtn) deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete this move';
+                annoBox.classList.remove('hidden');
+                document.getElementById('node-var-name').value = currentNode.variationName || '';
+                document.getElementById('node-comment').value = currentNode.comment || '';
+            }
+
+            // Render the move list from navigationPath (the single source of truth that
+            // is kept consistent in BOTH Explore Mode and Build Mode). The current index
+            // is highlighted; any moves still ahead of navigationIdx are shown dimmed
+            // (clickable to jump forward); and any branch point that was deviated from
+            // shows its old continuation in parentheses, fully clickable to switch back.
+            if (navigationPath.length === 0 && rootAlternates.length === 0) {
+                if (inExploreMode) {
+                    historyEl.innerHTML = `
                         <div class="mt-4 text-center py-4">
                             <i class="fa-solid fa-chess text-3xl text-gray-600 mb-3"></i>
                             <p class="text-gray-400 text-sm mb-4">Play a move to explore freely.</p>
@@ -2940,76 +3113,99 @@
                         </div>
                     `;
                 } else {
-                    let moveNum = 1;
-                    for (let i = 0; i < history.length; i++) {
-                        const isWhite = i % 2 === 0;
-                        if (isWhite) html += `<span class="text-gray-500 mr-1">${moveNum}.</span>`; 
-                        html += `<span class="px-1.5 py-0.5 rounded text-gray-300">${history[i]}</span> `;
+                    historyEl.innerHTML = '<span class="text-gray-500 italic">Starting position. Play a move to begin building.</span>';
+                }
+            } else {
+                let html = inExploreMode ? '<div class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-2"><i class="fa-solid fa-magnifying-glass"></i> Free Analysis Mode</div>' : '';
+
+                // Renders a branch (array of {san, alternates}) starting at `startMoveNum`,
+                // optionally wrapped in parentheses for sub-variations. depthPath is the
+                // list of indices used to build a unique click target for goToNavEntry.
+                function renderBranch(branch, startMoveNum, startIsWhite, isMain) {
+                    let out = '';
+                    let moveNum = startMoveNum;
+                    let isWhite = startIsWhite;
+                    for (let i = 0; i < branch.length; i++) {
+                        const entry = branch[i];
+                        if (isWhite) out += `<span class="text-gray-500 mr-1">${moveNum}.</span>`;
+                        out += entry.__renderedSpan;
+                        if (entry.alternates && entry.alternates.length > 0) {
+                            entry.alternates.forEach(altBranch => {
+                                out += ' (' + renderBranch(altBranch, moveNum, isWhite, false) + ') ';
+                            });
+                        }
                         if (!isWhite) moveNum++;
+                        isWhite = !isWhite;
                     }
-                }
-                historyEl.innerHTML = html;
-                varsContainer.classList.add('hidden');
-                annoBox.classList.add('hidden');
-                
-                const deleteBtn = document.querySelector('button[onclick="deleteCurrentNode()"]');
-                if (deleteBtn) deleteBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Undo Move';
-                return;
-            } else {
-                const deleteBtn = document.querySelector('button[onclick="deleteCurrentNode()"]');
-                if (deleteBtn) deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete this move';
-                annoBox.classList.remove('hidden');
-                
-                document.getElementById('node-var-name').value = currentNode.variationName || '';
-                document.getElementById('node-comment').value = currentNode.comment || '';
-            }
-
-            if (currentPath.length === 0 && (!currentNode || currentNode.children.length === 0)) {
-                historyEl.innerHTML = '<span class="text-gray-500 italic">Starting position. Play a move to begin building.</span>';
-                annoBox.classList.add('hidden');
-            } else {
-                // Build a "display path" that shows the full played-out mainline (currentPath
-                // extended forward via first-children) so stepping back never erases moves.
-                // The currently active node is highlighted; any move played that deviates
-                // from the prior mainline becomes node.children[0] for its parent going
-                // forward, which is exactly how branches persist in the tree -- nothing is
-                // erased, and older siblings remain reachable via the Alternative Moves list.
-                let displayPath = currentPath.slice();
-                let tail = currentNode;
-                while (tail && tail.children && tail.children.length > 0) {
-                    tail = tail.children[0];
-                    displayPath.push(tail);
+                    return out;
                 }
 
-                let html = '';
-                let moveNum = 1;
-                for (let i = 0; i < displayPath.length; i++) {
-                    const node = displayPath[i];
-                    const isWhite = i % 2 === 0;
-                    if (isWhite) html += `<span class="text-gray-500 mr-1">${moveNum}.</span>`;
-                    const isCurrent = (i === currentPath.length - 1);
-                    const isFuture = (i >= currentPath.length);
+                // First pass: compute rendered span (with correct highlight/click) for
+                // every entry in the mainline navigationPath, tagging each with its
+                // absolute index so clicks map back to goToNavEntry(idx, null).
+                navigationPath.forEach((entry, i) => {
+                    const isCurrent = (i === navigationIdx);
+                    const isFuture = (i > navigationIdx);
                     let classes = 'hover:bg-gray-700 cursor-pointer';
                     if (isCurrent) classes = 'bg-blue-600 text-white font-bold ring-2 ring-blue-400';
                     else if (isFuture) classes = 'hover:bg-gray-700 cursor-pointer text-gray-400 italic';
-                    html += `<span onclick="navigateToNode(${i})" class="px-1.5 py-0.5 rounded transition ${classes}">${node.san}</span> `;
-                    if (!isWhite) moveNum++;
+                    entry.__renderedSpan = `<span onclick="goToNavEntry(${i}, null)" class="px-1.5 py-0.5 rounded transition ${classes}">${escapeHtml(entry.san)}</span> `;
+                    tagAlternateSpans(entry.alternates, i);
+                });
+
+                // Tags every nested alternate entry (recursively) with a rendered span
+                // that calls goToNavEntry(anchorIdx, altPath) to jump into that branch.
+                function tagAlternateSpans(alternates, anchorIdx) {
+                    if (!alternates) return;
+                    alternates.forEach((altBranch, altI) => {
+                        altBranch.forEach((entry, j) => {
+                            const path = [altI, j];
+                            entry.__renderedSpan = `<span onclick='goToNavEntry(${anchorIdx}, ${JSON.stringify(path)})' class="px-1 py-0.5 rounded transition hover:bg-gray-700 cursor-pointer text-amber-300 italic">${escapeHtml(entry.san)}</span> `;
+                            tagAlternateSpansNested(entry.alternates, anchorIdx, path);
+                        });
+                    });
                 }
+                function tagAlternateSpansNested(alternates, anchorIdx, parentPath) {
+                    if (!alternates) return;
+                    alternates.forEach((altBranch, altI) => {
+                        altBranch.forEach((entry, j) => {
+                            const path = parentPath.concat([altI, j]);
+                            entry.__renderedSpan = `<span onclick='goToNavEntry(${anchorIdx}, ${JSON.stringify(path)})' class="px-1 py-0.5 rounded transition hover:bg-gray-700 cursor-pointer text-amber-300 italic">${escapeHtml(entry.san)}</span> `;
+                            tagAlternateSpansNested(entry.alternates, anchorIdx, path);
+                        });
+                    });
+                }
+
+                // Render root-level alternates (deviations from the very start) before
+                // the mainline, each in parentheses, then the mainline itself.
+                rootAlternates.forEach(altBranch => {
+                    altBranch.forEach((entry, j) => {
+                        entry.__renderedSpan = `<span onclick='goToNavEntry(-1, ${JSON.stringify([j])})' class="px-1 py-0.5 rounded transition hover:bg-gray-700 cursor-pointer text-amber-300 italic">${escapeHtml(entry.san)}</span> `;
+                        tagAlternateSpansNested(entry.alternates, -1, [j]);
+                    });
+                    html += ' (' + renderBranch(altBranch, 1, true, false) + ') ';
+                });
+
+                html += renderBranch(navigationPath, 1, true, true);
                 historyEl.innerHTML = html;
             }
 
-            if (currentNode && currentNode.children.length === 0) {
-                varsContainer.classList.add('hidden');
-            } else if (currentNode) {
-                varsContainer.classList.remove('hidden');
-                varsList.innerHTML = '';
-                currentNode.children.forEach(child => {
-                    const btn = document.createElement('button');
-                    btn.className = 'bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1.5 rounded shadow transition font-semibold';
-                    btn.innerText = child.variationName ? `${child.san} (${child.variationName})` : child.san;
-                    btn.onclick = () => navigateToVariation(child.san);
-                    varsList.appendChild(btn);
-                });
+            // "Alternative Moves" quick-buttons (what you could play NEXT from here) --
+            // unchanged, still sourced from the repertoire tree when one is active.
+            if (!inExploreMode) {
+                if (currentNode && currentNode.children.length === 0) {
+                    varsContainer.classList.add('hidden');
+                } else if (currentNode) {
+                    varsContainer.classList.remove('hidden');
+                    varsList.innerHTML = '';
+                    currentNode.children.forEach(child => {
+                        const btn = document.createElement('button');
+                        btn.className = 'bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1.5 rounded shadow transition font-semibold';
+                        btn.innerText = child.variationName ? `${child.san} (${child.variationName})` : child.san;
+                        btn.onclick = () => navigateToVariation(child.san);
+                        varsList.appendChild(btn);
+                    });
+                }
             }
         }
 
@@ -3503,8 +3699,8 @@
             currentTrainLineIndex = 0;
             globalForceSkipIndex = forceSkipToIndex;
             
-            document.getElementById('content-train').children[0].classList.add('hidden');
-            document.getElementById('training-status').classList.remove('hidden');
+            document.getElementById('content-train').children[0].style.display = 'none';
+            document.getElementById('training-status').style.display = 'flex';
             
             boardFlipped = (rep.color === 'b');
             applySettingsToUI(); 
@@ -3515,8 +3711,8 @@
             isTraining = false;
             clearInterval(demoInterval);
             demoInterval = null;
-            document.getElementById('content-train').children[0].classList.remove('hidden');
-            document.getElementById('training-status').classList.add('hidden');
+            document.getElementById('content-train').children[0].style.display = '';
+            document.getElementById('training-status').style.display = 'none';
             updateMistakesBadge();
             resetToStart();
         }
@@ -3880,11 +4076,11 @@
                 });
             }
             document.getElementById('edit-nodes-list').innerHTML = '<div class="text-gray-500 italic text-center mt-10">Select a line from the left to edit its moves and comments.</div>';
-            document.getElementById('edit-rep-modal').classList.remove('hidden');
+            document.getElementById('edit-rep-modal').style.display = 'flex';
         }
 
         function closeEditRepertoireModal() {
-            document.getElementById('edit-rep-modal').classList.add('hidden');
+            document.getElementById('edit-rep-modal').style.display = 'none';
         }
 
         function renderEditNodes(linePath, repertoireId) {
@@ -3956,13 +4152,13 @@
             if (subTab === 'deviate') {
                 btnDeviate.className = "flex-1 py-1 text-xs font-bold rounded bg-indigo-600 text-white transition";
                 btnStats.className = "flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition";
-                viewDeviate.classList.remove('hidden');
-                viewStats.classList.add('hidden');
+                viewDeviate.style.display = 'flex';
+                viewStats.style.display = 'none';
             } else {
                 btnStats.className = "flex-1 py-1 text-xs font-bold rounded bg-indigo-600 text-white transition";
                 btnDeviate.className = "flex-1 py-1 text-xs font-bold rounded hover:bg-gray-800 text-gray-400 transition";
-                viewStats.classList.remove('hidden');
-                viewDeviate.classList.add('hidden');
+                viewStats.style.display = 'flex';
+                viewDeviate.style.display = 'none';
             }
         }
 
@@ -4648,12 +4844,23 @@
 
         // -------------------- AUTH UI --------------------
 
-        function openAuthModal() {
-            document.getElementById('auth-modal').classList.remove('hidden');
+        async function openAuthModal() {
+            document.getElementById('auth-modal').style.display = 'flex';
+            // Re-fetch the profile from Firestore so manual admin/specialist/ban edits
+            // made directly in the Firebase console show up without needing to sign out.
+            if (cloudUser && !cloudUser.isAnonymous) {
+                await refreshCloudProfile();
+                updateAdminButtonVisibility();
+            }
             refreshAuthModalUI();
         }
         function closeAuthModal() {
-            document.getElementById('auth-modal').classList.add('hidden');
+            document.getElementById('auth-modal').style.display = 'none';
+        }
+
+        function updateAdminButtonVisibility() {
+            const adminBtn = document.getElementById('admin-panel-btn');
+            if (adminBtn) adminBtn.classList.toggle('hidden', !(cloudProfile && cloudProfile.isAdmin));
         }
 
         function refreshAuthModalUI() {
@@ -4758,7 +4965,7 @@
                 cloudProfile = null;
             }
 
-            if (adminBtn) adminBtn.classList.toggle('hidden', !(cloudProfile && cloudProfile.isAdmin));
+            if (adminBtn) updateAdminButtonVisibility();
             refreshAuthModalUI();
             populateOpeningFilterDropdowns();
         };
@@ -4885,10 +5092,13 @@
         function switchCommunitySubTab(tab) {
             communityCurrentTab = tab;
             ['browse','publish','messages'].forEach(t => {
-                document.getElementById('cview-' + t).classList.toggle('hidden', t !== tab);
+                const el = document.getElementById('cview-' + t);
+                if (el) el.style.display = (t === tab) ? (t === 'browse' || t === 'messages' ? 'flex' : 'flex') : 'none';
                 const btn = document.getElementById('ctab-' + t);
-                if (t === tab) { btn.classList.add('bg-purple-700','text-white'); btn.classList.remove('text-gray-400'); }
-                else { btn.classList.remove('bg-purple-700','text-white'); btn.classList.add('text-gray-400'); }
+                if (btn) {
+                    if (t === tab) { btn.classList.add('bg-purple-700','text-white'); btn.classList.remove('text-gray-400'); }
+                    else { btn.classList.remove('bg-purple-700','text-white'); btn.classList.add('text-gray-400'); }
+                }
             });
             if (tab === 'browse') { populateOpeningFilterDropdowns(); loadPublicRepertoires(); }
             if (tab === 'publish') { populatePublishDropdowns(); }
@@ -5024,10 +5234,17 @@
             const f = fbApi();
             try {
                 const rep = repData.repertoires[repId];
+                // IMPORTANT: store the tree as a JSON string, not a raw nested object.
+                // Firestore rejects documents with more than ~20 levels of nested
+                // objects/arrays -- a real repertoire (many plies deep, each ply being
+                // one level of nesting via `children`) blows past that limit easily,
+                // which made every publish attempt silently throw and abort. A string
+                // has no nesting depth as far as Firestore is concerned, regardless of
+                // how deep the underlying tree is.
                 await f.addDoc(f.collection(f.db, 'publicRepertoires'), {
                     name: rep.name,
                     color: rep.color,
-                    root: serializeNode(rep.root),
+                    rootData: JSON.stringify(serializeNode(rep.root)),
                     description: desc,
                     openingCategory: openingCat || null,
                     authorUid: cloudUser.uid,
@@ -5089,13 +5306,13 @@
                 likeBtn.innerHTML = alreadyLiked ? '<i class="fa-solid fa-heart mr-1"></i>Liked' : '<i class="fa-regular fa-heart mr-1"></i>Like';
                 likeBtn.className = alreadyLiked ? 'w-full bg-red-700 text-white text-xs py-2 rounded font-bold transition mb-4' : 'w-full bg-gray-700 hover:bg-gray-600 text-white text-xs py-2 rounded font-bold transition mb-4';
 
-                document.getElementById('pub-rep-modal').classList.remove('hidden');
+                document.getElementById('pub-rep-modal').style.display = 'flex';
                 loadPubRepComments(id);
             } catch (e) { showMsg('Error', e.message); }
         }
 
         function closePubRepModal() {
-            document.getElementById('pub-rep-modal').classList.add('hidden');
+            document.getElementById('pub-rep-modal').style.display = 'none';
             currentPubRepView = null;
         }
 
@@ -5103,7 +5320,8 @@
             if (!currentPubRepView) return;
             try {
                 const id = 'rep_' + Date.now();
-                repData.repertoires[id] = { name: currentPubRepView.name + ' (Imported)', color: currentPubRepView.color, root: deserializeNode(currentPubRepView.root) };
+                const rootObj = JSON.parse(currentPubRepView.rootData);
+                repData.repertoires[id] = { name: currentPubRepView.name + ' (Imported)', color: currentPubRepView.color, root: deserializeNode(rootObj) };
                 saveState();
                 scheduleCloudPush();
                 renderRepertoiresList();
@@ -5241,10 +5459,10 @@
 
         function openAdminPanel() {
             if (!cloudProfile || !cloudProfile.isAdmin) { showMsg('Access Denied', 'Admin access only.'); return; }
-            document.getElementById('admin-modal').classList.remove('hidden');
+            document.getElementById('admin-modal').style.display = 'flex';
             switchAdminTab('users');
         }
-        function closeAdminPanel() { document.getElementById('admin-modal').classList.add('hidden'); }
+        function closeAdminPanel() { document.getElementById('admin-modal').style.display = 'none'; }
 
         function switchAdminTab(tab) {
             adminCurrentTab = tab;
@@ -5474,6 +5692,13 @@
             } catch (e) { showMsg('Error', e.message); }
         }
 
+
+        window.addEventListener('focus', async () => {
+            if (cloudUser && !cloudUser.isAnonymous) {
+                await refreshCloudProfile();
+                updateAdminButtonVisibility();
+            }
+        });
 
         window.onload = init;
     </script>
