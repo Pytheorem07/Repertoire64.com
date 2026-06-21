@@ -2,26 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Repertoire64">
+    <meta name="application-name" content="Repertoire64">
+    <meta name="theme-color" content="#111827">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Google Search Console site verification -->
+    <meta name="google-site-verification" content="fz7fau_KmAp2y3iL32xcB3dnCr-x-eEDSljAlvzFwSc" />
+
     <!-- SEO & Meta Tags -->
-    <title>Repertoire64 - Interactive Chess Opening Trainer & Builder</title>
-    <meta name="description" content="Master your chess openings with Repertoire64. A free, single-file chess repertoire builder and trainer featuring Stockfish evaluation, ChessDB master games, and smart spaced repetition.">
-    <meta name="keywords" content="chess, repertoire, opening trainer, chess openings, stockfish, chessdb, chess study, chess tool, web chess, interactive chess">
+    <title>Repertoire64 - Free Chess Opening Repertoire Builder, Trainer & Database | repertoire64.com</title>
+    <meta name="description" content="Repertoire64 (repertoire64.com) is a free chess opening repertoire builder and trainer. Build your chess repertoire with Stockfish engine analysis, ChessDB and Lichess opening databases, spaced repetition training, deviation detection, and a community of shared chess repertoires for every opening — Sicilian, French, Caro-Kann, Ruy Lopez, Italian Game, Queen's Gambit, King's Indian, and 75+ more.">
+    <meta name="keywords" content="Repertoire64, Repertoire 64, repertoire64.com, repertoire64 chess, chess repertoire, chess repertoire builder, chess repertoire trainer, chess opening trainer, chess opening builder, opening repertoire app, free chess repertoire app, chess study tool, chess training app, chess opening database, build chess openings, chess opening tree, chess variation trainer, spaced repetition chess, chess opening prep, opening preparation tool, chess prep software, online chess repertoire, chess repertoire website, stockfish chess analysis, chessdb opening explorer, lichess opening explorer, lichess repertoire tool, chess deviation analysis, chess opening statistics, learn chess openings, memorize chess openings, chess opening practice, white repertoire, black repertoire, Sicilian Defense repertoire, French Defense repertoire, Caro-Kann repertoire, Ruy Lopez repertoire, Italian Game repertoire, Queen's Gambit repertoire, King's Indian Defense repertoire, Nimzo-Indian repertoire, English Opening repertoire, Scandinavian Defense repertoire, chess community repertoires, share chess repertoire, chess opening community">
     <meta name="author" content="PyTheorem07">
-    <meta name="robots" content="index, follow">
-    
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="googlebot" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://repertoire64.com/">
+
     <!-- Open Graph / Social Media Meta Tags -->
-    <meta property="og:title" content="Repertoire64 - Professional Chess Opening Trainer">
-    <meta property="og:description" content="Build, train, and study your chess openings with built-in Stockfish analysis and master databases.">
+    <meta property="og:site_name" content="Repertoire64">
+    <meta property="og:title" content="Repertoire64 - Free Chess Opening Repertoire Builder & Trainer">
+    <meta property="og:description" content="Build, train, and share your chess opening repertoire with Stockfish analysis, ChessDB & Lichess databases, spaced repetition, and a community of shared repertoires for every major opening.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
     <meta property="og:url" content="https://repertoire64.com">
+    <meta property="og:locale" content="en_US">
 
-    <!-- Favicon -->
-    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
-    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Repertoire64 - Free Chess Opening Repertoire Builder & Trainer">
+    <meta name="twitter:description" content="Build, train, and share your chess opening repertoire with Stockfish analysis, ChessDB & Lichess databases, and spaced repetition training.">
+    <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg">
+
+    <!-- Structured Data: helps Google show a rich result instead of a generic globe/link icon -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Repertoire64",
+      "alternateName": "Repertoire 64",
+      "url": "https://repertoire64.com",
+      "description": "A free chess opening repertoire builder and trainer with Stockfish engine analysis, ChessDB and Lichess opening databases, spaced repetition training, and a community of shared chess repertoires.",
+      "applicationCategory": "Game",
+      "operatingSystem": "Any (Web Browser)",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "PyTheorem07"
+      }
+    }
+    </script>
+
+    <!-- Favicon: a single, unambiguous rel="icon" reference, sized as a clean multiple
+         of 48px (192x192) per Google's favicon guidelines. Having more than one
+         conflicting rel="icon" tag is one of the most common documented reasons Google
+         falls back to a generic globe icon in search results instead of the real one,
+         so this intentionally has exactly ONE icon link plus ONE apple-touch-icon. -->
+    <link rel="icon" type="image/svg+xml" sizes="192x192" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192' width='192' height='192'%3E%3Crect width='192' height='192' rx='28' fill='%23111827'/%3E%3Ctext x='96' y='134' font-size='112' text-anchor='middle' fill='%23ffffff' font-family='Georgia,serif'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' width='180' height='180'%3E%3Crect width='180' height='180' rx='26' fill='%23111827'/%3E%3Ctext x='90' y='126' font-size='105' text-anchor='middle' fill='%23ffffff' font-family='Georgia,serif'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+
     <!-- Tailwind CSS & Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -29,8 +78,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        
+        html, body { font-family: 'Inter', sans-serif; overflow-x: hidden; max-width: 100vw; }
+        * { -webkit-tap-highlight-color: transparent; }
+
         .board-square { width: 12.5%; height: 12.5%; float: left; position: relative; }
         .highlight { box-shadow: inset 0 0 0 4px rgba(255, 255, 0, 0.5); z-index: 5; }
         .selected { background-color: rgba(20, 85, 30, 0.5) !important; z-index: 5; }
