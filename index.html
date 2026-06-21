@@ -778,21 +778,15 @@
                     <button onclick="switchAdminTab('reports')" id="admtab-reports" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Reports</button>
                     <button onclick="switchAdminTab('specialist')" id="admtab-specialist" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Specialist</button>
                     <button onclick="switchAdminTab('usernames')" id="admtab-usernames" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Usernames</button>
+                    <button onclick="switchAdminTab('broadcasts')" id="admtab-broadcasts" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Broadcasts</button>
                     <button onclick="switchAdminTab('feedback')" id="admtab-feedback" class="flex-1 py-1 text-xs font-bold rounded hover:bg-gray-700 text-gray-400">Feedback</button>
                 </div>
                 <!-- Users -->
                 <div id="admin-view-users">
-                    <div class="bg-gray-900 rounded p-2.5 border border-gray-700 mb-3">
-                        <p class="text-[10px] text-gray-500 mb-1.5">Look up a user by UID, email, or username:</p>
-                        <div class="flex gap-2 mb-1.5">
-                            <select id="admin-lookup-type" class="bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
-                                <option value="uid">UID</option>
-                                <option value="email">Email</option>
-                                <option value="username">Username (current or past)</option>
-                            </select>
-                            <input type="text" id="admin-msg-uid" placeholder="Search value..." class="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
-                            <button onclick="adminFetchUser()" class="bg-gray-700 text-xs px-3 py-1.5 rounded text-white font-bold hover:bg-gray-600">Lookup</button>
-                        </div>
+                    <div class="bg-gray-900 rounded p-2.5 border border-gray-700 mb-3 relative">
+                        <p class="text-[10px] text-gray-500 mb-1.5">Type any part of a name, email, UID, or username — matches appear as you type:</p>
+                        <input type="text" id="admin-msg-uid" oninput="adminSmartSearch()" autocomplete="off" placeholder="Start typing to search..." class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none">
+                        <div id="admin-search-results" class="absolute left-0 right-0 top-full mt-1 bg-gray-950 border border-gray-700 rounded shadow-xl z-10 max-h-56 overflow-y-auto" style="display:none"></div>
                     </div>
                     <div id="admin-user-detail" class="hidden bg-gray-900 rounded p-3 border border-gray-700 mb-3 text-xs text-gray-300 space-y-2">
                         <p><span class="text-gray-500">UID:</span> <span id="adm-uid"></span></p>
@@ -847,6 +841,11 @@
                 <div id="admin-view-usernames" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
                     <button onclick="adminLoadUsernameRequests()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Username Requests</button>
                     <div id="admin-usernames-list"></div>
+                </div>
+                <!-- Broadcasts -->
+                <div id="admin-view-broadcasts" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
+                    <button onclick="adminLoadBroadcasts()" class="w-full bg-gray-700 hover:bg-gray-600 text-xs py-1.5 rounded text-white font-bold">Load Sent Broadcasts</button>
+                    <div id="admin-broadcasts-list"></div>
                 </div>
                 <!-- Feedback -->
                 <div id="admin-view-feedback" class="space-y-2 max-h-96 overflow-y-auto" style="display:none">
@@ -1308,7 +1307,7 @@
             <div class="space-y-6 text-gray-300 text-sm leading-relaxed">
                 <section>
                     <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-hammer text-gray-400 mr-2"></i> 1. Build Your Openings</h3>
-                    <p>Click and drag pieces (or simply click the destination square) to record moves. Under the <strong>Build</strong> tab, write variation names and comments for any move. Add as many branching alternative moves as you want!</p>
+                    <p>Click and drag pieces (or simply click the destination square) to record moves. Under the <strong>Build</strong> tab, write variation names and comments for any move. Add as many branching alternative moves as you want! Step backward through your moves and the full line stays visible — play a different move and the old continuation is preserved in parentheses, fully clickable, so nothing you've built is ever lost.</p>
                 </section>
                 <section>
                     <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-network-wired text-indigo-400 mr-2"></i> 2. ChessDB & Lichess Auto-Build Features</h3>
@@ -1320,11 +1319,27 @@
                 </section>
                 <section>
                     <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-dumbbell text-gray-400 mr-2"></i> 4. Spaced repetition & Repertoire Tour</h3>
-                    <p>Launch customized study lines in the <strong>Train</strong> tab. By default, the program auto-plays opponent actions. Use the new <strong>Watch Rep</strong> button below the chessboard to automatically sit back and watch your whole repertoire played out beautifully branch-by-branch!</p>
+                    <p>Launch customized study lines in the <strong>Train</strong> tab. By default, the program auto-plays opponent actions. Use the <strong>Watch Rep</strong> button below the chessboard to automatically sit back and watch your whole repertoire played out beautifully branch-by-branch!</p>
                 </section>
                 <section>
                     <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-magnifying-glass-chart text-gray-400 mr-2"></i> 5. Deviation & Opening Stats Analysis</h3>
                     <p>Under the <strong>Games</strong> tab, scan recent player archives. Pinpoint exact spots you drifted from prep, or click <strong>Opening Stats</strong> to parse up to 4000 games instantly, extracting white/black response frequencies and a full analytical index of 75 major chess openings.</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-cloud text-blue-400 mr-2"></i> 6. Accounts & Cloud Sync</h3>
+                    <p>Sign in with Google or email (top of the screen) to save your repertoires, Lichess token, and settings to the cloud — sign in anywhere and they're all there. Guest mode is also available but doesn't sync or unlock community features.</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-users text-purple-400 mr-2"></i> 7. Community Repertoires</h3>
+                    <p>The <strong>Community</strong> tab lets signed-in users publish repertoires publicly, tag them by opening, and browse others' work sorted by most liked, most viewed, recently popular, or admin picks. Like and comment on repertoires you find useful, or apply to become a <strong>Repertoire Specialist</strong> — an admin-approved badge that highlights your published work.</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-at text-blue-300 mr-2"></i> 8. Username & Messages</h3>
+                    <p>Every account gets a username, changeable once for free from the account menu — further changes are sent to an admin for approval. Check the <strong>Messages</strong> tab for admin notices, warnings, or system-wide announcements; opening it marks everything read.</p>
+                </section>
+                <section>
+                    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-comment-dots text-cyan-400 mr-2"></i> 9. Feedback</h3>
+                    <p>Found a bug or have a suggestion? The <strong>Feedback</strong> tab inside Community sends it straight to the admins for review — no account required.</p>
                 </section>
             </div>
             
@@ -5163,18 +5178,18 @@
             const f = fbApi();
             try {
                 await f.addDoc(f.collection(f.db, 'feedback'), {
-                    type: type,
+                    type: type || 'other',
                     text: text,
-                    authorUid: cloudUser ? cloudUser.uid : null,
-                    authorEmail: cloudProfile ? cloudProfile.email : 'anonymous',
-                    authorName: cloudProfile ? cloudProfile.displayName : 'Guest',
+                    authorUid: (cloudUser && cloudUser.uid) ? cloudUser.uid : 'anonymous',
+                    authorEmail: (cloudProfile && cloudProfile.email) ? cloudProfile.email : 'anonymous',
+                    authorName: (cloudProfile && cloudProfile.displayName) ? cloudProfile.displayName : 'Guest',
                     status: 'open',
                     createdAt: f.serverTimestamp()
                 });
                 document.getElementById('feedback-text').value = '';
                 document.getElementById('feedback-type').value = 'bug';
                 showMsg('Feedback Sent', 'Thank you! Your ' + type + ' report has been submitted. We read every one.');
-            } catch (e) { showMsg('Error', e.message); }
+            } catch (e) { showMsg('Error', 'Could not submit feedback: ' + e.message); }
         }
 
         function checkUserMessagesForBanOrWarning() {
@@ -5660,7 +5675,7 @@
 
         function switchAdminTab(tab) {
             adminCurrentTab = tab;
-            ['users','reps','reports','specialist','usernames','feedback'].forEach(t => {
+            ['users','reps','reports','specialist','usernames','broadcasts','feedback'].forEach(t => {
                 const el = document.getElementById('admin-view-' + t);
                 if (el) el.style.display = (t === tab) ? 'block' : 'none';
                 const btn = document.getElementById('admtab-' + t);
@@ -5673,38 +5688,73 @@
 
         let adminLookupUid = null;
 
-        async function adminFetchUser() {
-            const lookupType = document.getElementById('admin-lookup-type').value;
-            const query = document.getElementById('admin-msg-uid').value.trim();
-            if (!query) return;
+        let adminUserCache = null;       // cached array of all user docs, for instant client-side filtering
+        let adminUserCacheLoadedAt = 0;
+        let adminSearchDebounce = null;
+
+        async function ensureAdminUserCache() {
+            const f = fbApi();
+            // Refresh the cache if it's missing or older than 60 seconds, so admins
+            // still see reasonably fresh data without re-fetching on every keystroke.
+            if (adminUserCache && (Date.now() - adminUserCacheLoadedAt) < 60000) return adminUserCache;
+            const snap = await f.getDocs(f.query(f.collection(f.db, 'users'), f.limit(500)));
+            const list = [];
+            snap.forEach(docSnap => {
+                const u = docSnap.data();
+                list.push({ uid: docSnap.id || u.uid, ...u });
+            });
+            adminUserCache = list;
+            adminUserCacheLoadedAt = Date.now();
+            return list;
+        }
+
+        async function adminSmartSearch() {
+            const input = document.getElementById('admin-msg-uid');
+            const resultsEl = document.getElementById('admin-search-results');
+            const query = input.value.trim().toLowerCase();
+            if (!query) { resultsEl.style.display = 'none'; resultsEl.innerHTML = ''; return; }
+
+            clearTimeout(adminSearchDebounce);
+            adminSearchDebounce = setTimeout(async () => {
+                try {
+                    const users = await ensureAdminUserCache();
+                    const matches = users.filter(u => {
+                        const haystacks = [
+                            u.uid || '', u.email || '', u.displayName || '', u.username || '',
+                            ...(u.usernameHistory || [])
+                        ].map(s => String(s).toLowerCase());
+                        return haystacks.some(h => h.includes(query));
+                    }).slice(0, 15);
+
+                    if (matches.length === 0) {
+                        resultsEl.innerHTML = '<div class="p-2 text-xs text-gray-500">No matching users.</div>';
+                        resultsEl.style.display = 'block';
+                        return;
+                    }
+
+                    resultsEl.innerHTML = matches.map(u => `
+                        <div onclick="adminSelectUserFromSearch('${u.uid}')" class="p-2 text-xs border-b border-gray-800 hover:bg-gray-800 cursor-pointer">
+                            <div class="font-bold text-white">${escapeHtml(u.displayName || '(no name)')} ${u.username ? '<span class="text-blue-300">@' + escapeHtml(u.username) + '</span>' : ''}</div>
+                            <div class="text-gray-500 text-[10px]">${escapeHtml(u.email || 'no email')} • ${u.uid}</div>
+                        </div>
+                    `).join('');
+                    resultsEl.style.display = 'block';
+                } catch (e) {
+                    resultsEl.innerHTML = '<div class="p-2 text-xs text-red-400">' + e.message + '</div>';
+                    resultsEl.style.display = 'block';
+                }
+            }, 200);
+        }
+
+        async function adminSelectUserFromSearch(uid) {
+            document.getElementById('admin-search-results').style.display = 'none';
             const f = fbApi();
             try {
-                let userData = null;
-                let foundUid = null;
-
-                if (lookupType === 'uid') {
-                    const snap = await f.getDoc(f.doc(f.db, 'users', query));
-                    if (snap.exists()) { userData = snap.data(); foundUid = query; }
-                } else if (lookupType === 'email') {
-                    const q = f.query(f.collection(f.db, 'users'), f.where('email', '==', query), f.limit(1));
-                    const snap = await f.getDocs(q);
-                    snap.forEach(docSnap => { userData = docSnap.data(); foundUid = docSnap.id || userData.uid; });
-                } else if (lookupType === 'username') {
-                    // Check current username first
-                    let q = f.query(f.collection(f.db, 'users'), f.where('username', '==', query), f.limit(1));
-                    let snap = await f.getDocs(q);
-                    snap.forEach(docSnap => { userData = docSnap.data(); foundUid = docSnap.id || userData.uid; });
-                    if (!userData) {
-                        // Fall back to searching username history (past usernames)
-                        q = f.query(f.collection(f.db, 'users'), f.where('usernameHistory', 'array-contains', query), f.limit(1));
-                        snap = await f.getDocs(q);
-                        snap.forEach(docSnap => { userData = docSnap.data(); foundUid = docSnap.id || userData.uid; });
-                    }
-                }
-
-                if (!userData) { showMsg('Not Found', 'No user found for that ' + lookupType + '.'); return; }
-                adminLookupUid = foundUid || userData.uid;
-                renderAdminUserDetail(userData);
+                const snap = await f.getDoc(f.doc(f.db, 'users', uid));
+                if (!snap.exists()) { showMsg('Not Found', 'This user could no longer be found.'); return; }
+                adminLookupUid = uid;
+                document.getElementById('admin-msg-uid').value = '';
+                renderAdminUserDetail(snap.data());
             } catch (e) { showMsg('Error', e.message); }
         }
 
@@ -5821,18 +5871,73 @@
         async function adminBroadcastMessage() {
             const text = document.getElementById('admin-broadcast-text').value.trim();
             if (!text) { showMsg('Required', 'Enter a broadcast message.'); return; }
-            if (!confirm('Send this message to ALL users? This cannot be undone.')) return;
+            if (!confirm('Send this message to ALL users? This cannot be undone, though it can be deleted later from the Broadcasts tab.')) return;
+            const f = fbApi();
+            try {
+                const broadcastId = 'bc_' + Date.now();
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'users'), f.limit(500)));
+                const updates = [];
+                let recipientCount = 0;
+                snap.forEach(docSnap => {
+                    const ref = f.doc(f.db, 'users', docSnap.id || docSnap.data().uid);
+                    updates.push(f.updateDoc(ref, { messages: f.arrayUnion({ text: text, type: 'system', read: false, sentAt: Date.now(), broadcastId: broadcastId }) }));
+                    recipientCount++;
+                });
+                await Promise.all(updates);
+                // Log the broadcast itself so admins can see/delete it later as a single unit.
+                await f.setDoc(f.doc(f.db, 'broadcasts', broadcastId), {
+                    text: text,
+                    recipientCount: recipientCount,
+                    sentAt: f.serverTimestamp(),
+                    sentBy: cloudUser.uid
+                });
+                showMsg('Broadcast Sent', 'System message delivered to ' + recipientCount + ' user(s).');
+                document.getElementById('admin-broadcast-text').value = '';
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminLoadBroadcasts() {
+            const f = fbApi();
+            const listEl = document.getElementById('admin-broadcasts-list');
+            if (!listEl) return;
+            listEl.innerHTML = '<div class="text-xs text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+            try {
+                const snap = await f.getDocs(f.query(f.collection(f.db, 'broadcasts'), f.orderBy('sentAt', 'desc'), f.limit(50)));
+                if (snap.empty) { listEl.innerHTML = '<div class="text-gray-500 text-xs">No broadcasts sent yet.</div>'; return; }
+                listEl.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const b = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-900 border border-blue-700/40 rounded p-2 text-xs mb-1.5';
+                    div.innerHTML = `
+                        <p class="text-gray-300 mb-1">${escapeHtml(b.text)}</p>
+                        <p class="text-gray-500 mb-1.5 text-[10px]">Sent to ${b.recipientCount || 0} user(s)</p>
+                        <button onclick="adminDeleteBroadcast('${docSnap.id}')" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold"><i class="fa-solid fa-trash mr-1"></i>Delete From All Users</button>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (e) { listEl.innerHTML = '<div class="text-red-400 text-xs">' + e.message + '</div>'; }
+        }
+
+        async function adminDeleteBroadcast(broadcastId) {
+            if (!confirm('Remove this message from every user\'s account? This cannot be undone.')) return;
             const f = fbApi();
             try {
                 const snap = await f.getDocs(f.query(f.collection(f.db, 'users'), f.limit(500)));
                 const updates = [];
                 snap.forEach(docSnap => {
-                    const ref = f.doc(f.db, 'users', docSnap.id || docSnap.data().uid);
-                    updates.push(f.updateDoc(ref, { messages: f.arrayUnion({ text: text, type: 'system', read: false, sentAt: Date.now() }) }));
+                    const u = docSnap.data();
+                    if (!u.messages) return;
+                    const hasIt = u.messages.some(m => m.broadcastId === broadcastId);
+                    if (!hasIt) return;
+                    const filtered = u.messages.filter(m => m.broadcastId !== broadcastId);
+                    const ref = f.doc(f.db, 'users', docSnap.id || u.uid);
+                    updates.push(f.updateDoc(ref, { messages: filtered }));
                 });
                 await Promise.all(updates);
-                showMsg('Broadcast Sent', 'System message delivered to ' + updates.length + ' user(s).');
-                document.getElementById('admin-broadcast-text').value = '';
+                await f.deleteDoc(f.doc(f.db, 'broadcasts', broadcastId));
+                showMsg('Deleted', 'Broadcast removed from ' + updates.length + ' user account(s).');
+                adminLoadBroadcasts();
             } catch (e) { showMsg('Error', e.message); }
         }
 
@@ -5855,7 +5960,7 @@
                             ${u.isBanned ? '<span class="ml-1 bg-red-900 text-[9px] px-1 rounded">BANNED</span>' : ''}
                             <div class="text-gray-500 text-[10px]">${docSnap.id}</div>
                         </div>
-                        <button onclick="document.getElementById('admin-msg-uid').value='${docSnap.id}'; adminFetchUser();" class="bg-gray-700 hover:bg-gray-600 text-[10px] px-2 py-1 rounded">Manage</button>
+                        <button onclick="adminSelectUserFromSearch('${docSnap.id}')" class="bg-gray-700 hover:bg-gray-600 text-[10px] px-2 py-1 rounded">Manage</button>
                     `;
                     listEl.appendChild(div);
                 });
