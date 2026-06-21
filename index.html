@@ -796,8 +796,12 @@
                         <p><span class="text-gray-500">Past Usernames:</span> <span id="adm-username-history" class="text-gray-400"></span></p>
                         <p><span class="text-gray-500">Specialist:</span> <span id="adm-specialist"></span></p>
                         <p><span class="text-gray-500">Banned:</span> <span id="adm-banned"></span></p>
+                        <p><span class="text-gray-500">Muted (publish/comment):</span> <span id="adm-muted"></span></p>
+                        <p><span class="text-gray-500">Feedback Muted:</span> <span id="adm-feedback-muted"></span></p>
                         <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-700">
                             <button onclick="adminToggleBan()" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Ban</button>
+                            <button onclick="adminToggleMute()" class="bg-orange-800 hover:bg-orange-700 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Mute</button>
+                            <button onclick="adminToggleFeedbackMute()" class="bg-cyan-800 hover:bg-cyan-700 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Feedback Mute</button>
                             <button onclick="adminToggleSpecialist()" class="bg-amber-700 hover:bg-amber-600 text-white text-[10px] px-2 py-1 rounded font-bold">Toggle Specialist</button>
                         </div>
                         <div class="flex gap-2 pt-2 border-t border-gray-700">
@@ -1195,6 +1199,7 @@
                             </select>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 <div>
@@ -5096,6 +5101,8 @@
                     isAdmin: makeAdmin,
                     isSpecialist: false,
                     isBanned: false,
+                    isMuted: false,
+                    isFeedbackMuted: false,
                     createdAt: f.serverTimestamp(),
                     messages: []
                 };
@@ -5103,16 +5110,20 @@
                 cloudProfile = profile;
             } else {
                 cloudProfile = snap.data();
-                // Backfill username for existing accounts that predate this field
+                // Backfill fields for existing accounts that predate them
+                const backfill = {};
                 if (!cloudProfile.username) {
                     const defaultUsername = (cloudProfile.displayName || 'Player').replace(/\s+/g, '_').substring(0, 20);
-                    await f.updateDoc(ref, {
-                        username: defaultUsername,
-                        usernameChangedOnce: false,
-                        usernameHistory: [defaultUsername],
-                        pendingUsernameRequest: null
-                    });
-                    cloudProfile = { ...cloudProfile, username: defaultUsername, usernameChangedOnce: false, usernameHistory: [defaultUsername], pendingUsernameRequest: null };
+                    backfill.username = defaultUsername;
+                    backfill.usernameChangedOnce = false;
+                    backfill.usernameHistory = [defaultUsername];
+                    backfill.pendingUsernameRequest = null;
+                }
+                if (cloudProfile.isMuted === undefined) backfill.isMuted = false;
+                if (cloudProfile.isFeedbackMuted === undefined) backfill.isFeedbackMuted = false;
+                if (Object.keys(backfill).length > 0) {
+                    await f.updateDoc(ref, backfill);
+                    cloudProfile = { ...cloudProfile, ...backfill };
                 }
             }
         }
@@ -5175,6 +5186,10 @@
         async function submitFeedback(type) {
             const text = document.getElementById('feedback-text').value.trim();
             if (!text) { showMsg('Required', 'Please describe your feedback.'); return; }
+            if (cloudProfile && cloudProfile.isFeedbackMuted) {
+                showMsg('Feedback Disabled', 'An admin has disabled feedback submissions for your account.');
+                return;
+            }
             const f = fbApi();
             try {
                 await f.addDoc(f.collection(f.db, 'feedback'), {
@@ -5196,6 +5211,8 @@
             if (!cloudProfile) return;
             if (cloudProfile.isBanned) {
                 showMsg('Account Banned', 'Your account has been banned by an administrator for violating community guidelines. You may still use the app privately, but cannot publish, comment, or like content.');
+            } else if (cloudProfile.isMuted) {
+                showMsg('Account Muted', 'An administrator has muted your account. You can still use the app privately, but cannot publish repertoires, comment, or like content until this is lifted.');
             }
             renderUserMessages();
         }
@@ -5339,6 +5356,10 @@
             }
             if (cloudProfile && cloudProfile.isBanned) {
                 showMsg('Account Banned', 'Your account has been banned and cannot ' + actionLabel + '.');
+                return false;
+            }
+            if (cloudProfile && cloudProfile.isMuted) {
+                showMsg('Account Muted', 'An admin has muted your account. You cannot ' + actionLabel + ' until this is lifted.');
                 return false;
             }
             return true;
@@ -5568,7 +5589,7 @@
                     div.innerHTML = `
                         <div class="flex justify-between items-start">
                             <span class="font-bold text-purple-300">${escapeHtml(c.authorName || 'User')}</span>
-                            <button onclick="reportComment('${repId}','${docSnap.id}')" class="text-gray-500 hover:text-red-400 text-[10px]" title="Report comment"><i class="fa-solid fa-flag"></i></button>
+                            <button onclick="reportComment('${repId}','${docSnap.id}','${c.authorUid||''}','${escapeHtml(c.authorName||'User').replace(/'/g,"\\'")}')" class="text-gray-500 hover:text-red-400 text-[10px]" title="Report comment"><i class="fa-solid fa-flag"></i></button>
                         </div>
                         <p class="text-gray-300 mt-0.5">${escapeHtml(c.text)}</p>
                     `;
@@ -5599,7 +5620,7 @@
             } catch (e) { showMsg('Error', e.message); }
         }
 
-        async function reportComment(repId, commentId) {
+        async function reportComment(repId, commentId, offenderUid, offenderName) {
             if (!requireSignedInNonAnon('report comments')) return;
             const reason = prompt('Why are you reporting this comment? (sent to admins)');
             if (reason === null) return;
@@ -5607,6 +5628,8 @@
             try {
                 await f.addDoc(f.collection(f.db, 'reports'), {
                     repId, commentId,
+                    offenderUid: offenderUid || null,
+                    offenderName: offenderName || 'Unknown',
                     reportedBy: cloudUser.uid,
                     reporterName: cloudProfile.displayName || cloudUser.email,
                     reason: reason || '(no reason given)',
@@ -5768,6 +5791,8 @@
             document.getElementById('adm-username-history').innerText = history.length > 0 ? history.map(h => '@' + h).join(', ') : '(none)';
             document.getElementById('adm-specialist').innerText = u.isSpecialist ? 'Yes' : 'No';
             document.getElementById('adm-banned').innerText = u.isBanned ? 'YES - BANNED' : 'No';
+            document.getElementById('adm-muted').innerText = u.isMuted ? 'YES - MUTED' : 'No';
+            document.getElementById('adm-feedback-muted').innerText = u.isFeedbackMuted ? 'YES - MUTED' : 'No';
 
             // Render this user's message history with read status
             const msgListEl = document.getElementById('admin-user-messages-list');
@@ -5797,6 +5822,10 @@
 
         async function adminToggleBan() {
             if (!adminLookupUid) return;
+            if (cloudUser && adminLookupUid === cloudUser.uid) {
+                showMsg('Not Allowed', 'You cannot ban your own account.');
+                return;
+            }
             const f = fbApi();
             try {
                 const ref = f.doc(f.db, 'users', adminLookupUid);
@@ -5805,6 +5834,42 @@
                 await f.updateDoc(ref, { isBanned: !current.isBanned });
                 showMsg('Updated', 'Ban status toggled.');
                 adminRefreshUserDetail();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminToggleMute(uidOverride) {
+            const targetUid = uidOverride || adminLookupUid;
+            if (!targetUid) return;
+            if (cloudUser && targetUid === cloudUser.uid) {
+                showMsg('Not Allowed', 'You cannot mute your own account.');
+                return;
+            }
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'users', targetUid);
+                const snap = await f.getDoc(ref);
+                const current = snap.data();
+                await f.updateDoc(ref, { isMuted: !current.isMuted });
+                showMsg('Updated', current.isMuted ? 'User unmuted -- they can publish repertoires and comment again.' : 'User muted -- they can no longer publish repertoires or comment.');
+                if (targetUid === adminLookupUid) adminRefreshUserDetail();
+            } catch (e) { showMsg('Error', e.message); }
+        }
+
+        async function adminToggleFeedbackMute(uidOverride) {
+            const targetUid = uidOverride || adminLookupUid;
+            if (!targetUid) return;
+            if (cloudUser && targetUid === cloudUser.uid) {
+                showMsg('Not Allowed', 'You cannot mute your own account.');
+                return;
+            }
+            const f = fbApi();
+            try {
+                const ref = f.doc(f.db, 'users', targetUid);
+                const snap = await f.getDoc(ref);
+                const current = snap.data();
+                await f.updateDoc(ref, { isFeedbackMuted: !current.isFeedbackMuted });
+                showMsg('Updated', current.isFeedbackMuted ? 'Feedback unmuted for this user.' : 'This user can no longer submit feedback.');
+                if (targetUid === adminLookupUid) adminRefreshUserDetail();
             } catch (e) { showMsg('Error', e.message); }
         }
 
@@ -5958,6 +6023,8 @@
                             ${u.isAdmin ? '<span class="ml-1 bg-red-700 text-[9px] px-1 rounded">ADMIN</span>' : ''}
                             ${u.isSpecialist ? '<span class="ml-1 bg-amber-700 text-[9px] px-1 rounded">SPECIALIST</span>' : ''}
                             ${u.isBanned ? '<span class="ml-1 bg-red-900 text-[9px] px-1 rounded">BANNED</span>' : ''}
+                            ${u.isMuted ? '<span class="ml-1 bg-orange-800 text-[9px] px-1 rounded">MUTED</span>' : ''}
+                            ${u.isFeedbackMuted ? '<span class="ml-1 bg-cyan-800 text-[9px] px-1 rounded">FB-MUTED</span>' : ''}
                             <div class="text-gray-500 text-[10px]">${docSnap.id}</div>
                         </div>
                         <button onclick="adminSelectUserFromSearch('${docSnap.id}')" class="bg-gray-700 hover:bg-gray-600 text-[10px] px-2 py-1 rounded">Manage</button>
@@ -6025,11 +6092,13 @@
                     div.className = 'bg-gray-900 border border-red-700/40 rounded p-2 text-xs mb-1.5';
                     div.innerHTML = `
                         <p class="text-gray-300 mb-1"><span class="text-gray-500">Reported by:</span> ${escapeHtml(r.reporterName||'?')}</p>
+                        <p class="text-gray-300 mb-1"><span class="text-gray-500">Comment author:</span> ${escapeHtml(r.offenderName||'Unknown')}</p>
                         <p class="text-gray-300 mb-1"><span class="text-gray-500">Reason:</span> ${escapeHtml(r.reason)}</p>
                         <p class="text-gray-500 mb-1.5">Rep ID: ${r.repId} • Comment ID: ${r.commentId}</p>
                         <div class="flex gap-1.5 flex-wrap">
                             <button onclick="adminDeleteReportedComment('${docSnap.id}','${r.repId}','${r.commentId}')" class="bg-red-800 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold">Delete Comment</button>
-                            <button onclick="document.getElementById('admin-msg-uid').value=''; switchAdminTab('users'); showMsg('Tip','Look up the commenter\'s UID from the comment author to ban or warn them.')" class="bg-amber-800 hover:bg-amber-700 text-white text-[10px] px-2 py-1 rounded font-bold">Go Ban/Warn User</button>
+                            ${r.offenderUid ? `<button onclick="adminToggleMute('${r.offenderUid}')" class="bg-orange-800 hover:bg-orange-700 text-white text-[10px] px-2 py-1 rounded font-bold">Mute User</button>` : ''}
+                            ${r.offenderUid ? `<button onclick="document.getElementById('admin-msg-uid').value='${r.offenderUid}'; switchAdminTab('users'); adminSmartSearch();" class="bg-amber-800 hover:bg-amber-700 text-white text-[10px] px-2 py-1 rounded font-bold">Go Ban/Warn User</button>` : `<button onclick="document.getElementById('admin-msg-uid').value=''; switchAdminTab('users'); showMsg('Tip','This report has no linked user id -- search by the commenter\\'s name instead.')" class="bg-amber-800 hover:bg-amber-700 text-white text-[10px] px-2 py-1 rounded font-bold">Go Ban/Warn User</button>`}
                             <button onclick="adminDismissReport('${docSnap.id}')" class="bg-gray-700 hover:bg-gray-600 text-white text-[10px] px-2 py-1 rounded font-bold">Dismiss</button>
                         </div>
                     `;
